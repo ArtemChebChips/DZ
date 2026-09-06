@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/*
+ * Токены Tailwind смотрят на обычные CSS-переменные, а те переопределяются
+ * по data-theme на <html>. Благодаря этому одна и та же разметка работает
+ * во всех трёх темах, и переключение — это смена одного атрибута.
+ */
+@theme {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-line: var(--c-line);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-danger: var(--c-danger);
+  --color-warn: var(--c-warn);
+  --color-ok: var(--c-ok);
+  --color-late: var(--c-late);
+  --color-late-line: var(--c-late-line);
+
+  --font-app: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-app);
+}
+
+/* ---------- Тихий: тема по умолчанию ---------- */
+:root {
+  --c-bg: #e9ebee;
+  --c-surface: #ffffff;
+  --c-surface-2: #f2f4f7;
+  --c-line: #dfe2e7;
+  --c-ink: #1b1f26;
+  --c-muted: #6a7280;
+  --c-accent: #3f6fb5;
+  --c-danger: #b23c34;
+  --c-warn: #a4682c;
+  --c-ok: #2f8a6a;
+  --c-late: #fdf0ef;
+  --c-late-line: #f2d4d1;
+
+  --subj-blue: #3f6fb5;
+  --subj-violet: #7256b0;
+  --subj-pink: #b4487c;
+  --subj-red: #c0554d;
+  --subj-orange: #a4682c;
+  --subj-amber: #8a7118;
+  --subj-lime: #5f7c1f;
+  --subj-green: #2f8a6a;
+  --subj-teal: #1d7f80;
+  --subj-cyan: #2d7391;
+  --subj-slate: #6b7383;
+
+  --radius-card: 18px;
+  --radius-pill: 11px;
+  --border-w: 1px;
+  --shadow-card: none;
+  --pill-shadow: none;
+  --on-accent: #ffffff;
+}
+
+/* ---------- Ночной мягкий ---------- */
+:root[data-theme="night"] {
+  --c-bg: #14161d;
+  --c-surface: #1d2029;
+  --c-surface-2: #262a35;
+  --c-line: #2c3140;
+  --c-ink: #e9ebf2;
+  --c-muted: #858da3;
+  --c-accent: #7aa2f7;
+  --c-danger: #ff7a70;
+  --c-warn: #e0a55c;
+  --c-ok: #63d9a8;
+  --c-late: #2a1c20;
+  --c-late-line: #3d2a2e;
+
+  --subj-blue: #7aa2f7;
+  --subj-violet: #b79cf0;
+  --subj-pink: #f091bc;
+  --subj-red: #ff8b83;
+  --subj-orange: #e0a55c;
+  --subj-amber: #d9c264;
+  --subj-lime: #bcd96a;
+  --subj-green: #63d9a8;
+  --subj-teal: #58ccc6;
+  --subj-cyan: #6ec5e8;
+  --subj-slate: #9aa3ba;
+
+  --radius-card: 20px;
+  --radius-pill: 13px;
+  --border-w: 0px;
+  --shadow-card: none;
+  --pill-shadow: none;
+  --on-accent: #10131a;
+}
+
+/* ---------- Режим сдвгшника ---------- */
+:root[data-theme="adhd"] {
+  --c-bg: #f7ee5e;
+  --c-surface: #fffdf2;
+  --c-surface-2: #fffdf2;
+  --c-line: #12100b;
+  --c-ink: #12100b;
+  --c-muted: #6a6446;
+  --c-accent: #12100b;
+  --c-danger: #d8352a;
+  --c-warn: #b45900;
+  --c-ok: #157a4a;
+  --c-late: #ff6b5e;
+  --c-late-line: #12100b;
+
+  --subj-blue: #2b5bd7;
+  --subj-violet: #7b3fe4;
+  --subj-pink: #e0338c;
+  --subj-red: #e03131;
+  --subj-orange: #e8590c;
+  --subj-amber: #b8860b;
+  --subj-lime: #5c940d;
+  --subj-green: #0ca678;
+  --subj-teal: #0b7285;
+  --subj-cyan: #1098ad;
+  --subj-slate: #495057;
+
+  --radius-card: 4px;
+  --radius-pill: 3px;
+  --border-w: 2.5px;
+  --shadow-card: 4px 4px 0 #12100b;
+  --pill-shadow: 2px 2px 0 #12100b;
+  --on-accent: #f7ee5e;
+  --font-display: "Unbounded", var(--font-app);
+}
+
+@layer base {
+  html {
+    background: var(--c-bg);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--c-bg);
+    color: var(--c-ink);
+    font-family: var(--font-app);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* 16px не даёт Safari зумить страницу при фокусе на поле ввода. */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  /* Крупный контейнер: блок недели, карточка пары, секция настроек. */
+  .card {
+    background: var(--c-surface);
+    border: var(--border-w) solid var(--c-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Мелкий элемент внутри карточки: задача, чип. */
+  .pill {
+    background: var(--c-surface-2);
+    border: var(--border-w) solid var(--c-line);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pill-shadow);
+  }
+
+  /* Ночная тема живёт на однотонных плашках, ей рамка ни к чему. */
+  :root[data-theme="night"] .pill {
+    border-color: transparent;
+  }
+
+  .card-late {
+    background: var(--c-late);
+    border-color: var(--c-late-line);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :root[data-theme="adhd"] .display {
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Отступы под «чёлку» и домашнюю полоску айфона. */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
