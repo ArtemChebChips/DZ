@@ -27,7 +27,7 @@ export function Screen({
         </div>
       </header>
       {/* Запас снизу — под нижнюю навигацию и домашнюю полоску айфона. */}
-      <main className="flex-1 px-3 pt-3 pb-32">{children}</main>
+      <main className="flex-1 px-3 pt-3 pb-28">{children}</main>
     </div>
   )
 }

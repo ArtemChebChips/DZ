@@ -19,7 +19,7 @@ export function BottomNav({ route }: { route: Route }) {
               key={tab.path}
               type="button"
               onClick={() => navigate(tab.path)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition ${
+              className={`flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1 transition ${
                 active ? 'text-accent' : 'text-muted'
               }`}
             >
