@@ -20,9 +20,21 @@ const TABS = [
 ]
 
 export function BottomNav({ route }: { route: Route }) {
+  const activeIndex = Math.max(
+    0,
+    TABS.findIndex((tab) => tab.match.includes(route.name)),
+  )
+
   return (
     <nav className="shrink-0 bg-bar border-t border-line safe-bottom">
-      <div className="flex max-w-lg mx-auto">
+      <div className="relative flex max-w-lg mx-auto">
+        {/* Подложка активной вкладки: переезжает, а не перекрашивается. */}
+        <span
+          aria-hidden
+          className="absolute top-1 bottom-1 left-0 w-1/3 rounded-xl bg-accent/12 transition-transform duration-300 ease-out motion-reduce:transition-none"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        />
+
         {TABS.map((tab) => {
           const active = tab.match.includes(route.name)
           const Icon = tab.icon
@@ -31,7 +43,7 @@ export function BottomNav({ route }: { route: Route }) {
               key={tab.key}
               type="button"
               onClick={() => navigate(tab.to())}
-              className={`flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1.5 transition ${
+              className={`relative flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1.5 transition-colors ${
                 active ? 'text-accent' : 'text-muted'
               }`}
             >

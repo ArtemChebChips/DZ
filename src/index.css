@@ -136,30 +136,25 @@
 
 @layer base {
   /*
-   * Фон html — цвет нижней панели, а не экрана: в standalone iOS под
-   * зафиксированным body остаётся полоска, и она должна сливаться с панелью.
+   * Ни html, ни body не скроллятся: страница занимает ровно экран, прокрутка
+   * живёт внутри списка. Заодно Safari не сворачивает адресную строку, и
+   * высота экрана перестаёт «дышать».
    */
-  html {
+  html,
+  body {
     height: 100%;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html {
+    /* Под нижней панелью может остаться зона safe-area — красим её в цвет панели. */
     background: var(--c-bar);
     -webkit-text-size-adjust: 100%;
   }
 
-  /*
-   * Страница приклеена к экрану и не скроллится сама. Это убирает сразу две
-   * болячки iOS: резиновый отскок у края и «дыхание» высоты экрана, из-за
-   * которого нижняя панель уезжала вслед за адресной строкой Safari.
-   */
-  /*
-   * Высоту не задаём: inset растягивает body на весь экран, включая зону под
-   * домашней полоской. С height: 100% снизу оставался непокрытый кусок фона.
-   */
   body {
-    position: fixed;
-    inset: 0;
-    margin: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
     background: var(--c-bg);
     color: var(--c-ink);
     font-family: var(--font-app);
@@ -217,6 +212,12 @@
     text-transform: uppercase;
     letter-spacing: -0.01em;
   }
+}
+
+/* Зонды: через них диагностика в настройках читает реальные отступы iOS. */
+:root {
+  --probe-top: env(safe-area-inset-top, 0px);
+  --probe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Отступ под «чёлку». */
