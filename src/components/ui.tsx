@@ -29,7 +29,7 @@ export function Screen({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-bg">
-      <header className="safe-top shrink-0 bg-bg border-b border-line">
+      <header className="safe-top shrink-0 bg-bar border-b border-line">
         <div className="flex items-center gap-2 px-3 h-14">
           {left}
           {onTitleClick ? (

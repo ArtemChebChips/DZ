@@ -6,8 +6,8 @@ const KEY = 'dz:theme'
 
 /** Цвет строки состояния телефона — должен совпадать с фоном темы. */
 const THEME_COLOR: Record<Theme, string> = {
-  quiet: '#e9ebee',
-  night: '#14161d',
+  quiet: '#f2f2f7',
+  night: '#000000',
   adhd: '#f7ee5e',
 }
 

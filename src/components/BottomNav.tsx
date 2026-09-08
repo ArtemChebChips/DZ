@@ -21,7 +21,7 @@ const TABS = [
 
 export function BottomNav({ route }: { route: Route }) {
   return (
-    <nav className="shrink-0 bg-bg border-t border-line safe-bottom">
+    <nav className="shrink-0 bg-bar border-t border-line safe-bottom">
       <div className="flex max-w-lg mx-auto">
         {TABS.map((tab) => {
           const active = tab.match.includes(route.name)
@@ -31,7 +31,7 @@ export function BottomNav({ route }: { route: Route }) {
               key={tab.key}
               type="button"
               onClick={() => navigate(tab.to())}
-              className={`flex-1 flex flex-col items-center gap-0.5 pt-1.5 pb-0.5 transition ${
+              className={`flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1.5 transition ${
                 active ? 'text-accent' : 'text-muted'
               }`}
             >

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { clearTasks, exportJSON, importJSON, seedDemoTasks, useData } from '../store'
 import { todayISO } from '../lib/dates'
+import { APP_VERSION, BUILD_TIME } from '../types'
 import { navigate, routes } from '../lib/router'
 import { setTheme, useTheme } from '../lib/theme'
 import { Screen, Button, Toggle } from '../components/ui'
@@ -82,6 +83,11 @@ export function SettingsScreen() {
 
   return (
     <Screen title="Настройки">
+      {/* Версия нужна, чтобы на телефоне сразу видеть, приехало ли обновление. */}
+      <p className="text-[11px] text-muted text-center -mt-1 mb-3">
+        версия {APP_VERSION} · сборка {BUILD_TIME}
+      </p>
+
       <Card title="Оформление">
         <Toggle
           label="Ночная тема"

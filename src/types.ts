@@ -1,3 +1,10 @@
+declare const __APP_VERSION__: string
+declare const __BUILD_TIME__: string
+
+/** Версия и время сборки — показываются в настройках, чтобы сверять обновления. */
+export const APP_VERSION = __APP_VERSION__
+export const BUILD_TIME = __BUILD_TIME__
+
 /** Чётность недели: числитель, знаменатель или «каждую неделю». */
 export type WeekParity = 'num' | 'denom' | 'both'
 
