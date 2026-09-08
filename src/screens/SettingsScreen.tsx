@@ -57,6 +57,19 @@ export function SettingsScreen() {
     URL.revokeObjectURL(url)
   }
 
+  /** Сносит кеш и регистрацию service worker — лечит залипшую старую версию. */
+  async function hardReload() {
+    try {
+      const regs = await navigator.serviceWorker?.getRegistrations?.()
+      await Promise.all((regs ?? []).map((r) => r.unregister()))
+      const keys = await caches?.keys?.()
+      await Promise.all((keys ?? []).map((k) => caches.delete(k)))
+    } catch {
+      // Даже если что-то не удалось снести, перезагрузка всё равно полезна.
+    }
+    location.reload()
+  }
+
   async function upload(file: File) {
     try {
       importJSON(await file.text())
@@ -122,6 +135,18 @@ export function SettingsScreen() {
             }}
           />
           {message ? <p className="text-[12px] text-accent mt-2">{message}</p> : null}
+        </div>
+      </Card>
+
+      <Card title="Обновление">
+        <div className="px-4 py-3.5">
+          <p className="text-[12px] text-muted mb-3">
+            Обычно новая версия приезжает сама. Если кажется, что приложение застряло на
+            старой — нажми, оно перезагрузится начисто. Задания не пострадают.
+          </p>
+          <Button variant="ghost" onClick={hardReload} className="w-full">
+            Обновить приложение
+          </Button>
         </div>
       </Card>
 

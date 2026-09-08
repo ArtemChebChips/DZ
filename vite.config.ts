@@ -13,6 +13,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Регистрируем сами в main.tsx: iOS не проверяет обновления без пинка.
+      injectRegister: null,
       includeAssets: ['icon-180.png'],
       manifest: {
         name: 'ДЗ',

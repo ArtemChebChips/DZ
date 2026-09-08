@@ -11,7 +11,7 @@ export default function App() {
   const route = useRoute()
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="h-dvh max-w-lg mx-auto flex flex-col overflow-hidden relative">
       {route.name === 'tasks' ? <TasksScreen /> : null}
       {route.name === 'calendar' ? <CalendarScreen /> : null}
       {/* key заставляет экран дня пересобраться при переходе между датами */}

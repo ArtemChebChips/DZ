@@ -52,7 +52,7 @@ export function DayScreen({ date }: { date: string }) {
   )
 
   return (
-    <div {...swipe}>
+    <div {...swipe} className="flex-1 min-h-0 flex flex-col">
       <Screen
         title={title}
         subtitle={subtitle}
@@ -111,7 +111,7 @@ export function DayScreen({ date }: { date: string }) {
         type="button"
         onClick={() => setEditor({ mode: 'new' })}
         aria-label="Добавить задание"
-        className="fixed right-4 bottom-24 z-30 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
+        className="absolute right-4 bottom-20 z-30 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
         style={{ color: 'var(--on-accent)' }}
       >
         <IconPlus size={26} />

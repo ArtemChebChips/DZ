@@ -21,7 +21,7 @@ const TABS = [
 
 export function BottomNav({ route }: { route: Route }) {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 bg-bg/90 backdrop-blur-lg border-t border-line safe-bottom">
+    <nav className="shrink-0 bg-bg border-t border-line safe-bottom">
       <div className="flex max-w-lg mx-auto">
         {TABS.map((tab) => {
           const active = tab.match.includes(route.name)

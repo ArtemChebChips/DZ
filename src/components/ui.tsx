@@ -28,8 +28,8 @@ export function Screen({
   )
 
   return (
-    <div className="min-h-dvh flex flex-col bg-bg">
-      <header className="safe-top sticky top-0 z-20 bg-bg/85 backdrop-blur-lg border-b border-line">
+    <div className="flex-1 min-h-0 flex flex-col bg-bg">
+      <header className="safe-top shrink-0 bg-bg border-b border-line">
         <div className="flex items-center gap-2 px-3 h-14">
           {left}
           {onTitleClick ? (
@@ -47,8 +47,10 @@ export function Screen({
           {right}
         </div>
       </header>
-      {/* Запас снизу — под нижнюю навигацию и домашнюю полоску айфона. */}
-      <main className="flex-1 px-3 pt-3 pb-28">{children}</main>
+      {/* Скроллится только содержимое: панель снизу тогда не ездит по экрану. */}
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-6">
+        {children}
+      </main>
     </div>
   )
 }
