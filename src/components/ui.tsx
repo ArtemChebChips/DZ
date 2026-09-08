@@ -170,11 +170,20 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export const inputClass =
   'w-full h-11 px-3 rounded-xl bg-surface-2 border border-line outline-none focus:border-accent transition'
 
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+export function EmptyState({
+  title,
+  hint,
+  action,
+}: {
+  title: string
+  hint?: string
+  action?: ReactNode
+}) {
   return (
     <div className="text-center py-16 px-6">
       <p className="text-muted">{title}</p>
       {hint ? <p className="text-[13px] text-muted/70 mt-1">{hint}</p> : null}
+      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   )
 }

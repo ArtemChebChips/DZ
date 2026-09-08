@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Subject, Task } from '../types'
-import { useData } from '../store'
+import { seedDemoTasks, useData } from '../store'
 import {
   MONTHS_GEN,
   WEEKDAYS_FULL,
@@ -14,7 +14,7 @@ import {
   weekdayOf,
 } from '../lib/dates'
 import { parityLabel, parityOf } from '../lib/week'
-import { Screen, EmptyState } from '../components/ui'
+import { Screen, EmptyState, Button } from '../components/ui'
 import { IconPlus } from '../components/icons'
 import { TaskPill } from '../components/TaskPill'
 import { TaskEditor } from '../components/TaskEditor'
@@ -160,7 +160,12 @@ export function TasksScreen() {
         {open.length === 0 ? (
           <EmptyState
             title="Заданий нет"
-            hint="Добавь первое кнопкой ниже или открой нужный день в календаре"
+            hint="Добавь своё кнопкой ниже или открой нужный день во вкладке «День»"
+            action={
+              <Button variant="ghost" onClick={seedDemoTasks}>
+                Накидать примеры
+              </Button>
+            }
           />
         ) : null}
 

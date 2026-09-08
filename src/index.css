@@ -131,17 +131,31 @@
 
 @layer base {
   html {
+    height: 100%;
     background: var(--c-bg);
     -webkit-text-size-adjust: 100%;
   }
 
+  /*
+   * Страница приклеена к экрану и не скроллится сама. Это убирает сразу две
+   * болячки iOS: резиновый отскок у края и «дыхание» высоты экрана, из-за
+   * которого нижняя панель уезжала вслед за адресной строкой Safari.
+   */
   body {
+    position: fixed;
+    inset: 0;
     margin: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     background: var(--c-bg);
     color: var(--c-ink);
     font-family: var(--font-app);
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
+  }
+
+  #root {
+    height: 100%;
   }
 
   input,
@@ -203,10 +217,7 @@
   padding-top: env(safe-area-inset-top);
 }
 
-/*
- * iOS в standalone резервирует под домашнюю полоску 34px, но визуально это
- * читается как дыра под навигацией, поэтому запас убран совсем.
- */
+/* Небольшой зазор, чтобы подписи не липли к самому краю экрана. */
 .safe-bottom {
-  padding-bottom: 0;
+  padding-bottom: 6px;
 }
