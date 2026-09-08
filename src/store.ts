@@ -2,9 +2,10 @@ import { useSyncExternalStore } from 'react'
 import type { AppData, Lesson, Settings, Subject, Task } from './types'
 import { mondayOf, todayISO } from './lib/dates'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedule'
+import { parseBackup } from './lib/backup'
 
-const STORAGE_KEY = 'dz:data'
-const DEVICE_KEY = 'dz:device'
+const STORAGE_KEY = 'dz:codex:data'
+const DEVICE_KEY = 'dz:codex:device'
 /** 2 — время переехало с общей сетки звонков внутрь каждой пары. */
 const DATA_VERSION = 2
 
@@ -214,7 +215,7 @@ export function exportJSON(): string {
 }
 
 export function importJSON(text: string): void {
-  commit(normalize(JSON.parse(text)))
+  commit(parseBackup(text))
 }
 
 /** Стереть задания, но сохранить расписание — для начала нового семестра. */

@@ -28,20 +28,20 @@ export function LessonCard({
   const meta = [KIND_LABEL[lesson.kind], place].filter(Boolean).join(' · ')
 
   return (
-    <div className="card overflow-hidden">
+    <div className="card lesson-card overflow-hidden">
       <div className="flex items-stretch">
-        <span className="w-1.5 shrink-0" style={{ background: color }} />
+        <span className="w-1 shrink-0" style={{ background: color }} />
 
-        <div className="shrink-0 py-3 pl-3 pr-1 w-14">
-          <div className="text-[14px] font-semibold leading-none tabular-nums" style={{ color }}>
+        <div className="shrink-0 py-5 pl-3 pr-2 w-[66px]">
+          <div className="text-[16px] font-semibold leading-none tabular-nums">
             {lesson.start}
           </div>
-          <div className="text-[11px] text-muted mt-1 leading-none tabular-nums">{lesson.end}</div>
+          <div className="text-[12px] text-muted mt-2 leading-none tabular-nums">{lesson.end}</div>
         </div>
 
-        <div className="flex-1 min-w-0 py-3 px-1">
-          <p className="text-[15px] font-medium leading-snug">{subject?.name ?? 'Неизвестный предмет'}</p>
-          {meta ? <p className="text-[12px] text-muted mt-0.5">{meta}</p> : null}
+        <div className="flex-1 min-w-0 py-4 px-1">
+          <p className="text-[16px] font-semibold leading-snug">{subject?.name ?? 'Неизвестный предмет'}</p>
+          {meta ? <p className="text-[13px] text-muted mt-2">{meta}</p> : null}
           {lesson.teacher ? (
             <p className="text-[12px] text-muted/80 mt-0.5">{lesson.teacher}</p>
           ) : null}
@@ -51,8 +51,8 @@ export function LessonCard({
           type="button"
           onClick={onAdd}
           aria-label={`Добавить задание по предмету ${subject?.name ?? ''}`}
-          className="shrink-0 self-center grid place-items-center w-10 h-10 mr-2.5 rounded-xl transition active:scale-95"
-          style={{ background: color, color: 'var(--on-accent)' }}
+          className="shrink-0 self-center grid place-items-center w-11 h-11 mr-2 rounded-xl bg-surface-2 transition active:scale-95"
+          style={{ color }}
         >
           <IconPlus size={20} />
         </button>

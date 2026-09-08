@@ -2,12 +2,12 @@ import { useSyncExternalStore } from 'react'
 
 export type Theme = 'quiet' | 'night' | 'adhd'
 
-const KEY = 'dz:theme'
+const KEY = 'dz:codex:theme'
 
 /** Цвет строки состояния телефона — должен совпадать с фоном темы. */
 const THEME_COLOR: Record<Theme, string> = {
-  quiet: '#e9ebee',
-  night: '#14161d',
+  quiet: '#f3f5f8',
+  night: '#101722',
   adhd: '#f7ee5e',
 }
 

@@ -6,12 +6,13 @@ import { DayScreen } from './screens/DayScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
 import { SubjectsScreen } from './screens/SubjectsScreen'
+import { UpdateNotice } from './components/UpdateNotice'
 
 export default function App() {
   const route = useRoute()
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="app-shell">
       {route.name === 'tasks' ? <TasksScreen /> : null}
       {route.name === 'calendar' ? <CalendarScreen /> : null}
       {/* key заставляет экран дня пересобраться при переходе между датами */}
@@ -20,6 +21,7 @@ export default function App() {
       {route.name === 'schedule' ? <ScheduleScreen /> : null}
       {route.name === 'subjects' ? <SubjectsScreen /> : null}
       <BottomNav route={route} />
+      <UpdateNotice />
     </div>
   )
 }

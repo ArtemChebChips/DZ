@@ -33,7 +33,7 @@ function Row({
 function Card({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <section className="mb-5">
-      {title ? <h2 className="text-[13px] text-muted mb-2 px-1">{title}</h2> : null}
+      {title ? <h2 className="text-[16px] font-semibold mb-3 px-1">{title}</h2> : null}
       <div className="bg-surface rounded-2xl border border-line overflow-hidden divide-y divide-line">
         {children}
       </div>
@@ -59,7 +59,9 @@ export function SettingsScreen() {
 
   async function upload(file: File) {
     try {
-      importJSON(await file.text())
+      const text = await file.text()
+      if (!confirm('Заменить задания и расписание в этой версии данными из файла?')) return
+      importJSON(text)
       setMessage('Данные загружены')
     } catch {
       setMessage('Не получилось прочитать файл')
@@ -78,7 +80,7 @@ export function SettingsScreen() {
         />
         <Toggle
           label="Режим сдвгшника"
-          hint="Кислотный жёлтый, чёрные обводки, всё орёт"
+          hint="Яркие акценты и чёткие границы"
           checked={theme === 'adhd'}
           onChange={(on) => setTheme(on ? 'adhd' : 'quiet')}
         />
@@ -99,8 +101,8 @@ export function SettingsScreen() {
 
       <Card title="Резервная копия">
         <div className="px-4 py-3.5">
-          <p className="text-[12px] text-muted mb-3">
-            Данные хранятся только на этом устройстве. Файл можно скинуть себе на другой телефон или другу.
+          <p className="text-[14px] text-muted mb-4">
+            Задания хранятся на этом устройстве. Чтобы перенести их из прежней версии, выгрузи там резервную копию и загрузи её сюда.
           </p>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={download} className="flex-1">

@@ -71,7 +71,7 @@ export function TaskEditor({
   }
 
   function remove() {
-    if (!task) return
+    if (!task || !confirm('Удалить это задание?')) return
     deleteTask(task.id)
     onClose()
   }
@@ -106,7 +106,8 @@ export function TaskEditor({
                   key={s.id}
                   type="button"
                   onClick={() => setSubjectId(s.id)}
-                  className={`flex items-center gap-2 pl-2.5 pr-3 h-9 rounded-xl border text-[14px] transition ${
+                  aria-pressed={active}
+                  className={`flex items-center gap-2 pl-2.5 pr-3 min-h-11 rounded-xl border text-[14px] transition ${
                     active ? 'border-accent bg-accent/10 text-ink' : 'border-line bg-surface-2 text-muted'
                   }`}
                 >
@@ -156,7 +157,8 @@ export function TaskEditor({
                     setDue(preset.date)
                     setDueTouched(true)
                   }}
-                  className={`flex items-center justify-between px-3 h-12 rounded-xl border transition ${
+                  aria-pressed={active}
+                  className={`flex items-center justify-between flex-wrap gap-1 px-3 py-3 min-h-12 rounded-xl border transition ${
                     active ? 'border-accent bg-accent/10' : 'border-line bg-surface-2'
                   }`}
                 >

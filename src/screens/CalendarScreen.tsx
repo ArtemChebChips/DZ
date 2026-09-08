@@ -5,6 +5,7 @@ import {
   WEEKDAYS_SHORT,
   addDays,
   diffDays,
+  formatFull,
   mondayOf,
   parseISO,
   todayISO,
@@ -58,24 +59,21 @@ export function CalendarScreen() {
 
   return (
     <Screen
-      title={`${MONTHS_NOM[month]} ${year}`}
-      subtitle="Тап по дню — расписание и задания"
-      left={
-        <IconButton onClick={() => shiftMonth(-1)} label="Предыдущий месяц">
-          <IconChevronLeft />
-        </IconButton>
-      }
-      right={
-        <IconButton onClick={() => shiftMonth(1)} label="Следующий месяц">
-          <IconChevronRight />
-        </IconButton>
-      }
+      title="Календарь"
+      subtitle="Расписание и сроки сдачи"
     >
+      <div className="calendar-month">
+        <h2>{MONTHS_NOM[month]} <span>{year}</span></h2>
+        <div className="flex">
+          <IconButton onClick={() => shiftMonth(-1)} label="Предыдущий месяц"><IconChevronLeft /></IconButton>
+          <IconButton onClick={() => shiftMonth(1)} label="Следующий месяц"><IconChevronRight /></IconButton>
+        </div>
+      </div>
       {/* Первая узкая колонка — метка чётности недели, чтобы не сорить ею в каждом дне. */}
       <div className="grid grid-cols-[1.4rem_repeat(7,1fr)] gap-1 mb-1 px-0.5">
         <span />
         {WEEKDAYS_SHORT.map((d) => (
-          <span key={d} className="text-center text-[11px] text-muted py-1">
+          <span key={d} className="text-center text-[12px] text-muted py-2">
             {d}
           </span>
         ))}
@@ -87,7 +85,8 @@ export function CalendarScreen() {
           return (
             <div key={week[0]} className="grid grid-cols-[1.4rem_repeat(7,1fr)] gap-1">
               <span
-                className={`grid place-items-center text-[11px] font-semibold rounded-lg ${
+                title={parity === 'num' ? 'Числитель' : 'Знаменатель'}
+                className={`grid place-items-center text-[12px] font-semibold rounded-lg ${
                   parity === 'num' ? 'text-accent' : 'text-warn'
                 }`}
               >
@@ -106,8 +105,10 @@ export function CalendarScreen() {
                   <button
                     key={iso}
                     type="button"
+                    aria-label={`${formatFull(iso)}${dots.length ? ', есть задания' : ''}`}
+                    aria-current={isToday ? 'date' : undefined}
                     onClick={() => navigate(routes.day(iso))}
-                    className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition active:scale-95 ${
+                    className={`aspect-square min-h-11 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition active:scale-95 ${
                       isToday
                         ? 'border-accent bg-accent/10'
                         : hasLessons
@@ -116,7 +117,7 @@ export function CalendarScreen() {
                     } ${otherMonth ? 'opacity-40' : ''}`}
                   >
                     <span
-                      className={`text-[14px] leading-none ${
+                      className={`text-[16px] leading-none ${
                         isToday ? 'text-accent font-semibold' : overdue ? 'text-danger' : ''
                       }`}
                     >
@@ -139,6 +140,7 @@ export function CalendarScreen() {
         })}
       </div>
 
+      <div className="calendar-legend"><span><b className="text-accent">Ч</b> — числитель</span><span><b className="text-warn">З</b> — знаменатель</span></div>
       <div className="flex gap-2 mt-4">
         <Button variant="ghost" onClick={() => setAnchor(today)} className="flex-1">
           Текущий месяц

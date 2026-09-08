@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Task } from '../types'
 import { useData } from '../store'
-import { addDays, formatFull, todayISO } from '../lib/dates'
+import { addDays, formatFull, todayISO, mondayOf, parseISO, WEEKDAYS_SHORT } from '../lib/dates'
 import { lessonsOn, parityLabel, parityOf } from '../lib/week'
 import { navigate, routes } from '../lib/router'
 import { Screen, EmptyState, IconButton } from '../components/ui'
@@ -61,6 +61,14 @@ export function DayScreen({ date }: { date: string }) {
           </IconButton>
         }
       >
+        <div className="day-strip" aria-label="Дни недели">
+          {Array.from({ length: 7 }, (_, i) => addDays(mondayOf(date), i)).map((iso, i) => (
+            <button key={iso} type="button" onClick={() => navigate(routes.day(iso))} aria-label={formatFull(iso)} aria-current={iso === date ? 'date' : undefined}>
+              <span>{WEEKDAYS_SHORT[i]}</span><strong>{parseISO(iso).getDate()}</strong>
+            </button>
+          ))}
+        </div>
+        <div className="day-summary"><span>{dayLessons.length} пар</span><span>{dayTasks.filter(t => !t.done).length} заданий к этому дню</span></div>
         {dayLessons.length === 0 && dayTasks.length === 0 ? (
           <EmptyState title="В этот день пар нет" hint="Можно всё равно записать задание кнопкой ниже" />
         ) : null}
@@ -103,10 +111,9 @@ export function DayScreen({ date }: { date: string }) {
         type="button"
         onClick={() => setEditor({ mode: 'new' })}
         aria-label="Добавить задание"
-        className="fixed right-4 bottom-24 z-30 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
-        style={{ color: 'var(--on-accent)' }}
+        className="fab"
       >
-        <IconPlus size={26} />
+        <IconPlus size={21} />Задание
       </button>
 
       {editor.mode !== 'closed' ? (

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { IconX } from './icons'
 
 export function Screen({
@@ -16,18 +16,22 @@ export function Screen({
 }) {
   return (
     <div className="min-h-dvh flex flex-col bg-bg">
-      <header className="safe-top sticky top-0 z-20 bg-bg/85 backdrop-blur-lg border-b border-line">
-        <div className="flex items-center gap-2 px-3 h-14">
+      <header className="screen-header">
+        <div className="brand-row">
+          <div className="brand"><span className="brand-mark">ДЗ</span><span>Задания и расписание</span></div>
+          <span className="edition">Codex</span>
+        </div>
+        <div className="heading-row">
           {left}
           <div className="min-w-0 flex-1">
-            <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
-            {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
+            <h1 className="display screen-title">{title}</h1>
+            {subtitle ? <p className="screen-subtitle">{subtitle}</p> : null}
           </div>
           {right}
         </div>
       </header>
       {/* Запас снизу — под нижнюю навигацию и домашнюю полоску айфона. */}
-      <main className="flex-1 px-3 pt-3 pb-28">{children}</main>
+      <main className="screen-main flex-1">{children}</main>
     </div>
   )
 }
@@ -48,7 +52,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`shrink-0 grid place-items-center w-10 h-10 rounded-xl active:scale-95 transition ${
+      className={`shrink-0 grid place-items-center w-11 h-11 rounded-xl active:scale-95 transition ${
         tone === 'danger' ? 'text-danger' : 'text-muted'
       } hover:bg-surface-2`}
     >
@@ -102,11 +106,33 @@ export function Sheet({
   title: ReactNode
   children: ReactNode
 }) {
+  const panel = useRef<HTMLDivElement>(null)
+  const layer = useRef<HTMLDivElement>(null)
+  const titleId = useId()
   useEffect(() => {
     if (!open) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (!panel.current?.contains(document.activeElement)) panel.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
+      if (e.key === 'Tab') {
+        const items = Array.from(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]') ?? []).filter(el => el.getClientRects().length > 0)
+        const first = items[0], last = items[items.length - 1]
+        if (!first) { e.preventDefault(); return }
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { e.preventDefault(); last.focus() }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
     }
+    const viewport = window.visualViewport
+    const fitViewport = () => {
+      if (layer.current && viewport) {
+        layer.current.style.height = `${viewport.height}px`
+        layer.current.style.top = `${viewport.offsetTop}px`
+      }
+    }
+    fitViewport()
+    viewport?.addEventListener('resize', fitViewport)
+    viewport?.addEventListener('scroll', fitViewport)
     // Пока панель открыта, фон за ней скроллиться не должен.
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -114,22 +140,25 @@ export function Sheet({
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
+      viewport?.removeEventListener('resize', fitViewport)
+      viewport?.removeEventListener('scroll', fitViewport)
+      if (previousFocus?.isConnected) previousFocus.focus()
     }
   }, [open, onClose])
 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div ref={layer} className="fixed inset-x-0 top-0 h-dvh z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/45" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-surface rounded-t-3xl border-t border-line max-h-[88dvh] flex flex-col">
+      <div ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="relative w-full max-w-lg bg-surface rounded-t-3xl border-t border-line max-h-[94%] flex flex-col outline-none">
         <div className="flex items-center gap-2 px-4 h-14 border-b border-line shrink-0">
-          <h2 className="display flex-1 text-[16px] font-bold truncate">{title}</h2>
+          <h2 id={titleId} className="display flex-1 text-[18px] font-bold truncate">{title}</h2>
           <IconButton onClick={onClose} label="Закрыть">
             <IconX />
           </IconButton>
         </div>
-        <div className="overflow-y-auto px-4 py-4 safe-bottom">{children}</div>
+        <div className="overflow-y-auto overscroll-contain px-5 py-5 safe-bottom">{children}</div>
       </div>
     </div>
   )
@@ -138,7 +167,7 @@ export function Sheet({
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block mb-4">
-      <span className="block text-[13px] text-muted mb-1.5">{label}</span>
+      <span className="block text-[14px] text-muted mb-2">{label}</span>
       {children}
     </label>
   )

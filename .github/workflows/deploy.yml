@@ -1,8 +1,8 @@
-name: Deploy to GitHub Pages
+name: Publish both app versions
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/redesign]
   workflow_dispatch:
 
 permissions:
@@ -18,21 +18,51 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Claude version
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: legacy
+      - name: Checkout Codex version
+        uses: actions/checkout@v4
+        with:
+          ref: codex/redesign
+          path: codex
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
+          cache-dependency-path: |
+            legacy/package-lock.json
+            codex/package-lock.json
       - run: npm ci
-      - run: npm run build
+        working-directory: legacy
+      - run: npm ci
+        working-directory: codex
+      - run: npm test
+        working-directory: codex
+      - name: Prepare legacy PWA coexistence
+        run: node codex/scripts/prepare-legacy.mjs legacy
         env:
-          # Pages отдаёт сайт из подпапки с именем репозитория.
+          LEGACY_BASE: /${{ github.event.repository.name }}/
+      - run: npm run build
+        working-directory: legacy
+        env:
           BASE_PATH: /${{ github.event.repository.name }}/
+      - run: npm run build
+        working-directory: codex
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/codex/
+      - name: Assemble both versions
+        run: node codex/scripts/assemble-pages.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
+    # Pages разрешает публикации из main. Ветка Codex проходит проверку;
+    # после push в неё можно запустить этот workflow вручную с ref main.
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:

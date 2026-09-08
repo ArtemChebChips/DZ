@@ -12,19 +12,20 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon-180.png'],
       manifest: {
-        name: 'ДЗ',
-        short_name: 'ДЗ',
+        id: base,
+        name: 'ДЗ · Codex',
+        short_name: 'ДЗ Codex',
         description: 'Домашние задания с учётом числителя и знаменателя',
         lang: 'ru',
         start_url: base,
         scope: base,
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0f1115',
-        theme_color: '#0f1115',
+        background_color: '#f3f5f8',
+        theme_color: '#f3f5f8',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -32,21 +33,22 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cacheId: 'dz-codex',
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
-        cleanupOutdatedCaches: true,
+        cleanupOutdatedCaches: false,
         // Шрифты лежат на Google Fonts, поэтому кешируем их отдельно — иначе
         // офлайн приложение откатится на системный шрифт.
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
             handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts-css' },
+            options: { cacheName: 'dz-codex-google-fonts-css' },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-files',
+              cacheName: 'dz-codex-google-fonts-files',
               expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
               cacheableResponse: { statuses: [0, 200] },
             },
