@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { AppData, Lesson, Settings, Subject, Task } from './types'
-import { mondayOf, todayISO } from './lib/dates'
+import { addDays, mondayOf, todayISO } from './lib/dates'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedule'
 
 const STORAGE_KEY = 'dz:data'
@@ -220,6 +220,46 @@ export function importJSON(text: string): void {
 /** Стереть задания, но сохранить расписание — для начала нового семестра. */
 export function clearTasks(): void {
   commit({ ...state, tasks: [] })
+}
+
+/**
+ * Набор заданий на разные сроки — чтобы посмотреть, как выглядит главный экран,
+ * не заполняя всё вручную. Временная кнопка в настройках, потом уберём.
+ */
+export function seedDemoTasks(): void {
+  const today = todayISO()
+  const samples: [string, string, number][] = [
+    ['phys', 'Отчёт по лабораторной о колебаниях', -3],
+    ['it', 'Лаба 2: доделать запросы к базе', -1],
+    ['matchem', 'Конспект §5, диаграммы состояния', 0],
+    ['prob', 'Домашка 2, вариант 12', 1],
+    ['innov', 'Прочитать главу к семинару', 2],
+    ['theory', 'Тезисы доклада, одна страница', 3],
+    ['metro', 'Оформить лабу по поверке', 4],
+    ['eng', 'Unit 4, упражнения 5–9 и слова', 7],
+    ['mech', 'Расчётно-графическая, первая часть', 9],
+    ['phys', 'Подготовиться к контрольной', 12],
+    ['mech', 'Курсовая: черновик расчётной части', 26],
+    ['theory', 'Доклад целиком, с презентацией', 40],
+  ]
+
+  const stamp = now()
+  const author = deviceId()
+  const demo: Task[] = samples
+    // Предмета может не быть, если расписание переписали руками.
+    .filter(([subjectId]) => state.subjects.some((s) => s.id === subjectId))
+    .map(([subjectId, title, offset]) => ({
+      id: uid(),
+      subjectId,
+      title,
+      due: addDays(today, offset),
+      done: false,
+      createdAt: stamp,
+      updatedAt: stamp,
+      authorId: author,
+    }))
+
+  commit({ ...state, tasks: [...state.tasks, ...demo] })
 }
 
 /** Заменить расписание целиком — этим я залью твоё настоящее расписание с фото. */

@@ -72,6 +72,7 @@ export function TaskEditor({
 
   function remove() {
     if (!task) return
+    if (!confirm(`Удалить задание «${task.title}»?`)) return
     deleteTask(task.id)
     onClose()
   }

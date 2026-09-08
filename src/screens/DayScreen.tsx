@@ -4,8 +4,9 @@ import { useData } from '../store'
 import { addDays, formatFull, todayISO } from '../lib/dates'
 import { lessonsOn, parityLabel, parityOf } from '../lib/week'
 import { navigate, routes } from '../lib/router'
+import { useSwipe } from '../lib/swipe'
 import { Screen, EmptyState, IconButton } from '../components/ui'
-import { IconChevronLeft, IconChevronRight, IconPlus } from '../components/icons'
+import { IconCalendar, IconChevronLeft, IconChevronRight, IconPlus } from '../components/icons'
 import { LessonCard } from '../components/LessonCard'
 import { TaskPill } from '../components/TaskPill'
 import { TaskEditor } from '../components/TaskEditor'
@@ -45,11 +46,18 @@ export function DayScreen({ date }: { date: string }) {
   const subtitle =
     isToday || isTomorrow ? `${formatFull(date)} · ${parityLabel(parity)}` : parityLabel(parity)
 
+  const swipe = useSwipe(
+    () => navigate(routes.day(addDays(date, 1))),
+    () => navigate(routes.day(addDays(date, -1))),
+  )
+
   return (
-    <>
+    <div {...swipe}>
       <Screen
         title={title}
         subtitle={subtitle}
+        onTitleClick={() => navigate(routes.calendar)}
+        titleHint={<IconCalendar size={18} />}
         left={
           <IconButton onClick={() => navigate(routes.day(addDays(date, -1)))} label="Предыдущий день">
             <IconChevronLeft />
@@ -117,6 +125,6 @@ export function DayScreen({ date }: { date: string }) {
           task={editor.mode === 'edit' ? editor.task : undefined}
         />
       ) : null}
-    </>
+    </div>
   )
 }

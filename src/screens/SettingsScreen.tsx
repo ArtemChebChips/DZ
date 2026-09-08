@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { clearTasks, exportJSON, importJSON, useData } from '../store'
+import { clearTasks, exportJSON, importJSON, seedDemoTasks, useData } from '../store'
 import { todayISO } from '../lib/dates'
 import { navigate, routes } from '../lib/router'
 import { setTheme, useTheme } from '../lib/theme'
@@ -122,6 +122,18 @@ export function SettingsScreen() {
             }}
           />
           {message ? <p className="text-[12px] text-accent mt-2">{message}</p> : null}
+        </div>
+      </Card>
+
+      <Card title="Пока тестируем">
+        <div className="px-4 py-3.5">
+          <p className="text-[12px] text-muted mb-3">
+            Добавит десяток заданий на разные сроки, чтобы посмотреть, как выглядит список.
+            Кнопка временная — уберём, когда наиграешься.
+          </p>
+          <Button variant="ghost" onClick={seedDemoTasks} className="w-full">
+            Накидать примеры заданий
+          </Button>
         </div>
       </Card>
 

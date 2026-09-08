@@ -1,10 +1,22 @@
 import { navigate, routes, type Route } from '../lib/router'
+import { todayISO } from '../lib/dates'
 import { IconCalendar, IconList, IconSettings } from './icons'
 
+/**
+ * Вкладка «День» всегда открывает сегодняшний день — заодно это и способ
+ * вернуться к сегодня, если улистал далеко вперёд или назад.
+ * Месяц спрятан за тапом по дате в шапке экрана дня.
+ */
 const TABS = [
-  { path: routes.tasks, label: 'Задачи', icon: IconList, match: ['tasks'] },
-  { path: routes.calendar, label: 'Календарь', icon: IconCalendar, match: ['calendar', 'day'] },
-  { path: routes.settings, label: 'Настройки', icon: IconSettings, match: ['settings', 'schedule', 'subjects'] },
+  { key: 'tasks', to: () => routes.tasks, label: 'Задачи', icon: IconList, match: ['tasks'] },
+  { key: 'day', to: () => routes.day(todayISO()), label: 'День', icon: IconCalendar, match: ['day', 'calendar'] },
+  {
+    key: 'settings',
+    to: () => routes.settings,
+    label: 'Настройки',
+    icon: IconSettings,
+    match: ['settings', 'schedule', 'subjects'],
+  },
 ]
 
 export function BottomNav({ route }: { route: Route }) {
@@ -16,9 +28,9 @@ export function BottomNav({ route }: { route: Route }) {
           const Icon = tab.icon
           return (
             <button
-              key={tab.path}
+              key={tab.key}
               type="button"
-              onClick={() => navigate(tab.path)}
+              onClick={() => navigate(tab.to())}
               className={`flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1 transition ${
                 active ? 'text-accent' : 'text-muted'
               }`}

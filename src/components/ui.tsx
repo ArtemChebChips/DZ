@@ -6,23 +6,44 @@ export function Screen({
   subtitle,
   left,
   right,
+  onTitleClick,
+  titleHint,
   children,
 }: {
   title: ReactNode
   subtitle?: ReactNode
   left?: ReactNode
   right?: ReactNode
+  /** Если задан, заголовок становится кнопкой. */
+  onTitleClick?: () => void
+  /** Иконка справа от заголовка — подсказка, что по нему можно нажать. */
+  titleHint?: ReactNode
   children: ReactNode
 }) {
+  const head = (
+    <>
+      <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
+      {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
+    </>
+  )
+
   return (
     <div className="min-h-dvh flex flex-col bg-bg">
       <header className="safe-top sticky top-0 z-20 bg-bg/85 backdrop-blur-lg border-b border-line">
         <div className="flex items-center gap-2 px-3 h-14">
           {left}
-          <div className="min-w-0 flex-1">
-            <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
-            {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
-          </div>
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              className="min-w-0 flex-1 flex items-center gap-1.5 text-left active:opacity-60 transition"
+            >
+              <span className="min-w-0">{head}</span>
+              {titleHint ? <span className="shrink-0 text-muted">{titleHint}</span> : null}
+            </button>
+          ) : (
+            <div className="min-w-0 flex-1">{head}</div>
+          )}
           {right}
         </div>
       </header>
