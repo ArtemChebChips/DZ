@@ -59,6 +59,7 @@ export function SettingsScreen() {
   }
 
   const screenInfo = [
+    `v${APP_VERSION}`,
     `экран ${window.screen.width}x${window.screen.height}`,
     `окно ${window.innerWidth}x${window.innerHeight}`,
     `body ${Math.round(document.body.getBoundingClientRect().height)}`,
@@ -158,7 +159,7 @@ export function SettingsScreen() {
       <Card title="Диагностика экрана">
         <div className="px-4 py-3.5">
           <p className="text-[12px] text-muted mb-2">
-            Нужно, чтобы разобраться с полосой внизу. Сфоткай и пришли.
+            Если «окно» ниже «экрана» — снизу останется полоса. Сфоткай и пришли.
           </p>
           <p className="text-[12px] font-mono leading-relaxed break-all">{screenInfo}</p>
         </div>
