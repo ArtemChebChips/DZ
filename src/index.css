@@ -55,7 +55,7 @@
 
   --radius-card: 12px;
   --radius-pill: 10px;
-  --border-w: 0px;
+  --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
   --on-accent: #ffffff;
@@ -63,19 +63,19 @@
 
 /* ---------- Тёмная: как в Telegram на iOS ---------- */
 :root[data-theme="night"] {
-  --c-bg: #000000;
-  --c-surface: #1c1c1d;
-  --c-surface-2: #2c2c2e;
-  --c-line: #2c2c2e;
+  --c-bg: #1c1c1d;
+  --c-surface: #2c2c2e;
+  --c-surface-2: #3a3a3c;
+  --c-line: #3d3d40;
   --c-ink: #ffffff;
   --c-muted: #8e8e93;
   --c-accent: #3390ec;
   --c-danger: #ff453a;
   --c-warn: #ff9f0a;
   --c-ok: #30d158;
-  --c-late: #2a1618;
-  --c-late-line: #3a2124;
-  --c-bar: #1c1c1d;
+  --c-late: #3a2124;
+  --c-late-line: #552e31;
+  --c-bar: #232325;
 
   --subj-blue: #3390ec;
   --subj-violet: #bf5af2;
@@ -91,7 +91,7 @@
 
   --radius-card: 12px;
   --radius-pill: 10px;
-  --border-w: 0px;
+  --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
   --on-accent: #ffffff;
@@ -135,9 +135,13 @@
 }
 
 @layer base {
+  /*
+   * Фон html — цвет нижней панели, а не экрана: в standalone iOS под
+   * зафиксированным body остаётся полоска, и она должна сливаться с панелью.
+   */
   html {
     height: 100%;
-    background: var(--c-bg);
+    background: var(--c-bar);
     -webkit-text-size-adjust: 100%;
   }
 

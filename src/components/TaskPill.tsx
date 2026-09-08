@@ -1,11 +1,10 @@
 import type { Subject, Task } from '../types'
 import { toggleTask } from '../store'
-import { colorOf } from '../lib/palette'
 import { IconCheck } from './icons'
 
 /**
- * Задача внутри блока дня. Кружок слева красится в цвет предмета и служит
- * чекбоксом: предмет опознаётся боковым зрением, отметить можно одним тапом.
+ * Задача внутри блока дня. Чекбокс одного цвета для всех предметов —
+ * пестрота из разноцветных кружков только мешала читать список.
  */
 export function TaskPill({
   task,
@@ -21,7 +20,6 @@ export function TaskPill({
   meta?: string
   showSubject?: boolean
 }) {
-  const color = colorOf(subject?.color)
   const caption = [showSubject ? subject?.short || subject?.name : null, meta]
     .filter(Boolean)
     .join(' · ')
@@ -32,12 +30,10 @@ export function TaskPill({
         type="button"
         aria-label={task.done ? 'Вернуть в работу' : 'Отметить выполненным'}
         onClick={() => toggleTask(task.id)}
-        className="shrink-0 grid place-items-center w-6 h-6 rounded-full border-2 transition active:scale-90"
-        style={{
-          borderColor: color,
-          background: task.done ? color : 'transparent',
-          color: 'var(--on-accent)',
-        }}
+        className={`shrink-0 grid place-items-center w-6 h-6 rounded-full border-2 transition active:scale-90 ${
+          task.done ? 'bg-accent border-accent' : 'border-muted/60'
+        }`}
+        style={task.done ? { color: 'var(--on-accent)' } : undefined}
       >
         {task.done ? <IconCheck size={14} /> : null}
       </button>
