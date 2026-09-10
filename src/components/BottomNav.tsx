@@ -19,6 +19,11 @@ const TABS = [
   },
 ]
 
+/**
+ * Панель нарочно висит капсулой, а не прижата к краю: на iPhone окно
+ * приложения короче экрана, и упереть её в нижнюю границу невозможно.
+ * Плавающая форма превращает этот зазор в поле вокруг панели.
+ */
 export function BottomNav({ route }: { route: Route }) {
   const activeIndex = Math.max(
     0,
@@ -26,13 +31,13 @@ export function BottomNav({ route }: { route: Route }) {
   )
 
   return (
-    <nav className="shrink-0 bg-bar border-t border-line safe-bottom">
-      <div className="relative flex max-w-lg mx-auto">
+    <nav className="shrink-0 px-3 pb-2 pt-1">
+      <div className="relative flex max-w-lg mx-auto bg-bar border border-line rounded-2xl p-1 shadow-lg shadow-black/10">
         {/* Подложка активной вкладки: переезжает, а не перекрашивается. */}
         <span
           aria-hidden
-          className="absolute top-1 bottom-1 left-0 w-1/3 rounded-xl bg-accent/12 transition-transform duration-300 ease-out motion-reduce:transition-none"
-          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+          className="absolute top-1 bottom-1 left-1 rounded-xl bg-accent/15 transition-transform duration-300 ease-out motion-reduce:transition-none"
+          style={{ width: 'calc((100% - 0.5rem) / 3)', transform: `translateX(${activeIndex * 100}%)` }}
         />
 
         {TABS.map((tab) => {
@@ -43,7 +48,7 @@ export function BottomNav({ route }: { route: Route }) {
               key={tab.key}
               type="button"
               onClick={() => navigate(tab.to())}
-              className={`relative flex-1 flex flex-col items-center gap-0.5 pt-2 pb-1.5 transition-colors ${
+              className={`relative flex-1 flex flex-col items-center gap-0.5 py-1.5 transition-colors ${
                 active ? 'text-accent' : 'text-muted'
               }`}
             >
