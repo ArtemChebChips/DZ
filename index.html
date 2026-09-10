@@ -12,9 +12,10 @@
     />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <!-- default, а не black-translucent: с translucent iOS укорачивает окно на
-         высоту статус-бара и прижимает его к верху, оставляя полосу внизу. -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent + viewport-fit=cover — единственная комбинация, при
+         которой iOS отдаёт окно во весь экран. Параметры читаются один раз,
+         когда иконку добавляют на домашний экран. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ДЗ" />
     <link rel="apple-touch-icon" href="icon-180.png" />
     <title>ДЗ</title>
