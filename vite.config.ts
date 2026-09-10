@@ -5,7 +5,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { readFileSync } from 'node:fs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
-// Время сборки в московском поясе — по нему видно, приехало ли обновление.
 const built = new Date().toLocaleString('ru-RU', {
   timeZone: 'Europe/Moscow',
   day: 'numeric',
@@ -41,8 +40,8 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         // Цвета заставки при запуске с иконки — под светлую тему «Тихий».
-        background_color: '#f2f2f7',
-        theme_color: '#f2f2f7',
+        background_color: '#e9ebee',
+        theme_color: '#e9ebee',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },

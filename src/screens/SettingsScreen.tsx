@@ -58,18 +58,6 @@ export function SettingsScreen() {
     URL.revokeObjectURL(url)
   }
 
-  const screenInfo = [
-    `v${APP_VERSION}`,
-    `экран ${window.screen.width}x${window.screen.height}`,
-    `окно ${window.innerWidth}x${window.innerHeight}`,
-    `body ${Math.round(document.body.getBoundingClientRect().height)}`,
-    `safe ${getComputedStyle(document.documentElement).getPropertyValue('--probe-top') || '?'}/${
-      getComputedStyle(document.documentElement).getPropertyValue('--probe-bottom') || '?'
-    }`,
-    `standalone ${window.matchMedia('(display-mode: standalone)').matches ? 'да' : 'нет'}`,
-    `dpr ${window.devicePixelRatio}`,
-  ].join(' · ')
-
   /** Сносит кеш и регистрацию service worker — лечит залипшую старую версию. */
   async function hardReload() {
     try {
@@ -95,7 +83,6 @@ export function SettingsScreen() {
 
   return (
     <Screen title="Настройки">
-      {/* Версия нужна, чтобы на телефоне сразу видеть, приехало ли обновление. */}
       <p className="text-[11px] text-muted text-center -mt-1 mb-3">
         версия {APP_VERSION} · сборка {BUILD_TIME}
       </p>
@@ -153,15 +140,6 @@ export function SettingsScreen() {
             }}
           />
           {message ? <p className="text-[12px] text-accent mt-2">{message}</p> : null}
-        </div>
-      </Card>
-
-      <Card title="Диагностика экрана">
-        <div className="px-4 py-3.5">
-          <p className="text-[12px] text-muted mb-2">
-            Если «окно» ниже «экрана» — снизу останется полоса. Сфоткай и пришли.
-          </p>
-          <p className="text-[12px] font-mono leading-relaxed break-all">{screenInfo}</p>
         </div>
       </Card>
 

@@ -18,83 +18,79 @@
   --color-ok: var(--c-ok);
   --color-late: var(--c-late);
   --color-late-line: var(--c-late-line);
-  --color-bar: var(--c-bar);
 
   --font-app: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-app);
 }
 
-/* ---------- Светлая: системные настройки iOS ---------- */
+/* ---------- Тихий: тема по умолчанию ---------- */
 :root {
-  --c-bg: #f2f2f7;
+  --c-bg: #e9ebee;
   --c-surface: #ffffff;
-  --c-surface-2: #f2f2f7;
-  --c-line: #d8d8dc;
-  --c-ink: #000000;
-  --c-muted: #8e8e93;
-  --c-accent: #007aff;
-  --c-danger: #ff3b30;
-  --c-warn: #ff9500;
-  --c-ok: #34c759;
-  --c-late: #ffeceb;
-  --c-late-line: #f5cfcc;
-  /* Панель и шапка — отдельный тон, иначе край экрана читается как дыра. */
-  --c-bar: #ffffff;
+  --c-surface-2: #f2f4f7;
+  --c-line: #dfe2e7;
+  --c-ink: #1b1f26;
+  --c-muted: #6a7280;
+  --c-accent: #3f6fb5;
+  --c-danger: #b23c34;
+  --c-warn: #a4682c;
+  --c-ok: #2f8a6a;
+  --c-late: #fdf0ef;
+  --c-late-line: #f2d4d1;
 
-  --subj-blue: #007aff;
-  --subj-violet: #af52de;
-  --subj-pink: #ff2d55;
-  --subj-red: #ff3b30;
-  --subj-orange: #ff9500;
-  --subj-amber: #c9a227;
-  --subj-lime: #7cb342;
-  --subj-green: #34c759;
-  --subj-teal: #00a3a3;
-  --subj-cyan: #32ade6;
-  --subj-slate: #8e8e93;
+  --subj-blue: #3f6fb5;
+  --subj-violet: #7256b0;
+  --subj-pink: #b4487c;
+  --subj-red: #c0554d;
+  --subj-orange: #a4682c;
+  --subj-amber: #8a7118;
+  --subj-lime: #5f7c1f;
+  --subj-green: #2f8a6a;
+  --subj-teal: #1d7f80;
+  --subj-cyan: #2d7391;
+  --subj-slate: #6b7383;
 
-  --radius-card: 12px;
-  --radius-pill: 10px;
+  --radius-card: 18px;
+  --radius-pill: 11px;
   --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
   --on-accent: #ffffff;
 }
 
-/* ---------- Тёмная: как в Telegram на iOS ---------- */
+/* ---------- Ночной мягкий ---------- */
 :root[data-theme="night"] {
-  --c-bg: #1c1c1d;
-  --c-surface: #2c2c2e;
-  --c-surface-2: #3a3a3c;
-  --c-line: #3d3d40;
-  --c-ink: #ffffff;
-  --c-muted: #8e8e93;
-  --c-accent: #3390ec;
-  --c-danger: #ff453a;
-  --c-warn: #ff9f0a;
-  --c-ok: #30d158;
-  --c-late: #3a2124;
-  --c-late-line: #552e31;
-  --c-bar: #232325;
+  --c-bg: #14161d;
+  --c-surface: #1d2029;
+  --c-surface-2: #262a35;
+  --c-line: #2c3140;
+  --c-ink: #e9ebf2;
+  --c-muted: #858da3;
+  --c-accent: #7aa2f7;
+  --c-danger: #ff7a70;
+  --c-warn: #e0a55c;
+  --c-ok: #63d9a8;
+  --c-late: #2a1c20;
+  --c-late-line: #3d2a2e;
 
-  --subj-blue: #3390ec;
-  --subj-violet: #bf5af2;
-  --subj-pink: #ff375f;
-  --subj-red: #ff453a;
-  --subj-orange: #ff9f0a;
-  --subj-amber: #ffd60a;
-  --subj-lime: #a3d84a;
-  --subj-green: #30d158;
-  --subj-teal: #40c8c8;
-  --subj-cyan: #64d2ff;
-  --subj-slate: #98989d;
+  --subj-blue: #7aa2f7;
+  --subj-violet: #b79cf0;
+  --subj-pink: #f091bc;
+  --subj-red: #ff8b83;
+  --subj-orange: #e0a55c;
+  --subj-amber: #d9c264;
+  --subj-lime: #bcd96a;
+  --subj-green: #63d9a8;
+  --subj-teal: #58ccc6;
+  --subj-cyan: #6ec5e8;
+  --subj-slate: #9aa3ba;
 
-  --radius-card: 12px;
-  --radius-pill: 10px;
-  --border-w: 1px;
+  --radius-card: 20px;
+  --radius-pill: 13px;
+  --border-w: 0px;
   --shadow-card: none;
   --pill-shadow: none;
-  --on-accent: #ffffff;
+  --on-accent: #10131a;
 }
 
 /* ---------- Режим сдвгшника ---------- */
@@ -111,7 +107,6 @@
   --c-ok: #157a4a;
   --c-late: #ff6b5e;
   --c-late-line: #12100b;
-  --c-bar: #fffdf2;
 
   --subj-blue: #2b5bd7;
   --subj-violet: #7b3fe4;
@@ -135,26 +130,24 @@
 }
 
 @layer base {
-  /*
-   * Ни html, ни body не скроллятся: страница занимает ровно экран, прокрутка
-   * живёт внутри списка. Заодно Safari не сворачивает адресную строку, и
-   * высота экрана перестаёт «дышать».
-   */
-  html,
-  body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
   html {
-    /* Зона за окном приложения — продолжение фона экрана, панель над ней висит. */
+    height: 100%;
     background: var(--c-bg);
     -webkit-text-size-adjust: 100%;
   }
 
+  /*
+   * Страница приклеена к экрану и не скроллится сама. Это убирает сразу две
+   * болячки iOS: резиновый отскок у края и «дыхание» высоты экрана, из-за
+   * которого нижняя панель уезжала вслед за адресной строкой Safari.
+   */
   body {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     background: var(--c-bg);
     color: var(--c-ink);
     font-family: var(--font-app);
@@ -182,7 +175,7 @@
 }
 
 @layer components {
-  /* Группа строк — как секция в системных настройках iOS. */
+  /* Крупный контейнер: блок недели, карточка пары, секция настроек. */
   .card {
     background: var(--c-surface);
     border: var(--border-w) solid var(--c-line);
@@ -196,6 +189,11 @@
     border: var(--border-w) solid var(--c-line);
     border-radius: var(--radius-pill);
     box-shadow: var(--pill-shadow);
+  }
+
+  /* Ночная тема живёт на однотонных плашках, ей рамка ни к чему. */
+  :root[data-theme="night"] .pill {
+    border-color: transparent;
   }
 
   .card-late {
@@ -214,24 +212,12 @@
   }
 }
 
-/* Зонды: через них диагностика в настройках читает реальные отступы iOS. */
-:root {
-  --probe-top: env(safe-area-inset-top, 0px);
-  --probe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Отступ под «чёлку». */
+/* Отступы под «чёлку» и домашнюю полоску айфона. */
 .safe-top {
   padding-top: env(safe-area-inset-top);
 }
 
-/*
- * Своего запаса снизу не делаем. На iPhone окно приложения короче экрана на
- * высоту статус-бара, и эти точки и так остаются под панелью — там же лежит
- * домашняя полоска. Собственный padding добавлял к ней вторую пустоту.
- * Зона за окном красится фоном html (--c-bar), поэтому выглядит продолжением
- * панели, а не дырой.
- */
+/* Панель прижата к самому низу: с любым запасом она читается как висящая. */
 .safe-bottom {
   padding-bottom: 0;
 }

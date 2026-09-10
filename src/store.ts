@@ -5,11 +5,8 @@ import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedul
 
 const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
-/**
- * 2 — время переехало с общей сетки звонков внутрь каждой пары.
- * 3 — цвет предмета стал означать вид аттестации.
- */
-const DATA_VERSION = 3
+/** 2 — время переехало с общей сетки звонков внутрь каждой пары. */
+const DATA_VERSION = 2
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -58,22 +55,9 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
   const lessonsUsable =
     Array.isArray(raw.lessons) && raw.lessons.every((l) => typeof l?.start === 'string' && l.start)
 
-  /*
-   * В третьей версии цвет предмета кодирует вид аттестации, поэтому у ранее
-   * сохранённых предметов подтягиваем цвет из умолчаний по их id.
-   */
-  const subjects =
-    lessonsUsable && Array.isArray(raw.subjects)
-      ? raw.subjects.map((subject) => {
-          if ((raw.version ?? 1) >= 3) return subject
-          const preset = base.subjects.find((s) => s.id === subject.id)
-          return preset ? { ...subject, color: preset.color } : subject
-        })
-      : base.subjects
-
   return {
     version: DATA_VERSION,
-    subjects,
+    subjects: lessonsUsable && Array.isArray(raw.subjects) ? raw.subjects : base.subjects,
     lessons: lessonsUsable ? raw.lessons! : base.lessons,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
     settings: {
