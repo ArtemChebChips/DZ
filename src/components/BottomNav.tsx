@@ -35,7 +35,7 @@ export function BottomNav({ route }: { route: Route }) {
                 active ? 'text-accent' : 'text-muted'
               }`}
             >
-              <Icon size={22} />
+              <Icon size={26} />
               <span className="text-[11px]">{tab.label}</span>
             </button>
           )
