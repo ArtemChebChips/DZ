@@ -219,5 +219,5 @@
 
 /* Небольшой запас: вплотную к краю подписи читаются как обрезанные. */
 .safe-bottom {
-  padding-bottom: 8px;
+  padding-bottom: 16px;
 }
