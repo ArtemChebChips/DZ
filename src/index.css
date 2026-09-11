@@ -50,8 +50,8 @@
   --subj-cyan: #32ade6;
   --subj-slate: #8e8e93;
 
-  --radius-card: 12px;
-  --radius-pill: 10px;
+  --radius-card: 15px;
+  --radius-pill: 13px;
   --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
@@ -86,8 +86,8 @@
   --subj-cyan: #64d2ff;
   --subj-slate: #98989d;
 
-  --radius-card: 12px;
-  --radius-pill: 10px;
+  --radius-card: 15px;
+  --radius-pill: 13px;
   --border-w: 0px;
   --shadow-card: none;
   --pill-shadow: none;
@@ -121,8 +121,8 @@
   --subj-cyan: #1098ad;
   --subj-slate: #495057;
 
-  --radius-card: 4px;
-  --radius-pill: 3px;
+  --radius-card: 5px;
+  --radius-pill: 4px;
   --border-w: 2.5px;
   --shadow-card: 4px 4px 0 #12100b;
   --pill-shadow: 2px 2px 0 #12100b;

@@ -96,11 +96,7 @@ function WeekBlock({
         const overdue = left < 0
         return (
           <div key={day.date}>
-            <p
-              className={`text-[11.5px] font-semibold text-muted pb-1.5 pt-2 px-0.5 ${
-                index > 0 ? 'border-t border-line mt-1' : ''
-              }`}
-            >
+            <p className={`text-[13px] font-semibold text-ink/75 pb-1.5 px-0.5 ${index > 0 ? 'pt-3.5' : 'pt-1'}`}>
               {dayLabel(day.date)}
               {left === 0 ? ' · сегодня' : left === 1 ? ' · завтра' : ''}
             </p>
