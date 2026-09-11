@@ -48,7 +48,7 @@ export function Screen({
         </div>
       </header>
       {/* Скроллится только содержимое: панель снизу тогда не ездит по экрану. */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-6">
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-28">
         {children}
       </main>
     </div>

@@ -210,7 +210,7 @@ export function TasksScreen() {
         type="button"
         onClick={() => setEditing('new')}
         aria-label="Добавить задание"
-        className="absolute right-4 bottom-20 z-30 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
+        className="absolute right-4 bottom-28 z-40 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
         style={{ color: 'var(--on-accent)' }}
       >
         <IconPlus size={26} />

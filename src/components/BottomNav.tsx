@@ -26,9 +26,9 @@ export function BottomNav({ route }: { route: Route }) {
   )
 
   return (
-    <nav className="shrink-0 px-3 pt-1 safe-bottom">
+    <nav className="absolute z-30 inset-x-0 bottom-0 px-3 pointer-events-none safe-bottom">
       {/* Панель — пузырь, оторванный от краёв экрана, как в Telegram. */}
-      <div className="relative flex max-w-lg mx-auto rounded-full bg-surface border border-line p-1 shadow-lg shadow-black/10">
+      <div className="pointer-events-auto relative flex max-w-lg mx-auto rounded-full bg-surface border border-line p-1 shadow-lg shadow-black/20">
         {/* Подложка активной вкладки переезжает, а не перекрашивается. */}
         <span
           aria-hidden
