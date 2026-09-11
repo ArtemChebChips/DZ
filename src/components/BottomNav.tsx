@@ -20,9 +20,25 @@ const TABS = [
 ]
 
 export function BottomNav({ route }: { route: Route }) {
+  const activeIndex = Math.max(
+    0,
+    TABS.findIndex((tab) => tab.match.includes(route.name)),
+  )
+
   return (
-    <nav className="shrink-0 bg-bg border-t border-line safe-bottom">
-      <div className="flex max-w-lg mx-auto">
+    <nav className="shrink-0 px-3 pt-1 safe-bottom">
+      {/* Панель — пузырь, оторванный от краёв экрана, как в Telegram. */}
+      <div className="relative flex max-w-lg mx-auto rounded-full bg-surface border border-line p-1 shadow-lg shadow-black/10">
+        {/* Подложка активной вкладки переезжает, а не перекрашивается. */}
+        <span
+          aria-hidden
+          className="absolute z-0 top-1 bottom-1 rounded-full bg-surface-2 transition-[left] duration-300 ease-out motion-reduce:transition-none"
+          style={{
+            width: `calc((100% - 0.5rem) / ${TABS.length})`,
+            left: `calc(0.25rem + ${activeIndex} * (100% - 0.5rem) / ${TABS.length})`,
+          }}
+        />
+
         {TABS.map((tab) => {
           const active = tab.match.includes(route.name)
           const Icon = tab.icon
@@ -31,8 +47,8 @@ export function BottomNav({ route }: { route: Route }) {
               key={tab.key}
               type="button"
               onClick={() => navigate(tab.to())}
-              className={`flex-1 flex flex-col items-center gap-0.5 pt-1.5 pb-0.5 transition ${
-                active ? 'text-accent' : 'text-muted'
+              className={`relative z-10 flex-1 flex flex-col items-center gap-0.5 py-2 rounded-full transition-colors ${
+                active ? 'text-ink' : 'text-muted'
               }`}
             >
               <Icon size={26} />
