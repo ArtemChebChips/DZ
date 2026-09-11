@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { clearTasks, exportJSON, importJSON, seedDemoTasks, useData } from '../store'
+import { clearTasks, exportJSON, importJSON, seedDemoTasks, updateSettings, useData } from '../store'
 import { todayISO } from '../lib/dates'
 import { APP_VERSION, BUILD_TIME } from '../types'
 import { navigate, routes } from '../lib/router'
@@ -43,7 +43,7 @@ function Card({ children, title }: { children: React.ReactNode; title?: string }
 }
 
 export function SettingsScreen() {
-  const { subjects, lessons, tasks } = useData()
+  const { subjects, lessons, tasks, settings } = useData()
   const theme = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
@@ -99,6 +99,15 @@ export function SettingsScreen() {
           hint="Кислотный жёлтый, чёрные обводки, всё орёт"
           checked={theme === 'adhd'}
           onChange={(on) => setTheme(on ? 'adhd' : 'quiet')}
+        />
+      </Card>
+
+      <Card title="Задачи">
+        <Toggle
+          label="Оставлять выполненные"
+          hint="Задание остаётся зачёркнутым, а не исчезает сразу"
+          checked={settings.keepDoneVisible}
+          onChange={(on) => updateSettings({ keepDoneVisible: on })}
         />
       </Card>
 

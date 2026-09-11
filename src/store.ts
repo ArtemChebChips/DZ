@@ -32,7 +32,7 @@ export function deviceId(): string {
 }
 
 function freshData(): AppData {
-  const settings: Settings = { anchorMonday: ANCHOR_MONDAY }
+  const settings: Settings = { anchorMonday: ANCHOR_MONDAY, keepDoneVisible: true }
   return {
     version: DATA_VERSION,
     subjects: DEFAULT_SUBJECTS,
@@ -66,6 +66,7 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
     settings: {
       anchorMonday: raw.settings?.anchorMonday || base.settings.anchorMonday,
+      keepDoneVisible: raw.settings?.keepDoneVisible ?? true,
     },
   }
 }

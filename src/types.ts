@@ -66,6 +66,8 @@ export type Task = {
 export type Settings = {
   /** Понедельник недели, которая точно числитель. От него считается вся чётность. */
   anchorMonday: string
+  /** Выполненное остаётся в списке зачёркнутым, а не исчезает сразу. */
+  keepDoneVisible: boolean
 }
 
 export type AppData = {

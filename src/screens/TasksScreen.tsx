@@ -45,6 +45,11 @@ function byDays(tasks: Task[]): DayGroup[] {
  * Раскладывает задания по неделям. В воскресенье учебная неделя уже кончилась,
  * поэтому «этой» считаем ту, что начинается завтра — иначе блок вечно пустой.
  */
+/** В счётчике блока показываем только то, что ещё предстоит сделать. */
+function undone(tasks: Task[]): number {
+  return tasks.filter((t) => !t.done).length
+}
+
 function buildBuckets(tasks: Task[]): Bucket[] {
   const today = todayISO()
   const thisWeekStart = weekdayOf(today) === 7 ? addDays(today, 1) : today
@@ -64,11 +69,11 @@ function buildBuckets(tasks: Task[]): Bucket[] {
   }
 
   return [
-    { key: 'overdue', title: 'Просрочено', late: true, days: byDays(overdue), count: overdue.length },
-    { key: 'this', title: 'Эта неделя', days: byDays(thisWeek), count: thisWeek.length },
-    { key: 'next', title: 'Следующая неделя', days: byDays(nextWeek), count: nextWeek.length },
-    { key: 'later', title: 'Больше недели', days: byDays(later), count: later.length },
-  ].filter((bucket) => bucket.count > 0)
+    { key: 'overdue', title: 'Просрочено', late: true, days: byDays(overdue), count: undone(overdue) },
+    { key: 'this', title: 'Эта неделя', days: byDays(thisWeek), count: undone(thisWeek) },
+    { key: 'next', title: 'Следующая неделя', days: byDays(nextWeek), count: undone(nextWeek) },
+    { key: 'later', title: 'Больше недели', days: byDays(later), count: undone(later) },
+  ].filter((bucket) => bucket.days.length > 0)
 }
 
 function WeekBlock({
@@ -131,18 +136,19 @@ export function TasksScreen() {
 
   const bySubject = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects])
 
-  const open = useMemo(
+  const sorted = useMemo(
     () =>
-      tasks
-        .filter((t) => !t.done)
-        .sort((a, b) => a.due.localeCompare(b.due) || a.createdAt.localeCompare(b.createdAt)),
+      [...tasks].sort((a, b) => a.due.localeCompare(b.due) || a.createdAt.localeCompare(b.createdAt)),
     [tasks],
   )
+  const open = useMemo(() => sorted.filter((t) => !t.done), [sorted])
+  // Выполненное либо остаётся зачёркнутым на своём месте, либо прячется вниз.
+  const visible = settings.keepDoneVisible ? sorted : open
   const done = useMemo(
     () => tasks.filter((t) => t.done).sort((a, b) => b.due.localeCompare(a.due)),
     [tasks],
   )
-  const buckets = useMemo(() => buildBuckets(open), [open])
+  const buckets = useMemo(() => buildBuckets(visible), [visible])
 
   const parity = parityLabel(parityOf(todayISO(), settings.anchorMonday))
   const subtitle =
@@ -176,7 +182,7 @@ export function TasksScreen() {
           ))}
         </div>
 
-        {done.length > 0 ? (
+        {!settings.keepDoneVisible && done.length > 0 ? (
           <section className="mt-4">
             <button
               type="button"
