@@ -23,74 +23,75 @@
   --font-display: var(--font-app);
 }
 
-/* ---------- Тихий: тема по умолчанию ---------- */
+/* ---------- Светлая: как системные настройки iOS ---------- */
 :root {
-  --c-bg: #e9ebee;
+  --c-bg: #f2f2f7;
   --c-surface: #ffffff;
-  --c-surface-2: #f2f4f7;
-  --c-line: #dfe2e7;
-  --c-ink: #1b1f26;
-  --c-muted: #6a7280;
-  --c-accent: #3f6fb5;
-  --c-danger: #b23c34;
-  --c-warn: #a4682c;
-  --c-ok: #2f8a6a;
-  --c-late: #fdf0ef;
-  --c-late-line: #f2d4d1;
+  --c-surface-2: #f2f2f7;
+  --c-line: #d8d8dc;
+  --c-ink: #000000;
+  --c-muted: #8e8e93;
+  --c-accent: #007aff;
+  --c-danger: #ff3b30;
+  --c-warn: #ff9500;
+  --c-ok: #34c759;
+  --c-late: #ffeceb;
+  --c-late-line: #f5cfcc;
 
-  --subj-blue: #3f6fb5;
-  --subj-violet: #7256b0;
-  --subj-pink: #b4487c;
-  --subj-red: #c0554d;
-  --subj-orange: #a4682c;
-  --subj-amber: #8a7118;
-  --subj-lime: #5f7c1f;
-  --subj-green: #2f8a6a;
-  --subj-teal: #1d7f80;
-  --subj-cyan: #2d7391;
-  --subj-slate: #6b7383;
+  --subj-blue: #007aff;
+  --subj-violet: #af52de;
+  --subj-pink: #ff2d55;
+  --subj-red: #ff3b30;
+  --subj-orange: #ff9500;
+  --subj-amber: #c9a227;
+  --subj-lime: #7cb342;
+  --subj-green: #34c759;
+  --subj-teal: #00a3a3;
+  --subj-cyan: #32ade6;
+  --subj-slate: #8e8e93;
 
-  --radius-card: 18px;
-  --radius-pill: 11px;
+  --radius-card: 12px;
+  --radius-pill: 10px;
   --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
   --on-accent: #ffffff;
 }
 
-/* ---------- Ночной мягкий ---------- */
+/* ---------- Тёмная: как в Telegram на iOS ---------- */
 :root[data-theme="night"] {
-  --c-bg: #14161d;
-  --c-surface: #1d2029;
-  --c-surface-2: #262a35;
-  --c-line: #2c3140;
-  --c-ink: #e9ebf2;
-  --c-muted: #858da3;
-  --c-accent: #7aa2f7;
-  --c-danger: #ff7a70;
-  --c-warn: #e0a55c;
-  --c-ok: #63d9a8;
-  --c-late: #2a1c20;
-  --c-late-line: #3d2a2e;
+  /* Фон серый, а карточки светлее него — иначе экран выглядит провалом. */
+  --c-bg: #1c1c1d;
+  --c-surface: #2c2c2e;
+  --c-surface-2: #3a3a3c;
+  --c-line: #3d3d40;
+  --c-ink: #ffffff;
+  --c-muted: #8e8e93;
+  --c-accent: #3390ec;
+  --c-danger: #ff453a;
+  --c-warn: #ff9f0a;
+  --c-ok: #30d158;
+  --c-late: #3a2124;
+  --c-late-line: #552e31;
 
-  --subj-blue: #7aa2f7;
-  --subj-violet: #b79cf0;
-  --subj-pink: #f091bc;
-  --subj-red: #ff8b83;
-  --subj-orange: #e0a55c;
-  --subj-amber: #d9c264;
-  --subj-lime: #bcd96a;
-  --subj-green: #63d9a8;
-  --subj-teal: #58ccc6;
-  --subj-cyan: #6ec5e8;
-  --subj-slate: #9aa3ba;
+  --subj-blue: #3390ec;
+  --subj-violet: #bf5af2;
+  --subj-pink: #ff375f;
+  --subj-red: #ff453a;
+  --subj-orange: #ff9f0a;
+  --subj-amber: #ffd60a;
+  --subj-lime: #a3d84a;
+  --subj-green: #30d158;
+  --subj-teal: #40c8c8;
+  --subj-cyan: #64d2ff;
+  --subj-slate: #98989d;
 
-  --radius-card: 20px;
-  --radius-pill: 13px;
+  --radius-card: 12px;
+  --radius-pill: 10px;
   --border-w: 0px;
   --shadow-card: none;
   --pill-shadow: none;
-  --on-accent: #10131a;
+  --on-accent: #ffffff;
 }
 
 /* ---------- Режим сдвгшника ---------- */
