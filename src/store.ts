@@ -5,8 +5,8 @@ import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedul
 
 const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
-/** 2 — время переехало с общей сетки звонков внутрь каждой пары. */
-const DATA_VERSION = 2
+/** 3 — у предмета вместо ключа цвета появился вид аттестации. */
+const DATA_VERSION = 3
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -57,7 +57,11 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
 
   return {
     version: DATA_VERSION,
-    subjects: lessonsUsable && Array.isArray(raw.subjects) ? raw.subjects : base.subjects,
+    // У предметов из старых версий вида аттестации нет — считаем их зачётными.
+    subjects:
+      lessonsUsable && Array.isArray(raw.subjects)
+        ? raw.subjects.map((s) => ({ ...s, assessment: s.assessment ?? 'credit' }))
+        : base.subjects,
     lessons: lessonsUsable ? raw.lessons! : base.lessons,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
     settings: {
@@ -154,7 +158,11 @@ export function deleteTask(id: string): void {
 
 // --- предметы --------------------------------------------------------------
 
-export function addSubject(input: { name: string; short?: string; color: string }): Subject {
+export function addSubject(input: {
+  name: string
+  short?: string
+  assessment: Subject['assessment']
+}): Subject {
   const subject: Subject = { id: uid(), ...input, updatedAt: now() }
   commit({ ...state, subjects: [...state.subjects, subject] })
   return subject

@@ -11,7 +11,7 @@ import {
   toISO,
 } from '../lib/dates'
 import { lessonsOn, parityOf, parityShort } from '../lib/week'
-import { colorOf } from '../lib/palette'
+import { subjectColor } from '../lib/palette'
 import { navigate, routes } from '../lib/router'
 import { Screen, IconButton, Button } from '../components/ui'
 import { IconChevronLeft, IconChevronRight } from '../components/icons'
@@ -46,7 +46,7 @@ export function CalendarScreen() {
     const map = new Map<string, string[]>()
     for (const task of tasks) {
       if (task.done) continue
-      const color = colorOf(bySubject.get(task.subjectId)?.color)
+      const color = subjectColor(bySubject.get(task.subjectId)?.assessment)
       const list = map.get(task.due) ?? []
       if (!list.includes(color)) list.push(color)
       map.set(task.due, list)

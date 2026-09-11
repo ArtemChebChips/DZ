@@ -8,8 +8,8 @@ import type { Lesson, Subject } from '../types'
 
 const STAMP = '2026-09-06T00:00:00.000Z'
 
-const S = (id: string, name: string, short: string, color: string): Subject => ({
-  id, name, short, color, updatedAt: STAMP,
+const S = (id: string, name: string, short: string, assessment: Subject['assessment']): Subject => ({
+  id, name, short, assessment, updatedAt: STAMP,
 })
 
 const L = (
@@ -28,17 +28,17 @@ const L = (
 })
 
 export const DEFAULT_SUBJECTS: Subject[] = [
-  S('phys', 'Физика и естествознание', 'Физика', 'blue'),
-  S('matchem', 'Материаловедение и химия', 'Материаловедение', 'orange'),
-  S('innov', 'Инновации в технике и управлении', 'Инновации', 'violet'),
-  S('mech', 'Прикладная механика', 'Механика', 'teal'),
-  S('prob', 'Основы теории вероятностей и математической статистики', 'Теорвер', 'pink'),
-  S('eng', 'Иностранный язык', 'Иностранный', 'lime'),
-  S('pe', 'Элективный курс по физической культуре и спорту', 'Физра', 'green'),
-  S('theory', 'Теория инноваций', 'Теория инноваций', 'amber'),
-  S('it', 'Информационные технологии', 'ИТ', 'red'),
-  S('metro', 'Метрология, стандартизация и сертификация', 'Метрология', 'cyan'),
-  S('vuc', 'ВУЦ', 'ВУЦ', 'slate'),
+  S('phys', 'Физика и естествознание', 'Физика', 'exam'),
+  S('matchem', 'Материаловедение и химия', 'Материаловедение', 'credit'),
+  S('innov', 'Инновации в технике и управлении', 'Инновации', 'credit'),
+  S('mech', 'Прикладная механика', 'Механика', 'dist'),
+  S('prob', 'Основы теории вероятностей и математической статистики', 'Теорвер', 'exam'),
+  S('eng', 'Иностранный язык', 'Иностранный', 'credit'),
+  S('pe', 'Элективный курс по физической культуре и спорту', 'Физра', 'credit'),
+  S('theory', 'Теория инноваций', 'Теория инноваций', 'credit'),
+  S('it', 'Информационные технологии', 'ИТ', 'credit'),
+  S('metro', 'Метрология, стандартизация и сертификация', 'Метрология', 'dist'),
+  S('vuc', 'ВУЦ', 'ВУЦ', 'other'),
 ]
 
 export const DEFAULT_LESSONS: Lesson[] = [

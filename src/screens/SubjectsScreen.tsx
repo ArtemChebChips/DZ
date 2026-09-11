@@ -1,22 +1,22 @@
 import { useState } from 'react'
 import type { Subject } from '../types'
 import { addSubject, deleteSubject, updateSubject, useData } from '../store'
-import { PALETTE_KEYS, colorOf, pickColor } from '../lib/palette'
+import { ASSESSMENTS, assessmentLabel, subjectColor } from '../lib/palette'
 import { goBack } from '../lib/router'
 import { Screen, Button, Field, Sheet, IconButton, EmptyState, inputClass } from '../components/ui'
 import { IconChevronLeft, IconPlus, IconTrash } from '../components/icons'
 
 function SubjectForm({ subject, onClose }: { subject?: Subject; onClose: () => void }) {
-  const { subjects, lessons, tasks } = useData()
+  const { lessons, tasks } = useData()
   const [name, setName] = useState(subject?.name ?? '')
   const [short, setShort] = useState(subject?.short ?? '')
-  const [color, setColor] = useState(subject?.color ?? pickColor(subjects.map((s) => s.color)))
+  const [assessment, setAssessment] = useState<Subject['assessment']>(subject?.assessment ?? 'credit')
 
   function save() {
     const payload = {
       name: name.trim(),
       short: short.trim() || undefined,
-      color,
+      assessment,
     }
     if (!payload.name) return
     if (subject) updateSubject(subject.id, payload)
@@ -56,19 +56,25 @@ function SubjectForm({ subject, onClose }: { subject?: Subject; onClose: () => v
           className={inputClass}
         />
       </Field>
-      <Field label="Цвет">
-        <div className="flex flex-wrap gap-2">
-          {PALETTE_KEYS.map((key) => (
+      <Field label="Чем заканчивается">
+        <div className="flex gap-1.5 flex-wrap">
+          {ASSESSMENTS.map((option) => (
             <button
-              key={key}
+              key={option.value}
               type="button"
-              onClick={() => setColor(key)}
-              aria-label={key}
-              className={`w-9 h-9 rounded-xl border-2 transition ${
-                color === key ? 'border-ink scale-110' : 'border-transparent'
+              onClick={() => setAssessment(option.value)}
+              className={`flex items-center gap-2 px-3 h-10 rounded-xl border text-[14px] transition ${
+                assessment === option.value
+                  ? 'border-accent bg-accent/10 text-ink'
+                  : 'border-line bg-surface-2 text-muted'
               }`}
-              style={{ background: colorOf(key) }}
-            />
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ background: subjectColor(option.value) }}
+              />
+              {option.label}
+            </button>
           ))}
         </div>
       </Field>
@@ -100,7 +106,7 @@ export function SubjectsScreen() {
     <>
       <Screen
         title="Предметы"
-        subtitle="Название и цвет"
+        subtitle="Название и вид аттестации"
         left={
           <IconButton onClick={goBack} label="Назад">
             <IconChevronLeft />
@@ -126,12 +132,12 @@ export function SubjectsScreen() {
               >
                 <span
                   className="w-3 h-3 rounded-full shrink-0"
-                  style={{ background: colorOf(subject.color) }}
+                  style={{ background: subjectColor(subject.assessment) }}
                 />
                 <span className="flex-1 min-w-0">
                   <span className="block text-[15px] truncate">{subject.name}</span>
                   <span className="block text-[12px] text-muted truncate">
-                    {`${count} пар в расписании`}
+                    {`${assessmentLabel(subject.assessment)} · ${count} пар`}
                   </span>
                 </span>
               </button>

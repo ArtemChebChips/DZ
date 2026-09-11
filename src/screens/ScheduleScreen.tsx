@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import type { Lesson, Weekday } from '../types'
+import type { Lesson, Subject, Weekday } from '../types'
 import { addLesson, addSubject, deleteLesson, setThisWeekAsNumerator, updateLesson, useData } from '../store'
 import { WEEKDAYS_FULL, todayISO } from '../lib/dates'
-import { PALETTE_KEYS, colorOf, pickColor } from '../lib/palette'
+import { ASSESSMENTS, subjectColor } from '../lib/palette'
 import { parityLabel, parityOf } from '../lib/week'
 import { goBack } from '../lib/router'
 import { Screen, Button, Field, Sheet, IconButton, EmptyState, inputClass } from '../components/ui'
@@ -61,15 +61,14 @@ function Segmented<T extends string>({
 
 /** Заводит предмет, не выходя из формы пары. */
 function NewSubjectInline({ onCreated }: { onCreated: (id: string) => void }) {
-  const { subjects } = useData()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [color, setColor] = useState(() => pickColor(subjects.map((s) => s.color)))
+  const [assessment, setAssessment] = useState<Subject['assessment']>('credit')
 
   function create() {
     const clean = name.trim()
     if (!clean) return
-    const subject = addSubject({ name: clean, short: shortFrom(clean), color })
+    const subject = addSubject({ name: clean, short: shortFrom(clean), assessment })
     onCreated(subject.id)
     setName('')
     setOpen(false)
@@ -100,20 +99,11 @@ function NewSubjectInline({ onCreated }: { onCreated: (id: string) => void }) {
         placeholder="Название предмета"
         className={inputClass}
       />
-      <div className="flex flex-wrap gap-1.5">
-        {PALETTE_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setColor(key)}
-            aria-label={key}
-            className={`w-7 h-7 rounded-lg border-2 transition ${
-              color === key ? 'border-ink scale-110' : 'border-transparent'
-            }`}
-            style={{ background: colorOf(key) }}
-          />
-        ))}
-      </div>
+      <Segmented
+        value={assessment}
+        options={ASSESSMENTS.map((a) => ({ value: a.value, label: a.label }))}
+        onChange={setAssessment}
+      />
       <div className="flex gap-2">
         <Button variant="ghost" onClick={() => setOpen(false)} className="flex-1">
           Отмена
@@ -186,7 +176,7 @@ function LessonForm({
                   : 'border-line bg-surface-2 text-muted'
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: colorOf(s.color) }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: subjectColor(s.assessment) }} />
               {s.short || s.name}
             </button>
           ))}
@@ -363,7 +353,7 @@ export function ScheduleScreen() {
                       >
                         <span
                           className="w-1 self-stretch rounded-full shrink-0"
-                          style={{ background: colorOf(subject?.color) }}
+                          style={{ background: subjectColor(subject?.assessment) }}
                         />
                         <span className="w-11 shrink-0 text-[12px] leading-tight text-muted tabular-nums">
                           {lesson.start}

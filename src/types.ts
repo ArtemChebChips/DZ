@@ -10,6 +10,9 @@ export type WeekParity = 'num' | 'denom' | 'both'
 
 export type LessonKind = 'lecture' | 'seminar' | 'lab' | 'other'
 
+/** Чем заканчивается предмет — от этого зависит его цвет в интерфейсе. */
+export type Assessment = 'exam' | 'dist' | 'credit' | 'other'
+
 /** Понедельник = 1 ... суббота = 6. Воскресенья в расписании не бывает. */
 export type Weekday = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -18,8 +21,7 @@ export type Subject = {
   name: string
   /** Короткое имя для узких мест вроде клеток календаря. */
   short?: string
-  /** Ключ палитры из lib/palette.ts. */
-  color: string
+  assessment: Assessment
   updatedAt: string
 }
 

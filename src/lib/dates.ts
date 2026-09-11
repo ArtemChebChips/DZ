@@ -95,3 +95,12 @@ export function humanDue(due: string, from: string = todayISO()): string {
   }
   return `через ${n} ${plural(n, 'день', 'дня', 'дней')}`
 }
+
+/** Длительность пары в минутах по строкам 'HH:MM'. */
+export function minutesBetween(start: string, end: string): number {
+  const toMinutes = (value: string) => {
+    const [h, m] = value.split(':').map(Number)
+    return h * 60 + m
+  }
+  return Math.max(0, toMinutes(end) - toMinutes(start))
+}

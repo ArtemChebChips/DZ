@@ -1,35 +1,26 @@
+import type { Assessment, LessonKind } from '../types'
+
 /**
- * Цвета предметов. В Subject.color лежит только ключ, а сам цвет живёт в CSS
- * переменной — так он подстраивается под тему: в ночной те же предметы
- * должны светиться, а не темнеть.
+ * Цвет несёт смысл: он говорит, чем предмет заканчивается. Лабораторные
+ * выделены отдельно — по ним чаще всего и висят долги.
  */
-export const PALETTE_KEYS = [
-  'blue',
-  'violet',
-  'pink',
-  'red',
-  'orange',
-  'amber',
-  'lime',
-  'green',
-  'teal',
-  'cyan',
-  'slate',
-] as const
+export const ASSESSMENTS: { value: Assessment; label: string; short: string }[] = [
+  { value: 'exam', label: 'Экзамен', short: 'экз' },
+  { value: 'dist', label: 'Распределённый экзамен', short: 'р. экз' },
+  { value: 'credit', label: 'Зачёт', short: 'зач' },
+  { value: 'other', label: 'Без аттестации', short: '—' },
+]
 
-export type ColorKey = (typeof PALETTE_KEYS)[number]
-
-/** Значения для превью в редакторе предметов — берутся из активной темы. */
-export function colorOf(key: string | undefined): string {
-  const safe = key && (PALETTE_KEYS as readonly string[]).includes(key) ? key : 'slate'
-  return `var(--subj-${safe})`
+export function assessmentLabel(value: Assessment): string {
+  return ASSESSMENTS.find((a) => a.value === value)?.label ?? 'Зачёт'
 }
 
-/** Цвет для следующего предмета — берём наименее занятый. */
-export function pickColor(used: string[]): string {
-  const counts = new Map<string, number>(PALETTE_KEYS.map((k) => [k, 0]))
-  for (const c of used) if (counts.has(c)) counts.set(c, counts.get(c)! + 1)
-  let best: string = PALETTE_KEYS[0]
-  for (const k of PALETTE_KEYS) if (counts.get(k)! < counts.get(best)!) best = k
-  return best
+/** Цвет предмета — по виду аттестации. */
+export function subjectColor(assessment?: Assessment): string {
+  return `var(--a-${assessment ?? 'credit'})`
+}
+
+/** Цвет конкретной пары: у лабораторных он свой, независимо от аттестации. */
+export function lessonColor(assessment?: Assessment, kind?: LessonKind): string {
+  return kind === 'lab' ? 'var(--a-lab)' : subjectColor(assessment)
 }

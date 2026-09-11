@@ -3,7 +3,7 @@ import type { Task } from '../types'
 import { addTask, deleteTask, updateTask, useData } from '../store'
 import { formatCompact, humanDue, todayISO } from '../lib/dates'
 import { nextLessonDates } from '../lib/week'
-import { colorOf } from '../lib/palette'
+import { subjectColor } from '../lib/palette'
 import { Button, Field, Sheet, inputClass } from './ui'
 import { IconTrash } from './icons'
 
@@ -86,7 +86,7 @@ export function TaskEditor({
           <span className="flex items-center gap-2 min-w-0">
             <span
               className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ background: colorOf(subject.color) }}
+              style={{ background: subjectColor(subject.assessment) }}
             />
             <span className="truncate">{subject.short || subject.name}</span>
           </span>
@@ -113,7 +113,7 @@ export function TaskEditor({
                 >
                   <span
                     className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ background: colorOf(s.color) }}
+                    style={{ background: subjectColor(s.assessment) }}
                   />
                   {s.short || s.name}
                 </button>
