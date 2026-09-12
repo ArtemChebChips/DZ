@@ -3,7 +3,7 @@ import type { Subject, Task } from '../types'
 import { seedDemoTasks, useData } from '../store'
 import {
   MONTHS_GEN,
-  WEEKDAYS_FULL,
+  WEEKDAYS_SHORT,
   addDays,
   diffDays,
   formatDayMonth,
@@ -24,13 +24,6 @@ import { TaskEditor } from '../components/TaskEditor'
 type DayGroup = { date: string; tasks: Task[] }
 type Bucket = { key: string; title: string; late?: boolean; days: DayGroup[]; count: number }
 
-/** «Понедельник, 7 сентября» */
-function dayLabel(iso: string): string {
-  const d = parseISO(iso)
-  const weekday = WEEKDAYS_FULL[weekdayOf(iso) - 1]
-  return `${weekday[0].toUpperCase()}${weekday.slice(1)}, ${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`
-}
-
 function byDays(tasks: Task[]): DayGroup[] {
   const map = new Map<string, Task[]>()
   for (const task of tasks) {
@@ -43,15 +36,15 @@ function byDays(tasks: Task[]): DayGroup[] {
     .map(([date, list]) => ({ date, tasks: list }))
 }
 
-/**
- * Раскладывает задания по неделям. В воскресенье учебная неделя уже кончилась,
- * поэтому «этой» считаем ту, что начинается завтра — иначе блок вечно пустой.
- */
 /** В счётчике блока показываем только то, что ещё предстоит сделать. */
 function undone(tasks: Task[]): number {
   return tasks.filter((t) => !t.done).length
 }
 
+/**
+ * Раскладывает задания по неделям. В воскресенье учебная неделя уже кончилась,
+ * поэтому «актуальной» считаем ту, что начинается завтра — иначе блок вечно пустой.
+ */
 function buildBuckets(tasks: Task[]): Bucket[] {
   const today = todayISO()
   const thisWeekStart = weekdayOf(today) === 7 ? addDays(today, 1) : today
@@ -78,6 +71,35 @@ function buildBuckets(tasks: Task[]): Bucket[] {
   ].filter((bucket) => bucket.days.length > 0)
 }
 
+/**
+ * Число дня крупно в колонке слева — дата становится осью, по которой глаз
+ * ведёт список. Ширина колонки фиксирована, поэтому все плашки стоят ровно.
+ */
+function DateColumn({ date }: { date: string }) {
+  const today = todayISO()
+  const left = diffDays(today, date)
+  const d = parseISO(date)
+  const otherMonth = d.getMonth() !== parseISO(today).getMonth()
+
+  const caption =
+    left === 0
+      ? 'сегодня'
+      : left === 1
+        ? 'завтра'
+        : otherMonth
+          ? MONTHS_GEN[d.getMonth()].slice(0, 3)
+          : WEEKDAYS_SHORT[weekdayOf(date) - 1]
+
+  const tone = left === 0 ? 'text-accent' : left < 0 ? 'text-danger' : 'text-ink'
+
+  return (
+    <div className="w-13 shrink-0 pt-2 text-center">
+      <div className={`text-[23px] font-bold leading-none tabular-nums ${tone}`}>{d.getDate()}</div>
+      <div className="text-[9.5px] font-semibold uppercase tracking-wide text-muted mt-1">{caption}</div>
+    </div>
+  )
+}
+
 function WeekBlock({
   bucket,
   bySubject,
@@ -94,7 +116,7 @@ function WeekBlock({
   const today = todayISO()
 
   return (
-    <section className={`card px-3 pt-3 ${collapsed ? 'pb-3' : 'pb-1'} ${bucket.late ? 'card-late' : ''}`}>
+    <section className={`card px-3 pt-3 ${collapsed ? 'pb-3' : 'pb-2.5'} ${bucket.late ? 'card-late' : ''}`}>
       {/* Шапка целиком служит кнопкой: промахнуться мимо мелкой стрелки легко. */}
       <button
         type="button"
@@ -102,52 +124,48 @@ function WeekBlock({
         aria-expanded={!collapsed}
         className="w-full flex items-center gap-2 px-0.5"
       >
-        {/* Счётчик слева уравновешивает стрелку справа, чтобы название встало по центру. */}
-        <span className="w-6 text-[12px] text-muted tabular-nums text-left">{bucket.count}</span>
-        <h2 className={`display flex-1 text-[14px] font-bold text-center ${bucket.late ? 'text-danger' : ''}`}>
+        {/* Счётчик слева и стрелка справа одной ширины — название стоит по центру. */}
+        <span className="w-7 text-left text-[12px] text-muted tabular-nums">{bucket.count}</span>
+        <h2 className={`display flex-1 text-center text-[14px] font-bold ${bucket.late ? 'text-danger' : ''}`}>
           {bucket.title}
         </h2>
-        <IconChevronDown
-          size={18}
-          className={`text-muted transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
-        />
+        <span className="w-7 flex justify-end">
+          <IconChevronDown
+            size={18}
+            className={`text-muted transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+          />
+        </span>
       </button>
 
-      {collapsed
-        ? null
-        : bucket.days.map((day, index) => {
-        const left = diffDays(today, day.date)
-        const overdue = left < 0
-        return (
-          <div key={day.date}>
-            <p
-              className={`text-[13px] font-semibold text-ink/75 text-center pb-1.5 px-0.5 ${
-                index > 0 ? 'pt-3.5' : 'pt-1'
-              }`}
-            >
-              {dayLabel(day.date)}
-              {left === 0 ? ' · сегодня' : left === 1 ? ' · завтра' : ''}
-            </p>
-            <div className="flex flex-col gap-1.5 pb-1.5">
-              {day.tasks.map((task) => (
-                <TaskPill
-                  key={task.id}
-                  task={task}
-                  subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
-                  onOpen={() => onOpenTask(task)}
-                  meta={
-                    overdue
-                      ? `${-left} ${plural(-left, 'день', 'дня', 'дней')} назад`
-                      : bucket.key === 'later'
-                        ? `через ${left} ${plural(left, 'день', 'дня', 'дней')}`
-                        : undefined
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        )
+      {collapsed ? null : (
+        <div className="mt-2.5 flex flex-col gap-3">
+          {bucket.days.map((day) => {
+            const left = diffDays(today, day.date)
+            return (
+              <div key={day.date} className="flex gap-1.5">
+                <DateColumn date={day.date} />
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  {day.tasks.map((task) => (
+                    <TaskPill
+                      key={task.id}
+                      task={task}
+                      subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
+                      onOpen={() => onOpenTask(task)}
+                      meta={
+                        left < 0
+                          ? `${-left} ${plural(-left, 'день', 'дня', 'дней')} назад`
+                          : bucket.key === 'later'
+                            ? `через ${left} ${plural(left, 'день', 'дня', 'дней')}`
+                            : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            )
           })}
+        </div>
+      )}
     </section>
   )
 }
@@ -183,7 +201,7 @@ export function TasksScreen() {
   return (
     <>
       <Screen title="Задачи" subtitle={subtitle}>
-        {open.length === 0 ? (
+        {open.length === 0 && !(settings.keepDoneVisible && done.length > 0) ? (
           <EmptyState
             title="Заданий нет"
             hint="Добавь своё кнопкой ниже или открой нужный день во вкладке «День»"
@@ -216,7 +234,7 @@ export function TasksScreen() {
             <button
               type="button"
               onClick={() => setShowDone((v) => !v)}
-              className="text-[13px] text-muted px-1 py-2"
+              className="w-full text-center text-[13px] text-muted py-2"
             >
               {showDone ? 'Скрыть выполненные' : `Выполненные (${done.length})`}
             </button>
@@ -251,10 +269,7 @@ export function TasksScreen() {
       </button>
 
       {editing ? (
-        <TaskEditor
-          onClose={() => setEditing(null)}
-          task={editing === 'new' ? undefined : editing}
-        />
+        <TaskEditor onClose={() => setEditing(null)} task={editing === 'new' ? undefined : editing} />
       ) : null}
     </>
   )

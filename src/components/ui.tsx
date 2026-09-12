@@ -6,52 +6,29 @@ export function Screen({
   subtitle,
   left,
   right,
-  onTitleClick,
-  titleHint,
   children,
 }: {
   title: ReactNode
   subtitle?: ReactNode
   left?: ReactNode
   right?: ReactNode
-  /** Если задан, заголовок становится кнопкой. */
-  onTitleClick?: () => void
-  /** Иконка справа от заголовка — подсказка, что по нему можно нажать. */
-  titleHint?: ReactNode
   children: ReactNode
 }) {
-  const head = (
-    <>
-      <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
-      {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
-    </>
-  )
-
-  /* Кнопки по краям шапки занимают одинаковую ширину, иначе заголовок
-   * по центру съезжает в ту сторону, где кнопки нет. */
-  const side = 'w-10 shrink-0 flex justify-center'
+  /*
+   * Боковые слоты всегда одной ширины, даже пустые: заголовок стоит строго
+   * по центру экрана и не зависит от того, что лежит по краям.
+   */
+  const side = 'w-11 shrink-0 flex justify-center'
 
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-bg">
       <header className="safe-top shrink-0 bg-bg border-b border-line">
         <div className="flex items-center gap-1 px-3 h-14">
           <span className={side}>{left}</span>
-          {onTitleClick ? (
-            <button
-              type="button"
-              onClick={onTitleClick}
-              className="min-w-0 flex-1 flex items-center justify-center gap-3.5 text-center active:opacity-60 transition"
-            >
-              <span className="min-w-0">{head}</span>
-              {titleHint ? (
-                <span className="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-surface-2 text-muted">
-                  {titleHint}
-                </span>
-              ) : null}
-            </button>
-          ) : (
-            <div className="min-w-0 flex-1 text-center">{head}</div>
-          )}
+          <div className="min-w-0 flex-1 text-center">
+            <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
+            {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
+          </div>
           <span className={side}>{right}</span>
         </div>
       </header>

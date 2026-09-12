@@ -189,7 +189,14 @@ export function TaskPill({
         tabIndex={openedForDelete ? 0 : -1}
         aria-hidden={!openedForDelete}
         className="absolute inset-y-0 right-0 flex items-center justify-center gap-1.5 bg-danger text-[14px] font-semibold"
-        style={{ width: ACTION_W, color: 'var(--on-accent)', borderRadius: 'var(--radius-pill)' }}
+        style={{
+          width: ACTION_W,
+          color: 'var(--on-accent)',
+          borderRadius: 'var(--radius-pill)',
+          // В покое кнопка скрыта: иначе её край просвечивает красной каймой
+          // по скруглённому углу плашки.
+          opacity: Math.min(1, Math.max(0, -dx) / 24),
+        }}
       >
         <IconTrash size={17} />
         Удалить

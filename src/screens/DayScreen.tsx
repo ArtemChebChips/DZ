@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import type { Task } from '../types'
 import { useData } from '../store'
-import { addDays, formatFull, todayISO } from '../lib/dates'
-import { lessonsOn, parityLabel, parityOf } from '../lib/week'
+import { WEEKDAYS_FULL, addDays, formatDayMonth, formatFull, todayISO, weekdayOf } from '../lib/dates'
+import { lessonsOn, parityLabel, parityOf, parityShort } from '../lib/week'
 import { navigate, routes } from '../lib/router'
 import { useSwipe } from '../lib/swipe'
 import { haptic } from '../lib/haptics'
-import { Screen, EmptyState, IconButton } from '../components/ui'
-import { IconCalendar, IconChevronLeft, IconChevronRight, IconPlus } from '../components/icons'
+import { Screen, EmptyState } from '../components/ui'
+import { IconCalendar, IconPlus } from '../components/icons'
 import { LessonCard } from '../components/LessonCard'
 import { TaskPill } from '../components/TaskPill'
 import { TaskEditor } from '../components/TaskEditor'
@@ -16,6 +16,9 @@ type EditorState =
   | { mode: 'closed' }
   | { mode: 'new'; subjectId?: string }
   | { mode: 'edit'; task: Task }
+
+/** Квадрат шапки: бейдж слева и кнопка справа одного размера — шапка симметрична. */
+const headSquare = 'grid place-items-center w-10 h-10 rounded-xl bg-surface-2'
 
 export function DayScreen({ date }: { date: string }) {
   const { subjects, lessons, tasks, settings } = useData()
@@ -46,9 +49,8 @@ export function DayScreen({ date }: { date: string }) {
   const parity = parityOf(date, settings.anchorMonday)
   const isToday = date === todayISO()
   const isTomorrow = date === addDays(todayISO(), 1)
-  const title = isToday ? 'Сегодня' : isTomorrow ? 'Завтра' : formatFull(date)
-  const subtitle =
-    isToday || isTomorrow ? `${formatFull(date)} · ${parityLabel(parity)}` : parityLabel(parity)
+  const title = isToday ? 'Сегодня' : isTomorrow ? 'Завтра' : formatDayMonth(date)
+  const subtitle = isToday || isTomorrow ? formatFull(date) : WEEKDAYS_FULL[weekdayOf(date) - 1]
 
   const swipe = useSwipe(
     () => navigate(routes.day(addDays(date, 1))),
@@ -60,17 +62,27 @@ export function DayScreen({ date }: { date: string }) {
       <Screen
         title={title}
         subtitle={subtitle}
-        onTitleClick={() => navigate(routes.calendar)}
-        titleHint={<IconCalendar size={23} />}
         left={
-          <IconButton onClick={() => navigate(routes.day(addDays(date, -1)))} label="Предыдущий день">
-            <IconChevronLeft />
-          </IconButton>
+          <span
+            className={`${headSquare} text-[15px] font-bold ${parity === 'num' ? 'text-accent' : 'text-warn'}`}
+            title={parityLabel(parity)}
+            aria-label={parityLabel(parity)}
+          >
+            {parityShort(parity)}
+          </span>
         }
         right={
-          <IconButton onClick={() => navigate(routes.day(addDays(date, 1)))} label="Следующий день">
-            <IconChevronRight />
-          </IconButton>
+          <button
+            type="button"
+            onClick={() => {
+              haptic()
+              navigate(routes.calendar)
+            }}
+            aria-label="Открыть календарь"
+            className={`${headSquare} text-ink active:scale-95 transition`}
+          >
+            <IconCalendar size={22} />
+          </button>
         }
       >
         {dayLessons.length === 0 && dayTasks.length === 0 ? (
@@ -96,7 +108,7 @@ export function DayScreen({ date }: { date: string }) {
 
         {tasksWithoutLesson.length > 0 ? (
           <section className="card px-3 pt-3 pb-3 mt-4">
-            <h2 className="display text-[14px] font-bold mb-2 px-0.5">Сдать в этот день</h2>
+            <h2 className="display text-[14px] font-bold mb-2 px-0.5 text-center">Сдать в этот день</h2>
             <div className="flex flex-col gap-1.5">
               {tasksWithoutLesson.map((task) => (
                 <TaskPill
