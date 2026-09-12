@@ -100,12 +100,13 @@ function WeekBlock({
         type="button"
         onClick={onToggle}
         aria-expanded={!collapsed}
-        className="w-full flex items-center gap-2 px-0.5 text-left"
+        className="w-full flex items-center gap-2 px-0.5"
       >
-        <h2 className={`display flex-1 text-[14px] font-bold ${bucket.late ? 'text-danger' : ''}`}>
+        {/* Счётчик слева уравновешивает стрелку справа, чтобы название встало по центру. */}
+        <span className="w-6 text-[12px] text-muted tabular-nums text-left">{bucket.count}</span>
+        <h2 className={`display flex-1 text-[14px] font-bold text-center ${bucket.late ? 'text-danger' : ''}`}>
           {bucket.title}
         </h2>
-        <span className="text-[12px] text-muted tabular-nums">{bucket.count}</span>
         <IconChevronDown
           size={18}
           className={`text-muted transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
@@ -119,7 +120,11 @@ function WeekBlock({
         const overdue = left < 0
         return (
           <div key={day.date}>
-            <p className={`text-[13px] font-semibold text-ink/75 pb-1.5 px-0.5 ${index > 0 ? 'pt-3.5' : 'pt-1'}`}>
+            <p
+              className={`text-[13px] font-semibold text-ink/75 text-center pb-1.5 px-0.5 ${
+                index > 0 ? 'pt-3.5' : 'pt-1'
+              }`}
+            >
               {dayLabel(day.date)}
               {left === 0 ? ' · сегодня' : left === 1 ? ' · завтра' : ''}
             </p>

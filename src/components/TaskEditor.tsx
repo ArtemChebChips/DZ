@@ -3,7 +3,7 @@ import type { Task } from '../types'
 import { addTask, deleteTask, updateTask, useData } from '../store'
 import { formatCompact, humanDue, todayISO } from '../lib/dates'
 import { nextLessonDates } from '../lib/week'
-import { subjectColor } from '../lib/palette'
+import { ASSESSMENTS, subjectColor } from '../lib/palette'
 import { Button, Field, Sheet, inputClass } from './ui'
 import { DayPicker } from './DayPicker'
 import { IconTrash } from './icons'
@@ -94,11 +94,53 @@ export function TaskEditor({
     >
       {locked ? null : (
         <Field label="Предмет">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2.5">
+            {/* Предметы сгруппированы по виду аттестации: так в списке из
+             * десятка названий видно, что важнее, а цвет получает объяснение. */}
+            {ASSESSMENTS.map((group) => {
+              const items = subjects.filter((s) => s.assessment === group.value)
+              if (items.length === 0) return null
+              return (
+                <div key={group.value}>
+                  <p className="flex items-center gap-1.5 text-[11px] text-muted mb-1.5">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: subjectColor(group.value) }}
+                    />
+                    {group.label}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {items.map((s) => {
+                      const active = s.id === subjectId
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setSubjectId(s.id)}
+                          className="px-3 h-9 rounded-xl border text-[14px] transition"
+                          style={
+                            active
+                              ? {
+                                  borderColor: subjectColor(s.assessment),
+                                  background: subjectColor(s.assessment),
+                                  color: 'var(--on-accent)',
+                                }
+                              : { borderColor: subjectColor(s.assessment), color: 'var(--c-ink)' }
+                          }
+                        >
+                          {s.short || s.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+
             <button
               type="button"
               onClick={() => setSubjectId('')}
-              className={`px-3 h-9 rounded-xl border text-[14px] transition ${
+              className={`self-start px-3 h-9 rounded-xl border text-[14px] transition ${
                 subjectId === ''
                   ? 'border-accent bg-accent/10 text-ink'
                   : 'border-line bg-surface-2 text-muted'
@@ -106,25 +148,6 @@ export function TaskEditor({
             >
               Без предмета
             </button>
-            {subjects.map((s) => {
-              const active = s.id === subjectId
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSubjectId(s.id)}
-                  className={`flex items-center gap-2 pl-2.5 pr-3 h-9 rounded-xl border text-[14px] transition ${
-                    active ? 'border-accent bg-accent/10 text-ink' : 'border-line bg-surface-2 text-muted'
-                  }`}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ background: subjectColor(s.assessment) }}
-                  />
-                  {s.short || s.name}
-                </button>
-              )
-            })}
           </div>
         </Field>
       )}

@@ -27,24 +27,32 @@ export function Screen({
     </>
   )
 
+  /* Кнопки по краям шапки занимают одинаковую ширину, иначе заголовок
+   * по центру съезжает в ту сторону, где кнопки нет. */
+  const side = 'w-10 shrink-0 flex justify-center'
+
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-bg">
       <header className="safe-top shrink-0 bg-bg border-b border-line">
-        <div className="flex items-center gap-2 px-3 h-14">
-          {left}
+        <div className="flex items-center gap-1 px-3 h-14">
+          <span className={side}>{left}</span>
           {onTitleClick ? (
             <button
               type="button"
               onClick={onTitleClick}
-              className="min-w-0 flex-1 flex items-center gap-1.5 text-left active:opacity-60 transition"
+              className="min-w-0 flex-1 flex items-center justify-center gap-2 text-center active:opacity-60 transition"
             >
               <span className="min-w-0">{head}</span>
-              {titleHint ? <span className="shrink-0 text-muted">{titleHint}</span> : null}
+              {titleHint ? (
+                <span className="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-surface-2 text-muted">
+                  {titleHint}
+                </span>
+              ) : null}
             </button>
           ) : (
-            <div className="min-w-0 flex-1">{head}</div>
+            <div className="min-w-0 flex-1 text-center">{head}</div>
           )}
-          {right}
+          <span className={side}>{right}</span>
         </div>
       </header>
       {/* Скроллится только содержимое: панель снизу тогда не ездит по экрану. */}

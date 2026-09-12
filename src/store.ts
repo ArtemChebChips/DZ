@@ -8,8 +8,11 @@ const DEFAULT_ASSESSMENT = new Map(DEFAULT_SUBJECTS.map((s) => [s.id, s.assessme
 
 const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
-/** 3 — у предмета вместо ключа цвета появился вид аттестации. */
-const DATA_VERSION = 3
+/**
+ * 4 — разовая починка вида аттестации. Версия 3 записала всем предметам
+ * «зачёт», поэтому мало проверить «если не задано»: нужно перезаписать.
+ */
+const DATA_VERSION = 4
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -61,20 +64,13 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
    */
   const lessonsUsable =
     Array.isArray(raw.lessons) && raw.lessons.every((l) => typeof l?.start === 'string' && l.start)
+  const needsRepair = (raw.version ?? 0) < 4
 
   return {
     version: DATA_VERSION,
-    /*
-     * У предметов из старых версий вида аттестации нет. Сначала пробуем взять
-     * его из умолчаний по тому же id — иначе всё расписание станет зачётным
-     * и цвета перестанут отличаться.
-     */
     subjects:
       lessonsUsable && Array.isArray(raw.subjects)
-        ? raw.subjects.map((s) => ({
-            ...s,
-            assessment: s.assessment ?? DEFAULT_ASSESSMENT.get(s.id) ?? 'credit',
-          }))
+        ? raw.subjects.map((s) => ({ ...s, assessment: assessmentFor(s, needsRepair) }))
         : base.subjects,
     lessons: lessonsUsable ? raw.lessons! : base.lessons,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
@@ -84,6 +80,16 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
       haptics: raw.settings?.haptics ?? true,
     },
   }
+}
+
+/**
+ * Вид аттестации предмета. До версии 4 он мог быть ошибочно записан как
+ * «зачёт» всем подряд, поэтому у знакомых предметов берём его из умолчаний.
+ */
+function assessmentFor(subject: Subject, repair: boolean): Subject['assessment'] {
+  const known = DEFAULT_ASSESSMENT.get(subject.id)
+  if (repair && known) return known
+  return subject.assessment ?? known ?? 'credit'
 }
 
 function load(): AppData {

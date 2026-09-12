@@ -117,25 +117,18 @@ export function DayPicker({
                 haptic()
                 onChange(iso)
               }}
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 text-[13px] transition ${
-                selected ? 'bg-accent font-semibold' : hasLesson ? 'bg-accent/12' : ''
+              className={`aspect-square rounded-xl grid place-items-center text-[13px] transition ${
+                selected
+                  ? 'bg-accent font-semibold'
+                  : hasLesson
+                    ? 'bg-accent/20 font-semibold text-accent'
+                    : ''
               } ${otherMonth && !selected ? 'opacity-35' : ''} ${
-                iso === today && !selected ? 'text-accent font-semibold' : ''
+                iso === today && !selected && !hasLesson ? 'text-accent' : ''
               }`}
               style={selected ? { color: 'var(--on-accent)' } : undefined}
             >
               {d.getDate()}
-              {/* Точка под числом — в этот день у предмета есть пара. */}
-              <span
-                className="w-1 h-1 rounded-full"
-                style={{
-                  background: hasLesson
-                    ? selected
-                      ? 'var(--on-accent)'
-                      : 'var(--c-accent)'
-                    : 'transparent',
-                }}
-              />
             </button>
           )
         })}
@@ -143,7 +136,7 @@ export function DayPicker({
 
       {subjectId ? (
         <p className="text-[11px] text-muted text-center mt-1.5">
-          Точкой отмечены дни, когда есть пара по этому предмету
+          Подсвечены дни, когда есть пара по этому предмету
         </p>
       ) : null}
     </div>

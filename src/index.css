@@ -27,7 +27,8 @@
 :root {
   --c-bg: #f2f2f7;
   --c-surface: #ffffff;
-  --c-surface-2: #f2f2f7;
+  /* Плашка задачи темнее карточки: так она читается как вложенная. */
+  --c-surface-2: #e9e9ef;
   --c-line: #d8d8dc;
   --c-ink: #000000;
   --c-muted: #8e8e93;
@@ -44,8 +45,8 @@
   --a-lab: #34c759;
   --a-other: #8e8e93;
 
-  --radius-card: 15px;
-  --radius-pill: 13px;
+  --radius-card: 17px;
+  --radius-pill: 15px;
   --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
@@ -57,7 +58,8 @@
   /* Фон серый, а карточки светлее него — иначе экран выглядит провалом. */
   --c-bg: #1c1c1d;
   --c-surface: #2c2c2e;
-  --c-surface-2: #3a3a3c;
+  /* Плашка задачи темнее карточки: так она читается как вложенная. */
+  --c-surface-2: #232325;
   --c-line: #3d3d40;
   --c-ink: #ffffff;
   --c-muted: #8e8e93;
@@ -74,8 +76,8 @@
   --a-lab: #30d158;
   --a-other: #98989d;
 
-  --radius-card: 15px;
-  --radius-pill: 13px;
+  --radius-card: 17px;
+  --radius-pill: 15px;
   --border-w: 1px;
   --shadow-card: none;
   --pill-shadow: none;
@@ -103,8 +105,8 @@
   --a-lab: #0ca678;
   --a-other: #495057;
 
-  --radius-card: 5px;
-  --radius-pill: 4px;
+  --radius-card: 6px;
+  --radius-pill: 5px;
   --border-w: 2.5px;
   --shadow-card: 4px 4px 0 #12100b;
   --pill-shadow: 2px 2px 0 #12100b;
