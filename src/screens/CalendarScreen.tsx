@@ -46,7 +46,7 @@ export function CalendarScreen() {
     const map = new Map<string, string[]>()
     for (const task of tasks) {
       if (task.done) continue
-      const color = subjectColor(bySubject.get(task.subjectId)?.assessment)
+      const color = subjectColor(task.subjectId ? bySubject.get(task.subjectId)?.assessment : 'other')
       const list = map.get(task.due) ?? []
       if (!list.includes(color)) list.push(color)
       map.set(task.due, list)

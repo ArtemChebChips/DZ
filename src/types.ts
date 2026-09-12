@@ -50,7 +50,8 @@ export type Lesson = {
 
 export type Task = {
   id: string
-  subjectId: string
+  /** Может не быть предмета: «сдать справку в деканат» ни к какой паре не привязана. */
+  subjectId?: string
   title: string
   note?: string
   /** К какому дню сдать, 'YYYY-MM-DD'. */

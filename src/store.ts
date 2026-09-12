@@ -119,7 +119,7 @@ export function useData(): AppData {
 // --- задания ---------------------------------------------------------------
 
 export function addTask(input: {
-  subjectId: string
+  subjectId?: string
   title: string
   note?: string
   due: string

@@ -37,7 +37,10 @@ export function DayScreen({ date }: { date: string }) {
     return map
   }, [dayLessons])
 
-  const tasksWithoutLesson = dayTasks.filter((t) => !firstSlotOfSubject.has(t.subjectId))
+  // Без предмета или предмет без пары в этот день — всё в отдельный блок.
+  const tasksWithoutLesson = dayTasks.filter(
+    (t) => !t.subjectId || !firstSlotOfSubject.has(t.subjectId),
+  )
 
   const parity = parityOf(date, settings.anchorMonday)
   const isToday = date === todayISO()
@@ -98,7 +101,7 @@ export function DayScreen({ date }: { date: string }) {
                 <TaskPill
                   key={task.id}
                   task={task}
-                  subject={bySubject.get(task.subjectId)}
+                  subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
                   onOpen={() => setEditor({ mode: 'edit', task })}
                 />
               ))}

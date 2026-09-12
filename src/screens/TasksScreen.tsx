@@ -127,7 +127,7 @@ function WeekBlock({
                 <TaskPill
                   key={task.id}
                   task={task}
-                  subject={bySubject.get(task.subjectId)}
+                  subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
                   onOpen={() => onOpenTask(task)}
                   meta={
                     overdue
@@ -217,7 +217,7 @@ export function TasksScreen() {
                   <TaskPill
                     key={task.id}
                     task={task}
-                    subject={bySubject.get(task.subjectId)}
+                    subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
                     onOpen={() => setEditing(task)}
                     meta={formatDayMonth(task.due)}
                   />

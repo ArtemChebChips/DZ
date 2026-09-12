@@ -39,7 +39,8 @@ export function TaskEditor({
   const subject = subjects.find((s) => s.id === subjectId)
 
   const presets: Preset[] = useMemo(() => {
-    if (!subjectId) return []
+    // Без предмета расписание подсказать нечего — остаётся только выбранный день.
+    if (!subjectId) return fromDate ? [{ date: fromDate, label: 'В этот день' }] : []
     const base = fromDate ?? todayISO()
     const upcoming = nextLessonDates(subjectId, base, lessons, settings.anchorMonday, 2)
 
@@ -58,14 +59,19 @@ export function TaskEditor({
     setDue(presets[0]?.date ?? fromDate ?? todayISO())
   }, [presets, dueTouched, fromDate])
 
-  const canSave = Boolean(subjectId && title.trim() && due)
+  const canSave = Boolean(title.trim() && due)
 
   function save() {
     if (!canSave) return
     if (task) {
-      updateTask(task.id, { subjectId, title: title.trim(), note: note.trim() || undefined, due })
+      updateTask(task.id, {
+        subjectId: subjectId || undefined,
+        title: title.trim(),
+        note: note.trim() || undefined,
+        due,
+      })
     } else {
-      addTask({ subjectId, title, note, due })
+      addTask({ subjectId: subjectId || undefined, title, note, due })
     }
     onClose()
   }
@@ -100,6 +106,17 @@ export function TaskEditor({
       {locked ? null : (
         <Field label="Предмет">
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSubjectId('')}
+              className={`px-3 h-9 rounded-xl border text-[14px] transition ${
+                subjectId === ''
+                  ? 'border-accent bg-accent/10 text-ink'
+                  : 'border-line bg-surface-2 text-muted'
+              }`}
+            >
+              Без предмета
+            </button>
             {subjects.map((s) => {
               const active = s.id === subjectId
               return (
@@ -172,7 +189,9 @@ export function TaskEditor({
           </div>
         ) : (
           <p className="text-[13px] text-muted mb-2">
-            У этого предмета нет пар в расписании — выбери дату вручную.
+            {subjectId
+              ? 'У этого предмета нет пар в расписании — выбери дату вручную.'
+              : 'Задание без предмета — выбери дату вручную.'}
           </p>
         )}
         <input
