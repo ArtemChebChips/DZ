@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Task } from '../types'
 import { useData } from '../store'
-import { WEEKDAYS_FULL, addDays, formatDayMonth, formatFull, mondayOf, todayISO, weekdayOf } from '../lib/dates'
+import { WEEKDAYS_FULL, addDays, diffDays, formatDayMonth, formatFull, todayISO, weekdayOf } from '../lib/dates'
 import { lessonsOn, parityLabel, parityOf, parityShort } from '../lib/week'
 import { navigate, routes } from '../lib/router'
 import { useSwipe } from '../lib/swipe'
@@ -50,24 +50,17 @@ export function DayScreen({ date }: { date: string }) {
   const isToday = date === todayISO()
   const isTomorrow = date === addDays(todayISO(), 1)
   /*
-   * В пределах актуальной недели главное — какой это день недели, дальше —
-   * какое число. В воскресенье актуальной считаем неделю, что начнётся завтра,
-   * так же как на экране задач.
+   * На ближайшие шесть дней вперёд главное — какой это день недели («Четверг»),
+   * дальше и в прошлом — какое число. Окно именно шесть дней: седьмой день уже
+   * совпал бы по дню недели с сегодняшним, и название стало бы двусмысленным.
    */
-  const today = todayISO()
-  const actualMonday = weekdayOf(today) === 7 ? addDays(today, 1) : mondayOf(today)
-  const inActualWeek = mondayOf(date) === actualMonday
+  const daysAhead = diffDays(todayISO(), date)
+  const soon = daysAhead >= 2 && daysAhead <= 6
   const weekday = WEEKDAYS_FULL[weekdayOf(date) - 1]
   const weekdayTitle = weekday[0].toUpperCase() + weekday.slice(1)
 
-  const title = isToday
-    ? 'Сегодня'
-    : isTomorrow
-      ? 'Завтра'
-      : inActualWeek
-        ? weekdayTitle
-        : formatDayMonth(date)
-  const subtitle = isToday || isTomorrow ? formatFull(date) : inActualWeek ? formatDayMonth(date) : weekday
+  const title = isToday ? 'Сегодня' : isTomorrow ? 'Завтра' : soon ? weekdayTitle : formatDayMonth(date)
+  const subtitle = isToday || isTomorrow ? formatFull(date) : soon ? formatDayMonth(date) : weekday
 
   const swipe = useSwipe(
     () => navigate(routes.day(addDays(date, 1))),
