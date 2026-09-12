@@ -109,6 +109,12 @@ export function SettingsScreen() {
           checked={settings.keepDoneVisible}
           onChange={(on) => updateSettings({ keepDoneVisible: on })}
         />
+        <Toggle
+          label="Отдача при нажатии"
+          hint="Короткая вибрация. На iPhone Safari её не умеет, работает на Android"
+          checked={settings.haptics}
+          onChange={(on) => updateSettings({ haptics: on })}
+        />
       </Card>
 
       <Card title="Расписание">

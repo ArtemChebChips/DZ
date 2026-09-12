@@ -5,6 +5,7 @@ import { addDays, formatFull, todayISO } from '../lib/dates'
 import { lessonsOn, parityLabel, parityOf } from '../lib/week'
 import { navigate, routes } from '../lib/router'
 import { useSwipe } from '../lib/swipe'
+import { haptic } from '../lib/haptics'
 import { Screen, EmptyState, IconButton } from '../components/ui'
 import { IconCalendar, IconChevronLeft, IconChevronRight, IconPlus } from '../components/icons'
 import { LessonCard } from '../components/LessonCard'
@@ -112,7 +113,10 @@ export function DayScreen({ date }: { date: string }) {
 
       <button
         type="button"
-        onClick={() => setEditor({ mode: 'new' })}
+        onClick={() => {
+          haptic()
+          setEditor({ mode: 'new' })
+        }}
         aria-label="Добавить задание"
         className="absolute right-4 bottom-28 z-40 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
         style={{ color: 'var(--on-accent)' }}

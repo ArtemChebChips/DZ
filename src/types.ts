@@ -69,6 +69,8 @@ export type Settings = {
   anchorMonday: string
   /** Выполненное остаётся в списке зачёркнутым, а не исчезает сразу. */
   keepDoneVisible: boolean
+  /** Короткая вибрация в ответ на действия. */
+  haptics: boolean
 }
 
 export type AppData = {

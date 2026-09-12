@@ -1,5 +1,6 @@
 import { navigate, routes, type Route } from '../lib/router'
 import { todayISO } from '../lib/dates'
+import { haptic } from '../lib/haptics'
 import { IconCalendar, IconList, IconSettings } from './icons'
 
 /**
@@ -46,7 +47,10 @@ export function BottomNav({ route }: { route: Route }) {
             <button
               key={tab.key}
               type="button"
-              onClick={() => navigate(tab.to())}
+              onClick={() => {
+                haptic()
+                navigate(tab.to())
+              }}
               className={`relative z-10 flex-1 flex flex-col items-center gap-0.5 py-2 rounded-full transition-colors ${
                 active ? 'text-ink' : 'text-muted'
               }`}

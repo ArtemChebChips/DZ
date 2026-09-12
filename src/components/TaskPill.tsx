@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import type { Subject, Task } from '../types'
 import { deleteTask, toggleTask, updateTask } from '../store'
-import { IconCheck, IconTrash } from './icons'
+import { haptic } from '../lib/haptics'
+import { IconCheck, IconTrash, IconX } from './icons'
 
 /** Сдвиг, после которого жест считается свайпом, а не случайным касанием. */
 const ACTION_AT = 72
@@ -10,8 +11,8 @@ const HOLD_MS = 450
 
 /**
  * Задача внутри блока дня.
- * Свайп вправо отмечает выполненной, влево — удаляет, долгое нажатие открывает
- * правку текста прямо в списке, обычный тап — полный редактор.
+ * Свайп вправо отмечает выполненной, влево — открывает кнопку удаления,
+ * долгое нажатие правит текст на месте, обычный тап — полный редактор.
  */
 export function TaskPill({
   task,
@@ -30,6 +31,7 @@ export function TaskPill({
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [draft, setDraft] = useState(task.title)
 
   /*
@@ -39,7 +41,12 @@ export function TaskPill({
   const offset = useRef(0)
   const from = useRef<{ x: number; y: number } | null>(null)
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const moved = useRef(false)
+  /*
+   * Как только жест признан горизонтальным, ведём плашку до конца жеста.
+   * Иначе при движении пальцем назад проверка направления срывалась и
+   * плашка застывала на полпути — это и было «спотыкание о корзину».
+   */
+  const locked = useRef(false)
 
   const caption = [showSubject ? subject?.short || subject?.name : null, meta]
     .filter(Boolean)
@@ -52,34 +59,50 @@ export function TaskPill({
     }
   }
 
+  function reset() {
+    offset.current = 0
+    locked.current = false
+    setDx(0)
+  }
+
+  function saveDraft() {
+    const clean = draft.trim()
+    if (clean && clean !== task.title) {
+      haptic()
+      updateTask(task.id, { title: clean })
+    }
+    setEditing(false)
+  }
+
   function onTouchStart(e: React.TouchEvent) {
-    if (editing) return
+    if (editing || confirming) return
     const t = e.touches[0]
     from.current = { x: t.clientX, y: t.clientY }
-    moved.current = false
+    locked.current = false
     hold.current = setTimeout(() => {
+      haptic()
       setDraft(task.title)
       setEditing(true)
-      offset.current = 0
-      setDx(0)
+      reset()
     }, HOLD_MS)
   }
 
   function onTouchMove(e: React.TouchEvent) {
     const start = from.current
-    if (!start || editing) return
+    if (!start || editing || confirming) return
     const t = e.touches[0]
     const shiftX = t.clientX - start.x
     const shiftY = t.clientY - start.y
 
-    if (!moved.current && Math.abs(shiftX) + Math.abs(shiftY) > 8) {
-      moved.current = true
-      cancelHold()
-    }
+    if (Math.abs(shiftX) + Math.abs(shiftY) > 8) cancelHold()
+
     // Вертикальный жест оставляем списку, горизонтальный забираем себе.
-    if (Math.abs(shiftX) > Math.abs(shiftY) * 1.4) {
-      e.stopPropagation()
+    if (!locked.current && Math.abs(shiftX) > Math.abs(shiftY) * 1.4 && Math.abs(shiftX) > 8) {
+      locked.current = true
       setDragging(true)
+    }
+    if (locked.current) {
+      e.stopPropagation()
       offset.current = shiftX
       setDx(shiftX)
     }
@@ -95,20 +118,44 @@ export function TaskPill({
      * Экран дня листает дни по своему свайпу и слушает отпускание выше нас.
      * Если жест забрали себе, гасим всплытие, иначе день перелистнётся.
      */
-    if (Math.abs(shift) > 4) e.stopPropagation()
-    offset.current = 0
-    setDx(0)
+    if (locked.current) e.stopPropagation()
+    reset()
 
-    if (shift > ACTION_AT) toggleTask(task.id)
-    else if (shift < -ACTION_AT) {
-      if (confirm(`Удалить задание «${task.title}»?`)) deleteTask(task.id)
+    if (shift > ACTION_AT) {
+      haptic(12)
+      toggleTask(task.id)
+    } else if (shift < -ACTION_AT) {
+      haptic([8, 40, 8])
+      setConfirming(true)
     }
   }
 
-  function saveDraft() {
-    const clean = draft.trim()
-    if (clean && clean !== task.title) updateTask(task.id, { title: clean })
-    setEditing(false)
+  // Подтверждение удаления: плашка уехала, на её месте красная кнопка.
+  if (confirming) {
+    return (
+      <div className="flex items-stretch gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            haptic(20)
+            deleteTask(task.id)
+          }}
+          className="flex-1 flex items-center justify-center gap-2 h-11 bg-danger font-semibold"
+          style={{ color: 'var(--on-accent)', borderRadius: 'var(--radius-pill)' }}
+        >
+          <IconTrash size={18} />
+          Удалить
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          aria-label="Отменить удаление"
+          className="pill shrink-0 grid place-items-center w-11 text-muted"
+        >
+          <IconX size={18} />
+        </button>
+      </div>
+    )
   }
 
   if (editing) {
@@ -164,7 +211,10 @@ export function TaskPill({
         <button
           type="button"
           aria-label={task.done ? 'Вернуть в работу' : 'Отметить выполненным'}
-          onClick={() => toggleTask(task.id)}
+          onClick={() => {
+            haptic()
+            toggleTask(task.id)
+          }}
           className={`shrink-0 grid place-items-center w-6 h-6 rounded-full border-2 transition active:scale-90 ${
             task.done ? 'bg-accent border-accent' : 'border-muted/60'
           }`}

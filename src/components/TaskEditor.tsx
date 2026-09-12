@@ -30,7 +30,6 @@ export function TaskEditor({
 
   const [subjectId, setSubjectId] = useState(task?.subjectId ?? lockedSubjectId ?? subjects[0]?.id ?? '')
   const [title, setTitle] = useState(task?.title ?? '')
-  const [note, setNote] = useState(task?.note ?? '')
   // Пока пользователь не трогал дату сам, она едет за выбранным предметом.
   const [dueTouched, setDueTouched] = useState(Boolean(task))
   const [due, setDue] = useState(task?.due ?? fromDate ?? '')
@@ -39,18 +38,12 @@ export function TaskEditor({
   const subject = subjects.find((s) => s.id === subjectId)
 
   const presets: Preset[] = useMemo(() => {
-    // Без предмета расписание подсказать нечего — остаётся только выбранный день.
-    if (!subjectId) return fromDate ? [{ date: fromDate, label: 'В этот день' }] : []
+    // Без предмета расписание подсказать нечего — дату выбирают вручную.
+    if (!subjectId) return []
     const base = fromDate ?? todayISO()
     const upcoming = nextLessonDates(subjectId, base, lessons, settings.anchorMonday, 2)
 
-    // Открыли конкретный день — значит по умолчанию сдавать в него же.
-    if (fromDate) {
-      return [
-        { date: fromDate, label: 'В этот день' },
-        ...(upcoming[0] ? [{ date: upcoming[0], label: 'Следующая пара' }] : []),
-      ]
-    }
+    // «В этот день» убрано специально: задание почти никогда не сдают в день выдачи.
     return upcoming.map((date, i) => ({ date, label: i === 0 ? 'Следующая пара' : 'Через одну' }))
   }, [subjectId, fromDate, lessons, settings.anchorMonday])
 
@@ -64,14 +57,9 @@ export function TaskEditor({
   function save() {
     if (!canSave) return
     if (task) {
-      updateTask(task.id, {
-        subjectId: subjectId || undefined,
-        title: title.trim(),
-        note: note.trim() || undefined,
-        due,
-      })
+      updateTask(task.id, { subjectId: subjectId || undefined, title: title.trim(), due })
     } else {
-      addTask({ subjectId: subjectId || undefined, title, note, due })
+      addTask({ subjectId: subjectId || undefined, title, due })
     }
     onClose()
   }
@@ -140,23 +128,13 @@ export function TaskEditor({
         </Field>
       )}
 
-      <Field label="Что сделать">
+      <Field label="Задание">
         <textarea
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           rows={2}
           autoFocus={!task}
           placeholder="Например: №№ 12–18, конспект §4"
-          className={`${inputClass} h-auto py-2.5 resize-none`}
-        />
-      </Field>
-
-      <Field label="Заметка (не обязательно)">
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          placeholder="Ссылка, страница учебника, детали"
           className={`${inputClass} h-auto py-2.5 resize-none`}
         />
       </Field>

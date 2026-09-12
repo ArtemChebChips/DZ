@@ -152,7 +152,12 @@ export function Sheet({
             <IconX />
           </IconButton>
         </div>
-        <div className="overflow-y-auto px-4 py-4 safe-bottom">{children}</div>
+        <div
+          className="overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-4 safe-bottom"
+          style={{ touchAction: 'pan-y' }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

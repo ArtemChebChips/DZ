@@ -15,6 +15,7 @@ import {
 } from '../lib/dates'
 import { parityLabel, parityOf } from '../lib/week'
 import { useCollapsed } from '../lib/collapsed'
+import { haptic } from '../lib/haptics'
 import { Screen, EmptyState, Button } from '../components/ui'
 import { IconChevronDown, IconPlus } from '../components/icons'
 import { TaskPill } from '../components/TaskPill'
@@ -197,7 +198,10 @@ export function TasksScreen() {
               bySubject={bySubject}
               onOpenTask={setEditing}
               collapsed={isCollapsed(bucket.key)}
-              onToggle={() => toggle(bucket.key)}
+              onToggle={() => {
+                haptic()
+                toggle(bucket.key)
+              }}
             />
           ))}
         </div>
@@ -230,7 +234,10 @@ export function TasksScreen() {
 
       <button
         type="button"
-        onClick={() => setEditing('new')}
+        onClick={() => {
+          haptic()
+          setEditing('new')
+        }}
         aria-label="Добавить задание"
         className="absolute right-4 bottom-28 z-40 grid place-items-center w-14 h-14 rounded-2xl bg-accent shadow-lg shadow-black/20 active:scale-95 transition"
         style={{ color: 'var(--on-accent)' }}

@@ -3,6 +3,9 @@ import type { AppData, Lesson, Settings, Subject, Task } from './types'
 import { addDays, mondayOf, todayISO } from './lib/dates'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedule'
 
+/** Вид аттестации из умолчаний — нужен при миграции старых данных. */
+const DEFAULT_ASSESSMENT = new Map(DEFAULT_SUBJECTS.map((s) => [s.id, s.assessment]))
+
 const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
 /** 3 — у предмета вместо ключа цвета появился вид аттестации. */
@@ -32,7 +35,11 @@ export function deviceId(): string {
 }
 
 function freshData(): AppData {
-  const settings: Settings = { anchorMonday: ANCHOR_MONDAY, keepDoneVisible: true }
+  const settings: Settings = {
+    anchorMonday: ANCHOR_MONDAY,
+    keepDoneVisible: true,
+    haptics: true,
+  }
   return {
     version: DATA_VERSION,
     subjects: DEFAULT_SUBJECTS,
@@ -57,16 +64,24 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
 
   return {
     version: DATA_VERSION,
-    // У предметов из старых версий вида аттестации нет — считаем их зачётными.
+    /*
+     * У предметов из старых версий вида аттестации нет. Сначала пробуем взять
+     * его из умолчаний по тому же id — иначе всё расписание станет зачётным
+     * и цвета перестанут отличаться.
+     */
     subjects:
       lessonsUsable && Array.isArray(raw.subjects)
-        ? raw.subjects.map((s) => ({ ...s, assessment: s.assessment ?? 'credit' }))
+        ? raw.subjects.map((s) => ({
+            ...s,
+            assessment: s.assessment ?? DEFAULT_ASSESSMENT.get(s.id) ?? 'credit',
+          }))
         : base.subjects,
     lessons: lessonsUsable ? raw.lessons! : base.lessons,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
     settings: {
       anchorMonday: raw.settings?.anchorMonday || base.settings.anchorMonday,
       keepDoneVisible: raw.settings?.keepDoneVisible ?? true,
+      haptics: raw.settings?.haptics ?? true,
     },
   }
 }
@@ -110,6 +125,11 @@ function commit(next: AppData): void {
   state = next
   persist(state)
   listeners.forEach((l) => l())
+}
+
+/** Настройки без подписки — нужны обработчикам вроде вибрации. */
+export function getSettings(): Settings {
+  return state.settings
 }
 
 export function useData(): AppData {
