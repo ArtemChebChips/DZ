@@ -93,9 +93,9 @@ function DateColumn({ date }: { date: string }) {
   const tone = left === 0 ? 'text-accent' : left < 0 ? 'text-danger' : 'text-ink'
 
   return (
-    <div className="w-13 shrink-0 pt-2 text-center">
+    <div className="w-14 shrink-0 pt-2 text-center">
       <div className={`text-[23px] font-bold leading-none tabular-nums ${tone}`}>{d.getDate()}</div>
-      <div className="text-[9.5px] font-semibold uppercase tracking-wide text-muted mt-1">{caption}</div>
+      <div className="text-[11px] font-semibold uppercase text-ink/70 mt-1">{caption}</div>
     </div>
   )
 }

@@ -27,7 +27,7 @@ export function Screen({
           <span className={side}>{left}</span>
           <div className="min-w-0 flex-1 text-center">
             <h1 className="display text-[18px] font-bold leading-tight truncate">{title}</h1>
-            {subtitle ? <p className="text-[12px] text-muted leading-tight truncate">{subtitle}</p> : null}
+            {subtitle ? <p className="text-[13.5px] text-ink/70 leading-tight truncate">{subtitle}</p> : null}
           </div>
           <span className={side}>{right}</span>
         </div>
