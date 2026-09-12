@@ -61,7 +61,7 @@ export function DayScreen({ date }: { date: string }) {
         title={title}
         subtitle={subtitle}
         onTitleClick={() => navigate(routes.calendar)}
-        titleHint={<IconCalendar size={19} />}
+        titleHint={<IconCalendar size={23} />}
         left={
           <IconButton onClick={() => navigate(routes.day(addDays(date, -1)))} label="Предыдущий день">
             <IconChevronLeft />

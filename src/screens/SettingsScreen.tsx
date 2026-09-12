@@ -110,8 +110,7 @@ export function SettingsScreen() {
           onChange={(on) => updateSettings({ keepDoneVisible: on })}
         />
         <Toggle
-          label="Отдача при нажатии"
-          hint="Короткая вибрация. На iPhone Safari её не умеет, работает на Android"
+          label="Отдача при нажатии (только для Android)"
           checked={settings.haptics}
           onChange={(on) => updateSettings({ haptics: on })}
         />

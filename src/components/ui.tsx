@@ -40,11 +40,11 @@ export function Screen({
             <button
               type="button"
               onClick={onTitleClick}
-              className="min-w-0 flex-1 flex items-center justify-center gap-2 text-center active:opacity-60 transition"
+              className="min-w-0 flex-1 flex items-center justify-center gap-3.5 text-center active:opacity-60 transition"
             >
               <span className="min-w-0">{head}</span>
               {titleHint ? (
-                <span className="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-surface-2 text-muted">
+                <span className="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-surface-2 text-muted">
                   {titleHint}
                 </span>
               ) : null}

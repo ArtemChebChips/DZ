@@ -72,7 +72,7 @@ function buildBuckets(tasks: Task[]): Bucket[] {
 
   return [
     { key: 'overdue', title: 'Просрочено', late: true, days: byDays(overdue), count: undone(overdue) },
-    { key: 'this', title: 'Эта неделя', days: byDays(thisWeek), count: undone(thisWeek) },
+    { key: 'this', title: 'Актуальная неделя', days: byDays(thisWeek), count: undone(thisWeek) },
     { key: 'next', title: 'Следующая неделя', days: byDays(nextWeek), count: undone(nextWeek) },
     { key: 'later', title: 'Больше недели', days: byDays(later), count: undone(later) },
   ].filter((bucket) => bucket.days.length > 0)

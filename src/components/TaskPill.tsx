@@ -6,8 +6,8 @@ import { IconCheck, IconTrash } from './icons'
 
 /** Сдвиг, после которого жест считается свайпом, а не случайным касанием. */
 const ACTION_AT = 72
-/** Ширина кнопки удаления, открывающейся из-под плашки. */
-const DELETE_W = 116
+/** Ширина кнопок, открывающихся из-под плашки. */
+const ACTION_W = 116
 /** Насколько нужно замереть пальцем, чтобы открылась быстрая правка. */
 const HOLD_MS = 450
 
@@ -49,7 +49,7 @@ export function TaskPill({
    */
   const locked = useRef(false)
 
-  const openedForDelete = dx <= -DELETE_W + 1 && !dragging
+  const openedForDelete = dx <= -ACTION_W + 1 && !dragging
 
   const caption = [showSubject ? subject?.short || subject?.name : null, meta]
     .filter(Boolean)
@@ -106,8 +106,8 @@ export function TaskPill({
     }
     if (locked.current) {
       e.stopPropagation()
-      // Влево дальше кнопки тянуть некуда, вправо — до порога отметки.
-      const limited = Math.max(-DELETE_W, Math.min(ACTION_AT + 24, shiftX))
+      // Тянуть дальше кнопок незачем: жесты в обе стороны симметричны.
+      const limited = Math.max(-ACTION_W, Math.min(ACTION_W, shiftX))
       offset.current = limited
       setDx(limited)
     }
@@ -132,8 +132,8 @@ export function TaskPill({
       return
     }
     // Кнопка удаления остаётся открытой — закрыть можно тапом по плашке.
-    settle(shift < -DELETE_W / 2 ? -DELETE_W : 0)
-    if (shift < -DELETE_W / 2) haptic([8, 30, 8])
+    settle(shift < -ACTION_W / 2 ? -ACTION_W : 0)
+    if (shift < -ACTION_W / 2) haptic([8, 30, 8])
   }
 
   if (editing) {
@@ -165,12 +165,18 @@ export function TaskPill({
 
   return (
     <div className="relative overflow-hidden" style={{ borderRadius: 'var(--radius-pill)' }}>
-      {/* Подсказка отметки слева проявляется по мере сдвига вправо. */}
+      {/* Отметка выполнения — зеркальная копия кнопки удаления. */}
       <div
-        className="absolute inset-y-0 left-0 flex items-center px-4 text-ok pointer-events-none"
-        style={{ opacity: Math.min(1, Math.max(0, dx) / ACTION_AT) }}
+        className="absolute inset-y-0 left-0 flex items-center justify-center gap-1.5 bg-ok text-[14px] font-semibold pointer-events-none"
+        style={{
+          width: ACTION_W,
+          color: 'var(--on-accent)',
+          borderRadius: 'var(--radius-pill)',
+          opacity: Math.min(1, Math.max(0, dx) / 24),
+        }}
       >
-        <IconCheck size={20} />
+        <IconCheck size={18} />
+        {task.done ? 'Вернуть' : 'Готово'}
       </div>
 
       {/* Кнопка удаления лежит под плашкой и открывается вместе со свайпом. */}
@@ -183,7 +189,7 @@ export function TaskPill({
         tabIndex={openedForDelete ? 0 : -1}
         aria-hidden={!openedForDelete}
         className="absolute inset-y-0 right-0 flex items-center justify-center gap-1.5 bg-danger text-[14px] font-semibold"
-        style={{ width: DELETE_W, color: 'var(--on-accent)' }}
+        style={{ width: ACTION_W, color: 'var(--on-accent)', borderRadius: 'var(--radius-pill)' }}
       >
         <IconTrash size={17} />
         Удалить
