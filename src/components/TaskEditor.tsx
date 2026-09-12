@@ -5,6 +5,7 @@ import { formatCompact, humanDue, todayISO } from '../lib/dates'
 import { nextLessonDates } from '../lib/week'
 import { subjectColor } from '../lib/palette'
 import { Button, Field, Sheet, inputClass } from './ui'
+import { DayPicker } from './DayPicker'
 import { IconTrash } from './icons'
 
 type Preset = { date: string; label: string }
@@ -172,14 +173,15 @@ export function TaskEditor({
               : 'Задание без предмета — выбери дату вручную.'}
           </p>
         )}
-        <input
-          type="date"
+        <DayPicker
           value={due}
-          onChange={(e) => {
-            setDue(e.target.value)
+          subjectId={subjectId || undefined}
+          lessons={lessons}
+          anchorMonday={settings.anchorMonday}
+          onChange={(date) => {
+            setDue(date)
             setDueTouched(true)
           }}
-          className={inputClass}
         />
       </Field>
 
