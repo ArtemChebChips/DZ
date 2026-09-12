@@ -14,8 +14,9 @@ import {
   weekdayOf,
 } from '../lib/dates'
 import { parityLabel, parityOf } from '../lib/week'
+import { useCollapsed } from '../lib/collapsed'
 import { Screen, EmptyState, Button } from '../components/ui'
-import { IconPlus } from '../components/icons'
+import { IconChevronDown, IconPlus } from '../components/icons'
 import { TaskPill } from '../components/TaskPill'
 import { TaskEditor } from '../components/TaskEditor'
 
@@ -80,23 +81,39 @@ function WeekBlock({
   bucket,
   bySubject,
   onOpenTask,
+  collapsed,
+  onToggle,
 }: {
   bucket: Bucket
   bySubject: Map<string, Subject>
   onOpenTask: (task: Task) => void
+  collapsed: boolean
+  onToggle: () => void
 }) {
   const today = todayISO()
 
   return (
-    <section className={`card px-3 pt-3 pb-1 ${bucket.late ? 'card-late' : ''}`}>
-      <header className="flex items-baseline justify-between mb-2 px-0.5">
-        <h2 className={`display text-[14px] font-bold ${bucket.late ? 'text-danger' : ''}`}>
+    <section className={`card px-3 pt-3 ${collapsed ? 'pb-3' : 'pb-1'} ${bucket.late ? 'card-late' : ''}`}>
+      {/* Шапка целиком служит кнопкой: промахнуться мимо мелкой стрелки легко. */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        className="w-full flex items-center gap-2 px-0.5 text-left"
+      >
+        <h2 className={`display flex-1 text-[14px] font-bold ${bucket.late ? 'text-danger' : ''}`}>
           {bucket.title}
         </h2>
         <span className="text-[12px] text-muted tabular-nums">{bucket.count}</span>
-      </header>
+        <IconChevronDown
+          size={18}
+          className={`text-muted transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}
+        />
+      </button>
 
-      {bucket.days.map((day, index) => {
+      {collapsed
+        ? null
+        : bucket.days.map((day, index) => {
         const left = diffDays(today, day.date)
         const overdue = left < 0
         return (
@@ -124,7 +141,7 @@ function WeekBlock({
             </div>
           </div>
         )
-      })}
+          })}
     </section>
   )
 }
@@ -133,6 +150,7 @@ export function TasksScreen() {
   const { subjects, tasks, settings } = useData()
   const [showDone, setShowDone] = useState(false)
   const [editing, setEditing] = useState<Task | 'new' | null>(null)
+  const { isCollapsed, toggle } = useCollapsed()
 
   const bySubject = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects])
 
@@ -178,6 +196,8 @@ export function TasksScreen() {
               bucket={bucket}
               bySubject={bySubject}
               onOpenTask={setEditing}
+              collapsed={isCollapsed(bucket.key)}
+              onToggle={() => toggle(bucket.key)}
             />
           ))}
         </div>

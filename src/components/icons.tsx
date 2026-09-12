@@ -99,3 +99,11 @@ export function IconPencil({ size = 22, className }: IconProps) {
     </svg>
   )
 }
+
+export function IconChevronDown({ size = 22, className }: IconProps) {
+  return (
+    <svg {...base(size, className)}>
+      <path d="M5 9l7 7 7-7" />
+    </svg>
+  )
+}
