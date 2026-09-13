@@ -10,10 +10,11 @@ const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
 /**
  * 4 — разовая починка вида аттестации: версия 3 записала всем предметам «зачёт».
- * 5 — предмет «ИТ» переименован в «Информационные технологии».
- * В обоих случаях мало проверить «если не задано»: нужно перезаписать.
+ * 5 — «ИТ» переименован в «Информационные технологии».
+ * 6 — «Инновации» переименованы в «Инновации в технике и управлении».
+ * Каждый раз мало проверить «если не задано»: нужно перезаписать.
  */
-const DATA_VERSION = 5
+const DATA_VERSION = 6
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -65,7 +66,7 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
    */
   const lessonsUsable =
     Array.isArray(raw.lessons) && raw.lessons.every((l) => typeof l?.start === 'string' && l.start)
-  const needsRepair = (raw.version ?? 0) < 5
+  const needsRepair = (raw.version ?? 0) < DATA_VERSION
 
   return {
     version: DATA_VERSION,
@@ -86,7 +87,7 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
 /**
  * Предмет из старых данных. У знакомого предмета при починке берём из умолчаний
  * название и вид аттестации: на устройстве могли остаться «зачёт» всем подряд
- * (версия 3) и сокращение «ИТ» (версия 4).
+ * и старые сокращения вроде «ИТ».
  */
 function repairSubject(subject: Subject, repair: boolean): Subject {
   const known = DEFAULT_SUBJECT.get(subject.id)
