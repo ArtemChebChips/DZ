@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { Subject, Task } from '../types'
 import { deleteTask, toggleTask, updateTask } from '../store'
+import { subjectColor } from '../lib/palette'
 import { haptic } from '../lib/haptics'
 import { IconCheck, IconTrash } from './icons'
 
@@ -51,9 +52,7 @@ export function TaskPill({
 
   const openedForDelete = dx <= -ACTION_W + 1 && !dragging
 
-  const caption = [showSubject ? subject?.short || subject?.name : null, meta]
-    .filter(Boolean)
-    .join(' · ')
+  const subjectName = showSubject ? subject?.short || subject?.name : undefined
 
   function cancelHold() {
     if (hold.current) {
@@ -164,7 +163,7 @@ export function TaskPill({
   }
 
   return (
-    <div className="relative overflow-hidden" style={{ borderRadius: 'var(--radius-pill)' }}>
+    <div className="relative overflow-hidden flex" style={{ borderRadius: 'var(--radius-pill)' }}>
       {/* Отметка выполнения — зеркальная копия кнопки удаления. */}
       <div
         className="absolute inset-y-0 left-0 flex items-center justify-center gap-1.5 bg-ok text-[14px] font-semibold pointer-events-none"
@@ -203,7 +202,7 @@ export function TaskPill({
       </button>
 
       <div
-        className="pill relative flex items-center gap-2.5 px-2.5 py-2.5"
+        className="pill relative flex-1 min-w-0 flex items-center gap-2.5 px-2.5 py-2.5"
         style={{
           transform: `translateX(${dx}px)`,
           transition: dragging ? 'none' : 'transform 180ms ease-out',
@@ -234,10 +233,19 @@ export function TaskPill({
           onClick={() => (openedForDelete ? settle(0) : onOpen())}
           className="flex-1 min-w-0 text-left"
         >
+          {/* Предмет сверху и своим цветом, задание под ним: видно и то, и другое. */}
+          {subjectName || meta ? (
+            <p className="text-[12.5px] font-semibold leading-none truncate mb-1">
+              {subjectName ? (
+                <span style={{ color: subjectColor(subject?.assessment) }}>{subjectName}</span>
+              ) : null}
+              {subjectName && meta ? <span className="text-muted"> · </span> : null}
+              {meta ? <span className="text-muted">{meta}</span> : null}
+            </p>
+          ) : null}
           <p className={`text-[14px] leading-snug ${task.done ? 'line-through text-muted' : ''}`}>
             {task.title}
           </p>
-          {caption ? <p className="text-[11.5px] text-muted mt-0.5 truncate">{caption}</p> : null}
         </button>
       </div>
     </div>

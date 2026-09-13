@@ -21,6 +21,13 @@ import { IconChevronDown, IconPlus } from '../components/icons'
 import { TaskPill } from '../components/TaskPill'
 import { TaskEditor } from '../components/TaskEditor'
 
+/**
+ * Высота плашки даты и она же — минимальная высота задачи рядом. Одно число
+ * на двоих: короткая задача ровно совпадает с датой, длинная растёт вниз сама,
+ * а дата остаётся прежней.
+ */
+const ROW_MIN = 58
+
 type DayGroup = { date: string; tasks: Task[] }
 type Bucket = { key: string; title: string; late?: boolean; days: DayGroup[]; count: number }
 
@@ -93,10 +100,17 @@ function DateColumn({ date }: { date: string }) {
   const tone = left === 0 ? 'text-accent' : left < 0 ? 'text-danger' : 'text-ink'
 
   return (
-    // Дата в своей плашке — та же форма, что у задач справа, список читается рядами.
-    <div className="pill self-start w-14 shrink-0 py-2 text-center">
+    /*
+     * Дата постоянного размера: у соседней задачи он же стоит минимальной
+     * высотой, поэтому короткая задача совпадает с датой, а длинная растёт
+     * вниз одна, не растягивая дату за собой.
+     */
+    <div
+      className="pill self-start w-14 flex flex-col justify-center text-center"
+      style={{ height: ROW_MIN }}
+    >
       <div className={`text-[23px] font-bold leading-none tabular-nums ${tone}`}>{d.getDate()}</div>
-      <div className="text-[13px] font-bold uppercase text-ink mt-1">{caption}</div>
+      <div className="text-[13px] font-bold uppercase leading-none text-ink mt-1.5">{caption}</div>
     </div>
   )
 }
@@ -143,12 +157,16 @@ function WeekBlock({
           {bucket.days.map((day) => {
             const left = diffDays(today, day.date)
             return (
-              <div key={day.date} className="flex gap-1.5">
+              /*
+               * Сетка, а не два столбца: дата и первая задача стоят в одной
+               * строке и получают одинаковую высоту. Остальные задачи идут
+               * строками ниже во втором столбце.
+               */
+              <div key={day.date} className="grid grid-cols-[3.5rem_1fr] gap-1.5">
                 <DateColumn date={day.date} />
-                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                  {day.tasks.map((task) => (
+                {day.tasks.map((task) => (
+                  <div key={task.id} className="col-start-2 grid min-w-0" style={{ minHeight: ROW_MIN }}>
                     <TaskPill
-                      key={task.id}
                       task={task}
                       subject={task.subjectId ? bySubject.get(task.subjectId) : undefined}
                       onOpen={() => onOpenTask(task)}
@@ -160,8 +178,8 @@ function WeekBlock({
                             : undefined
                       }
                     />
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )
           })}
