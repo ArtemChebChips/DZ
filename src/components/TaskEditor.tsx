@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Task } from '../types'
+import type { LessonKind, Task } from '../types'
 import { addTask, deleteTask, updateTask, useData } from '../store'
 import { formatCompact, humanDue, todayISO } from '../lib/dates'
 import { nextLessonDates } from '../lib/week'
@@ -17,12 +17,15 @@ type Preset = { date: string; label: string }
 export function TaskEditor({
   onClose,
   lockedSubjectId,
+  lockedKind,
   fromDate,
   task,
 }: {
   onClose: () => void
   /** Открыт с плашки пары: предмет уже известен, выбирать его незачем. */
   lockedSubjectId?: string
+  /** Вид той самой пары: и календарь, и подсказки держатся его. */
+  lockedKind?: LessonKind
   /** День, из которого открыли редактор. */
   fromDate?: string
   task?: Task
@@ -47,12 +50,14 @@ export function TaskEditor({
     // Без предмета расписание подсказать нечего — дату выбирают вручную.
     if (!subjectId) return []
     const base = fromDate ?? todayISO()
-    const upcoming = nextLessonDates(subjectId, base, lessons, settings.anchorMonday, 2)
+    const upcoming = nextLessonDates(subjectId, base, lessons, settings.anchorMonday, 2, {
+      kind: locked ? lockedKind : undefined,
+    })
 
     // Отдельной кнопки «В этот день» нет: с плашки пары эта дата уже стоит,
     // а из общей кнопки задание почти никогда не сдают в день выдачи.
     return upcoming.map((date, i) => ({ date, label: i === 0 ? 'Следующая пара' : 'Через одну' }))
-  }, [subjectId, fromDate, lessons, settings.anchorMonday])
+  }, [subjectId, fromDate, lessons, settings.anchorMonday, locked, lockedKind])
 
   useEffect(() => {
     if (dueTouched) return
@@ -205,6 +210,7 @@ export function TaskEditor({
         <DayPicker
           value={due}
           subjectId={subjectId || undefined}
+          kind={locked ? lockedKind : undefined}
           lessons={lessons}
           anchorMonday={settings.anchorMonday}
           onChange={(date) => {

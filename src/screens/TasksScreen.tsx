@@ -96,7 +96,7 @@ function DateColumn({ date }: { date: string }) {
     // Дата в своей плашке — та же форма, что у задач справа, список читается рядами.
     <div className="pill self-start w-14 shrink-0 py-2 text-center">
       <div className={`text-[23px] font-bold leading-none tabular-nums ${tone}`}>{d.getDate()}</div>
-      <div className="text-[11px] font-semibold uppercase text-ink/70 mt-1">{caption}</div>
+      <div className="text-[13px] font-bold uppercase text-ink mt-1">{caption}</div>
     </div>
   )
 }

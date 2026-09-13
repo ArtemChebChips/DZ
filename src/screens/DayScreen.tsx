@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Task } from '../types'
+import type { LessonKind, Task } from '../types'
 import { useData } from '../store'
 import { WEEKDAYS_FULL, addDays, diffDays, formatDayMonth, formatFull, todayISO, weekdayOf } from '../lib/dates'
 import { lessonsOn, parityLabel, parityOf, parityShort } from '../lib/week'
@@ -14,7 +14,7 @@ import { TaskEditor } from '../components/TaskEditor'
 
 type EditorState =
   | { mode: 'closed' }
-  | { mode: 'new'; subjectId?: string }
+  | { mode: 'new'; subjectId?: string; kind?: LessonKind }
   | { mode: 'edit'; task: Task }
 
 /** Квадрат шапки: бейдж слева и кнопка справа одного размера — шапка симметрична. */
@@ -110,7 +110,7 @@ export function DayScreen({ date }: { date: string }) {
                   ? dayTasks.filter((t) => t.subjectId === lesson.subjectId)
                   : []
               }
-              onAdd={() => setEditor({ mode: 'new', subjectId: lesson.subjectId })}
+              onAdd={() => setEditor({ mode: 'new', subjectId: lesson.subjectId, kind: lesson.kind })}
               onOpenTask={(task) => setEditor({ mode: 'edit', task })}
             />
           ))}
@@ -151,6 +151,7 @@ export function DayScreen({ date }: { date: string }) {
           onClose={() => setEditor({ mode: 'closed' })}
           fromDate={date}
           lockedSubjectId={editor.mode === 'new' ? editor.subjectId : undefined}
+          lockedKind={editor.mode === 'new' ? editor.kind : undefined}
           task={editor.mode === 'edit' ? editor.task : undefined}
         />
       ) : null}

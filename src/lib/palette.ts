@@ -24,3 +24,15 @@ export function subjectColor(assessment?: Assessment): string {
 export function lessonColor(assessment?: Assessment, kind?: LessonKind): string {
   return kind === 'lab' ? 'var(--a-lab)' : subjectColor(assessment)
 }
+
+/**
+ * Вид занятия для подсветки в календаре выбора дня. Внутри одного предмета
+ * цвет аттестации не различает пары, поэтому там красим по виду — и рядом
+ * с календарём всегда стоит легенда, чтобы цвет не спутали с аттестацией.
+ */
+export const LESSON_KINDS: Record<LessonKind, { label: string; color: string }> = {
+  lecture: { label: 'лекция', color: 'var(--a-credit)' },
+  seminar: { label: 'семинар', color: 'var(--a-dist)' },
+  lab: { label: 'лаба', color: 'var(--a-lab)' },
+  other: { label: 'занятие', color: 'var(--a-other)' },
+}

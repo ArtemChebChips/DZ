@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { Lesson } from '../types'
+import type { Lesson, LessonKind } from '../types'
 import {
   MONTHS_NOM,
   WEEKDAYS_SHORT,
@@ -10,8 +10,12 @@ import {
   toISO,
 } from '../lib/dates'
 import { lessonsOn } from '../lib/week'
+import { LESSON_KINDS } from '../lib/palette'
 import { haptic } from '../lib/haptics'
 import { IconChevronLeft, IconChevronRight } from './icons'
+
+/** Порядок в легенде — постоянный, чтобы точки не прыгали от месяца к месяцу. */
+const KIND_ORDER: LessonKind[] = ['lecture', 'seminar', 'lab', 'other']
 
 /** Недели месяца: полные строки от понедельника до воскресенья. */
 function buildWeeks(year: number, month: number): string[][] {
@@ -34,12 +38,15 @@ export function DayPicker({
   value,
   onChange,
   subjectId,
+  kind,
   lessons,
   anchorMonday,
 }: {
   value: string
   onChange: (date: string) => void
   subjectId?: string
+  /** Задано, когда задание завели с плашки пары: подсвечиваем только такие занятия. */
+  kind?: LessonKind
   lessons: Lesson[]
   anchorMonday: string
 }) {
@@ -51,19 +58,24 @@ export function DayPicker({
   const month = cursor.getMonth()
   const weeks = useMemo(() => buildWeeks(year, month), [year, month])
 
-  /** Дни месяца, когда у выбранного предмета есть пара. */
-  const withLesson = useMemo(() => {
-    if (!subjectId) return new Set<string>()
-    const days = new Set<string>()
+  /** Дни месяца с парой по предмету и вид этой пары — по нему красим подсветку. */
+  const dayKind = useMemo(() => {
+    const days = new Map<string, LessonKind>()
+    if (!subjectId) return days
     for (const week of weeks) {
       for (const iso of week) {
-        if (lessonsOn(iso, lessons, anchorMonday).some((l) => l.subjectId === subjectId)) {
-          days.add(iso)
-        }
+        const own = lessonsOn(iso, lessons, anchorMonday).filter((l) => l.subjectId === subjectId)
+        const match = kind ? own.find((l) => l.kind === kind) : own[0]
+        if (match) days.set(iso, match.kind)
       }
     }
     return days
-  }, [weeks, lessons, anchorMonday, subjectId])
+  }, [weeks, lessons, anchorMonday, subjectId, kind])
+
+  const kindsShown = useMemo(() => {
+    const present = new Set(dayKind.values())
+    return KIND_ORDER.filter((k) => present.has(k))
+  }, [dayKind])
 
   const shiftMonth = (delta: number) => {
     haptic()
@@ -107,7 +119,8 @@ export function DayPicker({
           const d = parseISO(iso)
           const otherMonth = d.getMonth() !== month
           const selected = iso === value
-          const hasLesson = withLesson.has(iso)
+          const lessonKind = dayKind.get(iso)
+          const color = lessonKind ? LESSON_KINDS[lessonKind].color : undefined
 
           return (
             <button
@@ -118,15 +131,18 @@ export function DayPicker({
                 onChange(iso)
               }}
               className={`aspect-square rounded-xl grid place-items-center text-[13px] transition ${
-                selected
-                  ? 'bg-accent font-semibold'
-                  : hasLesson
-                    ? 'bg-accent/20 font-semibold text-accent'
-                    : ''
-              } ${otherMonth && !selected ? 'opacity-35' : ''} ${
-                iso === today && !selected && !hasLesson ? 'text-accent' : ''
+                selected || color ? 'font-semibold' : ''
+              } ${selected ? 'bg-accent' : ''} ${otherMonth && !selected ? 'opacity-35' : ''} ${
+                iso === today && !selected && !color ? 'text-accent' : ''
               }`}
-              style={selected ? { color: 'var(--on-accent)' } : undefined}
+              /* Подсветка — кольцо цвета вида занятия: заливка занята выбранным днём. */
+              style={
+                selected
+                  ? { color: 'var(--on-accent)' }
+                  : color
+                    ? { color, boxShadow: `inset 0 0 0 2px ${color}` }
+                    : undefined
+              }
             >
               {d.getDate()}
             </button>
@@ -134,10 +150,24 @@ export function DayPicker({
         })}
       </div>
 
-      {subjectId ? (
+      {subjectId && kind ? (
         <p className="text-[11px] text-muted text-center mt-1.5">
-          Подсвечены дни, когда есть пара по этому предмету
+          Подсвечены дни, когда есть {LESSON_KINDS[kind].label} по этому предмету
         </p>
+      ) : null}
+
+      {subjectId && !kind && kindsShown.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-muted mt-1.5">
+          {kindsShown.map((k) => (
+            <span key={k} className="flex items-center gap-1">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ background: LESSON_KINDS[k].color }}
+              />
+              {LESSON_KINDS[k].label}
+            </span>
+          ))}
+        </div>
       ) : null}
     </div>
   )

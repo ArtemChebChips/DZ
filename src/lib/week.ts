@@ -1,4 +1,4 @@
-import type { Lesson } from '../types'
+import type { Lesson, LessonKind } from '../types'
 import { addDays, diffDays, mondayOf, weekdayOf } from './dates'
 
 export type Parity = 'num' | 'denom'
@@ -58,9 +58,13 @@ export function nextLessonDates(
   lessons: Lesson[],
   anchorMonday: string,
   count = 2,
-  options: { inclusive?: boolean } = {},
+  options: { inclusive?: boolean; kind?: LessonKind } = {},
 ): string[] {
-  const own = lessons.filter((l) => l.subjectId === subjectId)
+  // kind задан, когда задание завели с плашки конкретной пары: следующий
+  // семинар — это семинар, а не ближайшая лекция по тому же предмету.
+  const own = lessons.filter(
+    (l) => l.subjectId === subjectId && (!options.kind || l.kind === options.kind),
+  )
   if (own.length === 0) return []
 
   const out: string[] = []
@@ -80,7 +84,7 @@ export function nextLessonDate(
   fromISO: string,
   lessons: Lesson[],
   anchorMonday: string,
-  options: { inclusive?: boolean } = {},
+  options: { inclusive?: boolean; kind?: LessonKind } = {},
 ): string | null {
   return nextLessonDates(subjectId, fromISO, lessons, anchorMonday, 1, options)[0] ?? null
 }
