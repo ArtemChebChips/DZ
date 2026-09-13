@@ -29,13 +29,18 @@ export function TaskEditor({
 }) {
   const { subjects, lessons, settings } = useData()
 
+  const locked = Boolean(lockedSubjectId) && !task
+
   const [subjectId, setSubjectId] = useState(task?.subjectId ?? lockedSubjectId ?? subjects[0]?.id ?? '')
   const [title, setTitle] = useState(task?.title ?? '')
-  // Пока пользователь не трогал дату сам, она едет за выбранным предметом.
-  const [dueTouched, setDueTouched] = useState(Boolean(task))
+  /*
+   * Пока пользователь не трогал дату сам, она едет за выбранным предметом.
+   * Исключение — плюс на самой паре: задание записывают к этому дню, поэтому
+   * дата сразу стоит на нём. Подсказки расписания остаются кнопками рядом.
+   */
+  const [dueTouched, setDueTouched] = useState(Boolean(task) || locked)
   const [due, setDue] = useState(task?.due ?? fromDate ?? '')
 
-  const locked = Boolean(lockedSubjectId) && !task
   const subject = subjects.find((s) => s.id === subjectId)
 
   const presets: Preset[] = useMemo(() => {
@@ -44,7 +49,8 @@ export function TaskEditor({
     const base = fromDate ?? todayISO()
     const upcoming = nextLessonDates(subjectId, base, lessons, settings.anchorMonday, 2)
 
-    // «В этот день» убрано специально: задание почти никогда не сдают в день выдачи.
+    // Отдельной кнопки «В этот день» нет: с плашки пары эта дата уже стоит,
+    // а из общей кнопки задание почти никогда не сдают в день выдачи.
     return upcoming.map((date, i) => ({ date, label: i === 0 ? 'Следующая пара' : 'Через одну' }))
   }, [subjectId, fromDate, lessons, settings.anchorMonday])
 

@@ -47,49 +47,52 @@ export function LessonCard({
     .join(' · ')
 
   return (
-    <div className="card overflow-hidden">
-      <div className="flex items-stretch" style={{ minHeight: heightFor(lesson) }}>
-        <span className="w-1.5 shrink-0" style={{ background: color }} />
+    /* Полоса — первая колонка всей карточки, поэтому тянется и вдоль заданий. */
+    <div className="card overflow-hidden flex items-stretch">
+      <span className="w-1.5 shrink-0" style={{ background: color }} />
 
-        <div className="shrink-0 py-2.5 pl-3 pr-1 w-14">
-          <div className="text-[14px] font-semibold leading-none tabular-nums" style={{ color }}>
-            {lesson.start}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-stretch" style={{ minHeight: heightFor(lesson) }}>
+          <div className="shrink-0 py-2.5 pl-3 pr-1 w-14">
+            <div className="text-[14px] font-semibold leading-none tabular-nums" style={{ color }}>
+              {lesson.start}
+            </div>
+            <div className="text-[11px] text-muted mt-1 leading-none tabular-nums">{lesson.end}</div>
           </div>
-          <div className="text-[11px] text-muted mt-1 leading-none tabular-nums">{lesson.end}</div>
+
+          <div className="flex-1 min-w-0 py-2.5 px-1">
+            {/* Длинное название переносится на вторую строку, дальше обрезается. */}
+            <p className="text-[15px] font-medium leading-snug line-clamp-2">
+              {subject?.short || subject?.name || 'Неизвестный предмет'}
+            </p>
+            {meta ? <p className="text-[12px] text-muted mt-0.5 truncate">{meta}</p> : null}
+          </div>
+
+          <button
+            type="button"
+            onClick={onAdd}
+            aria-label={`Добавить задание по предмету ${subject?.name ?? ''}`}
+            className="shrink-0 self-start mt-2.5 mr-2.5 grid place-items-center w-9 h-9 rounded-full transition active:scale-95"
+            style={{ background: color, color: 'var(--on-accent)' }}
+          >
+            <IconPlus size={18} />
+          </button>
         </div>
 
-        <div className="flex-1 min-w-0 py-2.5 px-1">
-          {/* Короткое имя: полные названия занимают по две строки и распирают плашку. */}
-          <p className="text-[15px] font-medium leading-snug truncate">
-            {subject?.short || subject?.name || 'Неизвестный предмет'}
-          </p>
-          {meta ? <p className="text-[12px] text-muted mt-0.5 truncate">{meta}</p> : null}
-        </div>
-
-        <button
-          type="button"
-          onClick={onAdd}
-          aria-label={`Добавить задание по предмету ${subject?.name ?? ''}`}
-          className="shrink-0 self-start mt-2.5 mr-2.5 grid place-items-center w-9 h-9 rounded-full transition active:scale-95"
-          style={{ background: color, color: 'var(--on-accent)' }}
-        >
-          <IconPlus size={18} />
-        </button>
+        {tasks.length > 0 ? (
+          <div className="px-2.5 pb-2.5 flex flex-col gap-1.5">
+            {tasks.map((task) => (
+              <TaskPill
+                key={task.id}
+                task={task}
+                subject={subject}
+                onOpen={() => onOpenTask(task)}
+                showSubject={false}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
-
-      {tasks.length > 0 ? (
-        <div className="px-2.5 pb-2.5 pl-4 flex flex-col gap-1.5">
-          {tasks.map((task) => (
-            <TaskPill
-              key={task.id}
-              task={task}
-              subject={subject}
-              onOpen={() => onOpenTask(task)}
-              showSubject={false}
-            />
-          ))}
-        </div>
-      ) : null}
     </div>
   )
 }

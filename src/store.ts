@@ -3,16 +3,17 @@ import type { AppData, Lesson, Settings, Subject, Task } from './types'
 import { addDays, mondayOf, todayISO } from './lib/dates'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS } from './data/schedule'
 
-/** Вид аттестации из умолчаний — нужен при миграции старых данных. */
-const DEFAULT_ASSESSMENT = new Map(DEFAULT_SUBJECTS.map((s) => [s.id, s.assessment]))
+/** Предметы из умолчаний — по ним чинятся данные, сохранённые старой версией. */
+const DEFAULT_SUBJECT = new Map(DEFAULT_SUBJECTS.map((s) => [s.id, s]))
 
 const STORAGE_KEY = 'dz:data'
 const DEVICE_KEY = 'dz:device'
 /**
- * 4 — разовая починка вида аттестации. Версия 3 записала всем предметам
- * «зачёт», поэтому мало проверить «если не задано»: нужно перезаписать.
+ * 4 — разовая починка вида аттестации: версия 3 записала всем предметам «зачёт».
+ * 5 — предмет «ИТ» переименован в «Информационные технологии».
+ * В обоих случаях мало проверить «если не задано»: нужно перезаписать.
  */
-const DATA_VERSION = 4
+const DATA_VERSION = 5
 
 export function uid(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -64,13 +65,13 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
    */
   const lessonsUsable =
     Array.isArray(raw.lessons) && raw.lessons.every((l) => typeof l?.start === 'string' && l.start)
-  const needsRepair = (raw.version ?? 0) < 4
+  const needsRepair = (raw.version ?? 0) < 5
 
   return {
     version: DATA_VERSION,
     subjects:
       lessonsUsable && Array.isArray(raw.subjects)
-        ? raw.subjects.map((s) => ({ ...s, assessment: assessmentFor(s, needsRepair) }))
+        ? raw.subjects.map((s) => repairSubject(s, needsRepair))
         : base.subjects,
     lessons: lessonsUsable ? raw.lessons! : base.lessons,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
@@ -83,13 +84,16 @@ function normalize(raw: Partial<AppData> | null | undefined): AppData {
 }
 
 /**
- * Вид аттестации предмета. До версии 4 он мог быть ошибочно записан как
- * «зачёт» всем подряд, поэтому у знакомых предметов берём его из умолчаний.
+ * Предмет из старых данных. У знакомого предмета при починке берём из умолчаний
+ * название и вид аттестации: на устройстве могли остаться «зачёт» всем подряд
+ * (версия 3) и сокращение «ИТ» (версия 4).
  */
-function assessmentFor(subject: Subject, repair: boolean): Subject['assessment'] {
-  const known = DEFAULT_ASSESSMENT.get(subject.id)
-  if (repair && known) return known
-  return subject.assessment ?? known ?? 'credit'
+function repairSubject(subject: Subject, repair: boolean): Subject {
+  const known = DEFAULT_SUBJECT.get(subject.id)
+  if (known && repair) {
+    return { ...subject, name: known.name, short: known.short, assessment: known.assessment }
+  }
+  return { ...subject, assessment: subject.assessment ?? known?.assessment ?? 'credit' }
 }
 
 function load(): AppData {
