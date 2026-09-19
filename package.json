@@ -1,12 +1,14 @@
 {
   "name": "dz",
   "private": true,
-  "version": "1.20.0",
+  "version": "1.21.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:design": "vite --config vite.design.config.ts",
+    "build:design": "tsc --project tsconfig.design.json && vite build --config vite.design.config.ts"
   },
   "dependencies": {
     "react": "^19.2.8",
