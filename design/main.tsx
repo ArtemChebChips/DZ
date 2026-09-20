@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO, WEEKDAYS_SHORT } from '../src/lib/dates'
 import { lessonsOn, parityOf } from '../src/lib/week'
 import { IconList, IconCalendar, IconSettings, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
-import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, TODAY, subjectName, kindName, type DemoTask, type Draft } from './data'
+import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, TODAY, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
+import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
 import './style.css'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
@@ -32,9 +33,13 @@ function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) 
 
 function App() {
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
-  const [theme, setTheme] = useState<Theme>(query.get('theme') === 'dark' ? 'dark' : 'light')
-  const [tasks, setTasks] = useState<DemoTask[]>(query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS)
-  const [collapsed, setCollapsed] = useState<string[]>([])
+  const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
+  const { tasks, theme, collapsed } = notebook.data
+  const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
+  const setTheme = (theme: Theme) => notebook.update(current => ({ ...current, theme }))
+  const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
+  const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${TODAY}.json`)
+  const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${TODAY}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
   const [showDone, setShowDone] = useState(false)
   const [date, setDate] = useState(TODAY)
   const [draft, setDraft] = useState<Draft | null>(null)
@@ -51,6 +56,8 @@ function App() {
   const toggle = (id: string) => setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
   const openNew = (lesson?: Lesson) => setDraft({ subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : TODAY, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
   const save = (value: Draft) => {
+    if (value.kind) value = { ...value, lessonId: lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind && l.id === value.lessonId)?.id || lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind)?.id }
+
     setTasks(items => value.id ? items.map(t => t.id === value.id ? { ...t, ...value } : t) : [...items, { ...value, id: crypto.randomUUID(), done: false }])
     setDraft(null); setNotice(value.id ? 'Изменения сохранены' : 'Задание добавлено')
   }
@@ -68,9 +75,10 @@ function App() {
     <nav className="app-nav" aria-label="Основные вкладки">
       <span className="desktop-brand">ДЗ<span>Учебный планер</span></span>
       {([{ key: 'tasks', label: 'Задачи', icon: IconList }, { key: 'schedule', label: 'Расписание', icon: IconCalendar }, { key: 'settings', label: 'Настройки', icon: IconSettings }] as const).map(item => <button key={item.key} aria-current={tab === item.key ? 'page' : undefined} onClick={() => changeTab(item.key)}><item.icon size={25} /><span>{item.label}</span></button>)}
-      <span className="desktop-footer">Лист · превью {version}</span>
+      <span className="desktop-footer">Версия {version}</span>
     </nav>
     <main className={`app-main screen-${tab}`}>
+      {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
       {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="empty-state"><IconCheck size={30} /><h2>{tasks.length ? 'Всё выполнено' : 'Пока нет заданий'}</h2><p>{tasks.length ? 'Выполненные задания останутся внизу.' : 'Добавь первое — предмет и срок можно выбрать сразу.'}</p><button className="text-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button></div>}
@@ -100,11 +108,11 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="cloud" /><span><strong>Резервная копия</strong><small>Сохранение и перенос данных</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
-      <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>
+      {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
     </main>
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     {draft && <Editor draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
-    {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{s.name}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Сохранение и восстановление появятся после подключения постоянного хранения.</p><p>Сейчас здесь демонстрационные задания. Твои данные из прежней версии не изменяются.</p></> : <><h3>ДЗ · Лист</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version} · макет на демоданных.</p></>}</div></Modal>}
+    {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{s.name}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
 

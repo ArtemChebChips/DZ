@@ -196,3 +196,6 @@ body:has(.sheet[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: no-preference) {
   button { transition: color .12s, background-color .12s; }
 }
+
+.storage-warning { padding: 14px; margin-bottom: 20px; border: 1px solid var(--danger); border-radius: 8px; font-size: 14px; line-height: 1.5; color: var(--danger); }
+.storage-warning button { min-height: 44px; text-decoration: underline; }

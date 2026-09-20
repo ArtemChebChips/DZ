@@ -3,7 +3,9 @@ import { DEFAULT_SUBJECTS } from '../src/data/schedule'
 export { DEFAULT_LESSONS, DEFAULT_SUBJECTS, ANCHOR_MONDAY } from '../src/data/schedule'
 
 // Фиксированная дата делает сравнение воспроизводимым. Только память вкладки.
-export const TODAY = '2026-09-21'
+export const IS_DEMO = new URLSearchParams(location.search).get('demo') === '1'
+const now = new Date()
+export const TODAY = IS_DEMO ? '2026-09-21' : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 export type DemoTask = {
   id: string
   subjectId: string
