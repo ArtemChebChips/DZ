@@ -1,33 +1,31 @@
-name: Publish both app versions
-
+name: Publish app versions
 on:
   push:
-    branches: [main, codex/redesign]
+    branches: [main, codex/redesign, codex/rebuild]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Claude version
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
           path: legacy
-      - name: Checkout Codex version
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: codex/redesign
           path: codex
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/rebuild
+          path: next
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -35,34 +33,36 @@ jobs:
           cache-dependency-path: |
             legacy/package-lock.json
             codex/package-lock.json
+            next/package-lock.json
       - run: npm ci
         working-directory: legacy
       - run: npm ci
         working-directory: codex
+      - run: npm ci
+        working-directory: next
       - run: npm test
         working-directory: codex
-      - name: Prepare legacy PWA coexistence
-        run: node codex/scripts/prepare-legacy.mjs legacy
-        env:
-          LEGACY_BASE: /${{ github.event.repository.name }}/
+      - run: npm run test:next
+        working-directory: next
       - run: npm run build
         working-directory: legacy
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: /${{ github.event.repository.name }}/legacy/
       - run: npm run build
         working-directory: codex
         env:
           BASE_PATH: /${{ github.event.repository.name }}/codex/
-      - name: Assemble both versions
-        run: node codex/scripts/assemble-pages.mjs
+      - run: npm run build:design
+        working-directory: next
+        env:
+          BASE_PATH: ./
+      - name: Assemble all versions
+        run: node next/scripts/assemble-pages.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
-
   deploy:
-    # Pages разрешает публикации из main. Ветка Codex проходит проверку;
-    # после push в неё можно запустить этот workflow вручную с ref main.
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/rebuild'
     needs: build
     runs-on: ubuntu-latest
     environment:
