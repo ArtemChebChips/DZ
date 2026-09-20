@@ -9,6 +9,7 @@ import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASK
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
 import './style.css'
+import './register-sw'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'system'

@@ -44,14 +44,10 @@ jobs:
         working-directory: codex
       - run: npm run test:next
         working-directory: next
-      - name: Prepare legacy PWA coexistence
-        run: node next/scripts/prepare-legacy.mjs legacy
-        env:
-          LEGACY_BASE: /${{ github.event.repository.name }}/
       - run: npm run build
         working-directory: legacy
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: /${{ github.event.repository.name }}/legacy/
       - run: npm run build
         working-directory: codex
         env:
@@ -59,11 +55,9 @@ jobs:
       - run: npm run build:design
         working-directory: next
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/next/
+          BASE_PATH: ./
       - name: Assemble all versions
-        run: |
-          node codex/scripts/assemble-pages.mjs
-          cp -R next/dist-design site/next
+        run: node next/scripts/assemble-pages.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
