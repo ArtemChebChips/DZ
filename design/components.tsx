@@ -7,7 +7,36 @@ const tone = (id: string, kind?: string) => kind === 'lab' ? 'lab' : DEFAULT_SUB
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => { const dialog = ref.current!; dialog.showModal(); return () => dialog.close() }, [])
+  useEffect(() => {
+    const dialog = ref.current!
+    const viewport = window.visualViewport
+    // Клавиатура iPhone уменьшает видимую область, не обязательно высоту страницы.
+    const fit = () => {
+      const height = `${viewport?.height ?? window.innerHeight}px`
+      const resized = dialog.style.getPropertyValue('--sheet-height') !== height
+      dialog.style.setProperty('--sheet-height', height)
+      dialog.style.setProperty('--sheet-top', `${viewport?.offsetTop ?? 0}px`)
+      const field = document.activeElement
+      if (resized && dialog.open && field instanceof HTMLElement && dialog.contains(field) && field.matches('input, textarea, select')) {
+        const bounds = field.getBoundingClientRect()
+        const top = dialog.querySelector('header')!.getBoundingClientRect().bottom + 12
+        const bottom = (dialog.querySelector('footer')?.getBoundingClientRect().top ?? dialog.getBoundingClientRect().bottom) - 12
+        if (bounds.bottom > bottom) dialog.scrollTop += bounds.bottom - bottom
+        else if (bounds.top < top) dialog.scrollTop -= top - bounds.top
+      }
+    }
+    fit()
+    dialog.showModal()
+    viewport?.addEventListener('resize', fit)
+    viewport?.addEventListener('scroll', fit)
+    window.addEventListener('resize', fit)
+    return () => {
+      viewport?.removeEventListener('resize', fit)
+      viewport?.removeEventListener('scroll', fit)
+      window.removeEventListener('resize', fit)
+      dialog.close()
+    }
+  }, [])
   return <dialog ref={ref} className="sheet" onCancel={e => { e.preventDefault(); onClose() }} onClick={e => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
     <div className="sheet-inner"><header><h2>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><IconX /></button></header>{children}</div>
   </dialog>

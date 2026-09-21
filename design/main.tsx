@@ -1,4 +1,4 @@
-import { useEffect, useState, type SetStateAction } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO, WEEKDAYS_SHORT } from '../src/lib/dates'
@@ -33,6 +33,7 @@ function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) 
 }
 
 function App() {
+  const mainRef = useRef<HTMLElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
@@ -70,7 +71,8 @@ function App() {
   const ownTasks = tasks.filter(t => t.due === date)
   const assigned = new Set<string>()
   const row = (task: DemoTask) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} />
-  const changeTab = (next: Tab) => { setTab(next); window.scrollTo({ top: 0 }) }
+  useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
+  const changeTab = (next: Tab) => { setTab(next); mainRef.current?.scrollTo({ top: 0 }) }
 
   return <div className="app-shell">
     <nav className="app-nav" aria-label="Основные вкладки">
@@ -78,7 +80,7 @@ function App() {
       {([{ key: 'tasks', label: 'Задачи', icon: IconList }, { key: 'schedule', label: 'Расписание', icon: IconCalendar }, { key: 'settings', label: 'Настройки', icon: IconSettings }] as const).map(item => <button key={item.key} aria-current={tab === item.key ? 'page' : undefined} onClick={() => changeTab(item.key)}><item.icon size={25} /><span>{item.label}</span></button>)}
       <span className="desktop-footer">Версия {version}</span>
     </nav>
-    <main className={`app-main screen-${tab}`}>
+    <main ref={mainRef} className={`app-main screen-${tab}`}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
       {tab === 'tasks' && <div className="task-list">
