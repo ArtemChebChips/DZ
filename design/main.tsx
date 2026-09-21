@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
-import { addDays, parseISO, WEEKDAYS_SHORT } from '../src/lib/dates'
+import { addDays, parseISO } from '../src/lib/dates'
 import { lessonsOn, parityOf } from '../src/lib/week'
 import { IconList, IconCalendar, IconSettings, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
-import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, TODAY, subjectName, kindName, type DemoTask, type Draft } from './data'
+import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
+import { useToday, currentDay } from './use-today'
 import './style.css'
 import './register-sw'
 
@@ -17,7 +18,7 @@ type Panel = 'subjects' | 'backup' | 'about' | null
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
-const relativeDate = (date: string) => date < TODAY ? 'Просрочено' : date === TODAY ? 'Сегодня' : date === addDays(TODAY, 1) ? 'Завтра' : 'Позже'
+const relativeDate = (date: string, today: string) => date < today ? 'Просрочено' : date === today ? 'Сегодня' : date === addDays(today, 1) ? 'Завтра' : 'Позже'
 
 function SettingIcon({ kind }: { kind: 'book' | 'cloud' | 'info' | 'sun' }) {
   return <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -33,6 +34,9 @@ function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) 
 }
 
 function App() {
+  const today = useToday()
+  const previousToday = useRef(today)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
@@ -40,10 +44,15 @@ function App() {
   const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
   const setTheme = (theme: Theme) => notebook.update(current => ({ ...current, theme }))
   const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
-  const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${TODAY}.json`)
-  const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${TODAY}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
+  const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${today}.json`)
+  const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${today}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
   const [showDone, setShowDone] = useState(false)
-  const [date, setDate] = useState(TODAY)
+  const [date, setDate] = useState(today)
+  useEffect(() => {
+    const previous = previousToday.current
+    setDate(selected => selected === previous ? today : selected)
+    previousToday.current = today
+  }, [today])
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
   const [removed, setRemoved] = useState<DemoTask | null>(null)
@@ -56,7 +65,7 @@ function App() {
   }, [theme])
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice])
   const toggle = (id: string) => setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
-  const openNew = (lesson?: Lesson) => setDraft({ subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : TODAY, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
+  const openNew = (lesson?: Lesson) => setDraft({ subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : today, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
   const save = (value: Draft) => {
     if (value.kind) value = { ...value, lessonId: lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind && l.id === value.lessonId)?.id || lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind)?.id }
 
@@ -72,7 +81,10 @@ function App() {
   const assigned = new Set<string>()
   const row = (task: DemoTask) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} />
   useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
-  const changeTab = (next: Tab) => { setTab(next); mainRef.current?.scrollTo({ top: 0 }) }
+  const changeTab = (next: Tab) => {
+    if (next === 'schedule' && tab !== 'schedule') setDate(currentDay())
+    setTab(next); mainRef.current?.scrollTo({ top: 0 })
+  }
 
   return <div className="app-shell">
     <nav className="app-nav" aria-label="Основные вкладки">
@@ -85,21 +97,22 @@ function App() {
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
       {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="empty-state"><IconCheck size={30} /><h2>{tasks.length ? 'Всё выполнено' : 'Пока нет заданий'}</h2><p>{tasks.length ? 'Выполненные задания останутся внизу.' : 'Добавь первое — предмет и срок можно выбрать сразу.'}</p><button className="text-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button></div>}
-        {days.map(day => <section className={`day-section ${day < TODAY ? 'overdue' : ''}`} key={day}>
+        {days.map(day => <section className={`day-section ${day < today ? 'overdue' : ''}`} key={day}>
           <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
-            <span><span className="relative-date">{relativeDate(day)}</span><h2>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(TODAY).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</h2></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
+            <span><span className="relative-date">{relativeDate(day, today)}</span><h2>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</h2></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
           </button>
           {!collapsed.includes(day) && visible.filter(t => t.due === day).map(row)}
         </section>)}
         {done.length > 0 && <section className="done-section"><button className="done-heading" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}><IconCheck size={18} />Выполнено <span>{done.length}</span><IconChevronDown size={16} className={!showDone ? 'rotated' : ''} /></button>{showDone && done.map(row)}</section>}
       </div>}
-      {tab === 'schedule' && <div className="schedule-layout"><section className="calendar-section" aria-label="Календарь расписания"><Calendar value={date} onChange={setDate} /><button className="text-button today-button" onClick={() => setDate(TODAY)}>Сегодня</button></section><section className="agenda">
-        <div className="agenda-heading"><h2>{WEEKDAYS_SHORT[(parseISO(date).getDay() + 6) % 7]}, {longDate(date)}</h2><span>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</span></div>
+      {tab === 'schedule' && <div className="schedule-layout"><section className="agenda">
+        <div className="agenda-heading"><div><h2>{longDate(date)}</h2><p>{weekday(date)} · {parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><button className="text-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={20} />Календарь</button></div>
+        {date !== today && <button className="text-button today-button" onClick={() => setDate(today)}>Вернуться к сегодня</button>}
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
         {lessons.map(lesson => {
           const attached = ownTasks.filter(t => !assigned.has(t.id) && (t.lessonId ? t.lessonId === lesson.id : Boolean(t.kind) && t.kind === lesson.kind && t.subjectId === lesson.subjectId))
           attached.forEach(t => assigned.add(t.id))
-          return <article className="lesson" key={lesson.id}><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3><button className="icon-button" aria-label={`Добавить: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openNew(lesson)}><IconPlus size={19} /></button></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${lesson.room}`}</p>{lesson.building && <p className="lesson-detail">{lesson.building}</p>}{attached.map(row)}</div></article>
+          return <article className="lesson" key={lesson.id}><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3><button className="icon-button" aria-label={`Добавить: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openNew(lesson)}><IconPlus size={19} /></button></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(row)}</div></article>
         })}
         {ownTasks.some(t => !assigned.has(t.id)) && <section className="day-extra"><h3>Сдать в этот день</h3>{ownTasks.filter(t => !assigned.has(t.id)).map(row)}</section>}
         <button className="text-button agenda-add" onClick={() => openNew()}><IconPlus size={19} />Добавить задание на этот день</button>
@@ -114,7 +127,8 @@ function App() {
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
     </main>
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
-    {draft && <Editor draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
+    {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
+    {calendarOpen && <Modal title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { setDate(selected); setCalendarOpen(false); mainRef.current?.scrollTo({ top: 0 }) }} /><button className="text-button today-button" onClick={() => { setDate(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
     {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{s.name}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
