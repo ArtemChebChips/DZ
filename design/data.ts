@@ -31,5 +31,9 @@ export const EXTRA_TASKS: DemoTask[] = [
   { id: 'later', subjectId: 'mech', title: 'Расчётно-графическая: первая часть', due: '2026-10-05', done: false },
 ]
 
-export const subjectName = (id: string) => DEFAULT_SUBJECTS.find(s => s.id === id)?.short || 'Личное'
+const subjectNames: Record<string, string> = {
+  phys: 'Физика', matchem: 'Материаловедение', mech: 'Механика',
+  prob: 'Тервер', eng: 'Английский', pe: 'Физра', metro: 'Метрология',
+}
+export const subjectName = (id: string) => subjectNames[id] || DEFAULT_SUBJECTS.find(s => s.id === id)?.short || 'Личное'
 export const kindName = { lecture: 'Лекция', seminar: 'Семинар', lab: 'Лабораторная', other: 'Занятие' }

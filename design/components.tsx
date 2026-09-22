@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { addDays, diffDays, formatDayMonth, mondayOf, parseISO, toISO, WEEKDAYS_SHORT, MONTHS_NOM } from '../src/lib/dates'
 import { lessonsOn, nextLessonDates } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
+import { homeworkLessons, isHomeworkKind, taskLesson } from './homework'
+import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
-const tone = (id: string, kind?: string) => kind === 'lab' ? 'lab' : DEFAULT_SUBJECTS.find(s => s.id === id)?.assessment || 'other'
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -42,7 +43,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   </dialog>
 }
 
-export function Calendar({ value, today, onChange, match }: { value: string; today: string; onChange: (date: string) => void; match?: (date: string) => boolean }) {
+export function Calendar({ value, today, onChange, kinds }: { value: string; today: string; onChange: (date: string) => void; kinds?: (date: string) => LessonKind[] }) {
   const [month, setMonth] = useState(value)
   useEffect(() => { setMonth(value) }, [value])
   const d = parseISO(month)
@@ -56,28 +57,72 @@ export function Calendar({ value, today, onChange, match }: { value: string; tod
     <div className="month-grid">{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
       {Array.from({ length: count / 7 }, (_, week) => <div className="month-row" key={week}>{Array.from({ length: 7 }, (_, day) => {
         const date = addDays(start, week * 7 + day)
-        return <button type="button" key={date} aria-label={parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''} ${match?.(date) ? 'has-lesson' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}</button>
+        const marks = kinds?.(date) || []
+        const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+        return <button type="button" key={date} aria-label={`${label}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
       })}</div>)}
     </div>
   </div>
 }
 
 export function Editor({ draft, today, save, remove, close }: { draft: Draft; today: string; save: (draft: Draft) => void; remove: (id: string) => void; close: () => void }) {
-  const [value, setValue] = useState(draft)
-  const dates = value.subjectId ? nextLessonDates(value.subjectId, draft.due, DEFAULT_LESSONS, ANCHOR_MONDAY, 2, { kind: value.kind }) : []
-  const matches = (date: string) => lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY).some(l => l.subjectId === value.subjectId && (!value.kind || l.kind === value.kind))
-  return <Modal title={draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close}>
-    <form onSubmit={e => { e.preventDefault(); if (value.title.trim()) save({ ...value, title: value.title.trim() }) }}>
+  const [value, setValue] = useState(() => {
+    const lesson = taskLesson(draft, lessonsOn(draft.due, DEFAULT_LESSONS, ANCHOR_MONDAY))
+    return lesson ? { ...draft, kind: lesson.kind, lessonId: lesson.id } : draft
+  })
+  const [picking, setPicking] = useState(false)
+  const subjectButton = useRef<HTMLButtonElement>(null)
+  const subjectList = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (picking) subjectList.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus()
+    else subjectButton.current?.focus({ preventScroll: true })
+  }, [picking])
+  const dayLessons = lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY)
+  const choices = homeworkLessons(value.subjectId, dayLessons)
+  const availableKinds = [...new Set(homeworkLessons(value.subjectId, DEFAULT_LESSONS).map(l => l.kind))]
+  const candidates = homeworkLessons(value.subjectId, dayLessons, value.kind)
+  const selected = taskLesson(value, dayLessons)
+  const needsChoice = candidates.length > 1 && !selected
+  const dates = isHomeworkKind(value.kind) ? nextLessonDates(value.subjectId, value.due, DEFAULT_LESSONS, ANCHOR_MONDAY, 2, { kind: value.kind }) : []
+  const marks = (date: string) => [...new Set(homeworkLessons(value.subjectId, lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)).map(l => l.kind))]
+  const changeContext = (patch: Partial<Draft>) => {
+    const next = { ...value, ...patch, lessonId: undefined }
+    const matching = homeworkLessons(next.subjectId, lessonsOn(next.due, DEFAULT_LESSONS, ANCHOR_MONDAY), next.kind)
+    const same = matching.find(l => l.id === value.lessonId) ?? (matching.length === 1 ? matching[0] : undefined)
+    if (same) setValue({ ...next, kind: same.kind, lessonId: same.id })
+    else setValue(next)
+  }
+  const pickSubject = (subjectId: string) => {
+    if (subjectId !== value.subjectId) {
+      const kinds = [...new Set(homeworkLessons(subjectId, DEFAULT_LESSONS).map(l => l.kind))]
+      changeContext({ subjectId, kind: kinds.length === 1 ? kinds[0] : undefined })
+    }
+    setPicking(false)
+  }
+  const finish = () => {
+    if (!value.title.trim() || needsChoice) return
+    // Старое отсутствующее lessonId сохраняет несопоставленную запись, пока пользователь не выберет пару.
+    save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
+  }
+  return <Modal title={picking ? 'Выбрать предмет' : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={() => picking ? setPicking(false) : close()}>
+    {picking && <div className="subject-picker" ref={subjectList}>
+      {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
+      <button type="button" className="text-button" onClick={() => setPicking(false)}>Назад к заданию</button>
+    </div>}
+    <form hidden={picking} onSubmit={e => { e.preventDefault(); finish() }}>
       <div className="editor-fields">
-        {draft.locked ? <div className={`locked-subject tone-${tone(value.subjectId, value.kind)}`}><span className="subject-dot" /><strong>{subjectName(value.subjectId)}</strong><small>{value.kind ? kindName[value.kind] : ''}</small></div> : <label className="field">Предмет<select value={value.subjectId} onChange={e => setValue({ ...value, subjectId: e.target.value, lessonId: undefined, kind: undefined })}><option value="">Без предмета</option>{DEFAULT_SUBJECTS.map(s => <option value={s.id} key={s.id}>{s.name}</option>)}</select></label>}
+        <div className="field"><span id="subject-label">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
         <label className="field">Что нужно сделать<textarea placeholder="Например, решить задачи 12–18" rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
+        {availableKinds.length > 0 && <div className="kind-options" aria-label="Вид занятия">{availableKinds.map(kind => <button type="button" key={kind} className={`kind-${kind}`} aria-pressed={value.kind === kind} onClick={() => changeContext({ kind })}>{kind === 'lab' ? 'Лаба' : 'Семинар'}</button>)}</div>}
         <div className="date-field-title"><span>Сдать к</span><strong>{formatDayMonth(value.due)}</strong></div>
-        {dates.length > 0 && <div className="date-presets">{dates.map((date, i) => <button type="button" key={date} onClick={() => setValue({ ...value, due: date })} aria-pressed={value.due === date}>{i === 0 ? 'Следующая пара' : 'Через одну'}<span>{formatDayMonth(date)}</span></button>)}</div>}
-        <Calendar today={today} value={value.due} onChange={due => setValue({ ...value, due })} match={matches} />
-        {value.subjectId && <p className="calendar-hint"><span /> Обведены дни подходящих занятий</p>}
+        {dates.length > 0 && <div className="date-presets">{dates.map((date, i) => <button type="button" key={date} onClick={() => changeContext({ due: date })}>{value.kind === 'lab' ? (i === 0 ? 'Ближайший день лаб' : 'Следующий день лаб') : (i === 0 ? 'Следующий семинар' : 'Семинар после него')}<span>{formatDayMonth(date)}</span></button>)}</div>}
+        <Calendar today={today} value={value.due} onChange={due => changeContext({ due })} kinds={marks} />
+        {value.subjectId && <div className="calendar-legend"><span><i className="mark-seminar" />Семинар</span><span><i className="mark-lab" />Лаба</span></div>}
+        {choices.length > 0 && <fieldset className="lesson-choices"><legend>{needsChoice ? 'Выбери время пары' : 'Занятие в этот день'}</legend>{choices.map(l => <button type="button" key={l.id} className={`kind-${l.kind}`} aria-pressed={value.lessonId === l.id} onClick={() => setValue({ ...value, kind: l.kind, lessonId: l.id })}><span>{l.kind === 'lab' ? 'Лаба' : 'Семинар'} · {l.start}–{l.end}</span>{value.lessonId === l.id && <IconCheck size={18} />}</button>)}</fieldset>}
+        {value.subjectId && !selected && <p className="binding-hint">{needsChoice ? 'В этот день несколько пар — выбери нужную.' : choices.length ? 'Можно выбрать пару выше или сохранить задание на эту дату без привязки.' : 'Подходящей пары в этот день нет. Задание останется на выбранной дате без привязки.'}</p>}
+        {selected?.kind === 'lecture' && <p className="binding-hint">Прежняя привязка к лекции сохранена. Для смены выбери семинар или лабу.</p>}
       </div>
-      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => remove(draft.id!)}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim()} type="submit">{draft.id ? 'Сохранить' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
+      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => remove(draft.id!)}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim() || needsChoice} type="submit">{draft.id ? 'Сохранить' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
     </form>
   </Modal>
 }
-

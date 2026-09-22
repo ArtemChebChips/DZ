@@ -8,6 +8,7 @@ import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
+import { taskLesson, isHomeworkKind } from './homework'
 import { useToday, currentDay } from './use-today'
 import './style.css'
 import './register-sw'
@@ -67,9 +68,8 @@ function App() {
   const toggle = (id: string) => setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
   const openNew = (lesson?: Lesson) => setDraft({ subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : today, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
   const save = (value: Draft) => {
-    if (value.kind) value = { ...value, lessonId: lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind && l.id === value.lessonId)?.id || lessonsOn(value.due, DEFAULT_LESSONS, ANCHOR_MONDAY).find(l => l.subjectId === value.subjectId && l.kind === value.kind)?.id }
-
-    setTasks(items => value.id ? items.map(t => t.id === value.id ? { ...t, ...value } : t) : [...items, { ...value, id: crypto.randomUUID(), done: false }])
+    const { locked: _locked, ...record } = value
+    setTasks(items => record.id ? items.map(t => t.id === record.id ? { ...t, ...record } : t) : [...items, { ...record, id: crypto.randomUUID(), done: false }])
     setDraft(null); setNotice(value.id ? 'Изменения сохранены' : 'Задание добавлено')
   }
   const remove = (id: string) => { setRemoved(tasks.find(t => t.id === id) || null); setTasks(items => items.filter(t => t.id !== id)); setDraft(null) }
@@ -110,11 +110,11 @@ function App() {
         {date !== today && <button className="text-button today-button" onClick={() => setDate(today)}>Вернуться к сегодня</button>}
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
         {lessons.map(lesson => {
-          const attached = ownTasks.filter(t => !assigned.has(t.id) && (t.lessonId ? t.lessonId === lesson.id : Boolean(t.kind) && t.kind === lesson.kind && t.subjectId === lesson.subjectId))
+          const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
           attached.forEach(t => assigned.add(t.id))
-          return <article className="lesson" key={lesson.id}><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3><button className="icon-button" aria-label={`Добавить: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openNew(lesson)}><IconPlus size={19} /></button></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(row)}</div></article>
+          return <article className="lesson" key={lesson.id}><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3>{isHomeworkKind(lesson.kind) && <button className="icon-button" aria-label={`Добавить: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openNew(lesson)}><IconPlus size={19} /></button>}</div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(row)}</div></article>
         })}
-        {ownTasks.some(t => !assigned.has(t.id)) && <section className="day-extra"><h3>Сдать в этот день</h3>{ownTasks.filter(t => !assigned.has(t.id)).map(row)}</section>}
+        {ownTasks.some(t => !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !assigned.has(t.id)).map(row)}</section>}
         <button className="text-button agenda-add" onClick={() => openNew()}><IconPlus size={19} />Добавить задание на этот день</button>
       </section></div>}
       {tab === 'settings' && <div className="settings-list">
@@ -129,7 +129,7 @@ function App() {
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
     {calendarOpen && <Modal title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { setDate(selected); setCalendarOpen(false); mainRef.current?.scrollTo({ top: 0 }) }} /><button className="text-button today-button" onClick={() => { setDate(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
-    {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{s.name}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
+    {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
 

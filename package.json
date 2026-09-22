@@ -1,7 +1,7 @@
 {
   "name": "dz",
   "private": true,
-  "version": "1.23.4",
+  "version": "1.23.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "dev:design": "vite --config vite.design.config.ts",
     "build:design": "tsc --project tsconfig.design.json && vite build --config vite.design.config.ts",
-    "test:next": "node --experimental-strip-types --test tests/storage.test.mjs"
+    "test:next": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

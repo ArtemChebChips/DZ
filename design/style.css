@@ -76,7 +76,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .done-heading { min-height: 44px; display: flex; gap: 9px; align-items: center; color: var(--muted); padding: 0; width: 100%; text-align: left; font-size: 14px; }
 .done-heading > svg:last-child { margin-left: auto; }
 /* Компактный нижний край по проверке владельца на iPhone. */
-.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 9px max(12px, var(--safe-right)) 12px max(12px, var(--safe-left)); }
+.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 0 max(12px, var(--safe-left)); }
 .app-nav button { width: 33.333%; max-width: 200px; min-height: 53px; padding: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .app-nav button[aria-current='page'] { color: var(--accent); }
 .desktop-brand, .desktop-footer { display: none; }
@@ -91,7 +91,14 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .calendar-date::before { content: ''; position: absolute; width: 39px; height: 39px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: -1; }
 .calendar-date.outside { color: var(--muted); opacity: .55; }
 .calendar-date.today:not(.selected) { color: var(--accent); }
-.calendar-date.has-lesson:not(.selected)::before { border: 1px solid var(--accent); }
+.lesson-marks { position: absolute; bottom: 1px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
+.calendar-date:has(.lesson-marks i)::before { width: 35px; height: 35px; top: calc(50% - 3px); }
+.lesson-marks i, .calendar-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+.mark-seminar { background: var(--accent); }
+.mark-lab { background: #238b54; }
+:root[data-theme='dark'] .mark-lab { background: #70d99a; }
+.calendar-legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 14px; }
+.calendar-legend span { display: flex; align-items: center; gap: 6px; }
 .calendar-date.selected { color: var(--on-accent); opacity: 1; }
 .calendar-date.selected::before { background: var(--accent); }
 .today-button { font-size: 14px; }
@@ -144,6 +151,19 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .field { display: flex; flex-direction: column; gap: 9px; font-size: 13px; color: var(--muted); margin-bottom: 22px; }
 .field select, .field textarea { width: 100%; background: var(--surface); color: var(--ink); border: 1px solid var(--line); padding: 12px; border-radius: 7px; font-size: 16px; line-height: 1.5; min-height: 46px; }
 .field textarea { resize: vertical; min-height: 105px; }
+.subject-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 12px; min-height: 46px; border: 1px solid var(--line); border-radius: 7px; padding: 12px; color: var(--ink); background: var(--surface); font-size: 16px; }
+.subject-picker { padding: 12px 20px 24px; }
+.subject-picker > button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 12px; border-bottom: 1px solid var(--line); text-align: left; font-size: 16px; }
+.subject-picker > button[aria-pressed='true'] { color: var(--accent); background: var(--soft); border-radius: 7px; }
+.kind-options { display: flex; gap: 8px; margin-bottom: 20px; }
+.kind-options button, .lesson-choices button { min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; }
+.kind-options button[aria-pressed='true'], .lesson-choices button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); background: var(--soft); }
+.kind-options .kind-lab[aria-pressed='true'], .lesson-choices .kind-lab[aria-pressed='true'] { color: #238b54; border-color: #238b54; }
+:root[data-theme='dark'] .kind-lab[aria-pressed='true'] { color: #70d99a; border-color: #70d99a; }
+.lesson-choices { border: 0; padding: 0; margin: 20px 0 0; min-width: 0; }
+.lesson-choices legend { font-size: 13px; color: var(--muted); padding: 0; margin-bottom: 10px; }
+.lesson-choices button { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; width: 100%; margin-top: 6px; font-size: 14px; }
+.binding-hint { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 12px; }
 .date-field-title { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; margin-bottom: 18px; }
 .date-field-title > span { color: var(--muted); }
 .date-field-title strong { font-weight: 500; }
@@ -183,6 +203,10 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 }
 @media (max-width: 600px) {
   .sheet { top: calc(var(--sheet-top, 0px) + var(--sheet-height, 100dvh)); transform: translateY(-100%); width: calc(100% - var(--safe-left) - var(--safe-right)); max-width: 100%; max-height: calc(var(--sheet-height, 100dvh) - var(--safe-top) - 16px); border-radius: 15px 15px 0 0; border-bottom: 0; }
+}
+@media (display-mode: standalone) {
+  /* Установленное приложение занимает всё окно, без вычета панелей Safari. */
+  .app-shell { height: 100%; }
 }
 @media (min-width: 1000px) {
   .app-shell { grid-template-columns: 214px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
