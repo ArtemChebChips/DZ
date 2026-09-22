@@ -12,6 +12,8 @@ export type DemoTask = {
   title: string
   due: string
   done: boolean
+  entryType?: 'homework' | 'note'
+  testBatchId?: string
   lessonId?: string
   kind?: LessonKind
 }

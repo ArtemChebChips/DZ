@@ -8,14 +8,15 @@ import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
-import { taskLesson, isHomeworkKind } from './homework'
+import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { useToday, currentDay } from './use-today'
+import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import './style.css'
 import './register-sw'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'system'
-type Panel = 'subjects' | 'backup' | 'about' | null
+type Panel = 'subjects' | 'backup' | 'about' | 'beta' | null
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
@@ -30,7 +31,7 @@ function SettingIcon({ kind }: { kind: 'book' | 'cloud' | 'info' | 'sun' }) {
 function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void }) {
   return <div className={`task-row ${task.done ? 'completed' : ''}`}>
     <button className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
-    <button className="task-content" onClick={() => edit(task)}><span className="task-subject">{subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
+    <button className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? `Заметка${task.subjectId ? ' · ' + subjectName(task.subjectId) : ''}` : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
   </div>
 }
 
@@ -56,6 +57,7 @@ function App() {
   }, [today])
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
+  const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [removed, setRemoved] = useState<DemoTask | null>(null)
   const [notice, setNotice] = useState('')
   useEffect(() => {
@@ -66,13 +68,28 @@ function App() {
   }, [theme])
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice])
   const toggle = (id: string) => setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
-  const openNew = (lesson?: Lesson) => setDraft({ subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : today, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
+  const openNew = (lesson?: Lesson) => setDraft({ entryType: 'homework', subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : today, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
   const save = (value: Draft) => {
     const { locked: _locked, ...record } = value
     setTasks(items => record.id ? items.map(t => t.id === record.id ? { ...t, ...record } : t) : [...items, { ...record, id: crypto.randomUUID(), done: false }])
-    setDraft(null); setNotice(value.id ? 'Изменения сохранены' : 'Задание добавлено')
+    setDraft(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
   }
   const remove = (id: string) => { setRemoved(tasks.find(t => t.id === id) || null); setTasks(items => items.filter(t => t.id !== id)); setDraft(null) }
+  const testCount = tasks.filter(isTestTask).length
+  const generateExamples = () => {
+    const days = Array.from({ length: 21 }, (_, i) => {
+      const date = addDays(today, i)
+      return { date, lessons: lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY) }
+    })
+    const generated = generateTestTasks(days, crypto.randomUUID())
+    setTasks(items => [...withoutTestTasks(items), ...generated])
+    setRemoved(null); setBetaDeleted(null)
+  }
+  const deleteExamples = () => {
+    setBetaDeleted(testCount)
+    setTasks(withoutTestTasks)
+    setRemoved(null)
+  }
   const visible = tasks.filter(t => !t.done)
   const days = [...new Set(visible.map(t => t.due))].sort()
   const done = tasks.filter(t => t.done)
@@ -114,7 +131,9 @@ function App() {
           attached.forEach(t => assigned.add(t.id))
           return <article className="lesson" key={lesson.id}><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3>{isHomeworkKind(lesson.kind) && <button className="icon-button" aria-label={`Добавить: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openNew(lesson)}><IconPlus size={19} /></button>}</div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(row)}</div></article>
         })}
-        {ownTasks.some(t => !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !assigned.has(t.id)).map(row)}</section>}
+        {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(row)}</section>}
+        {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(row)}</section>}
+        <button className="text-button agenda-add" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка на день</button>
         <button className="text-button agenda-add" onClick={() => openNew()}><IconPlus size={19} />Добавить задание на этот день</button>
       </section></div>}
       {tab === 'settings' && <div className="settings-list">
@@ -122,6 +141,7 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="cloud" /><span><strong>Резервная копия</strong><small>Сохранение и перенос данных</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры заданий на три недели</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
@@ -129,7 +149,18 @@ function App() {
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
     {calendarOpen && <Modal title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { setDate(selected); setCalendarOpen(false); mainRef.current?.scrollTo({ top: 0 }) }} /><button className="text-button today-button" onClick={() => { setDate(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
-    {panel && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
+    {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
+      <div className="info-panel beta-panel">
+        <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
+        <p>Тестовых записей: {testCount}</p>
+        {notebook.error && <p role="alert">{notebook.error}</p>}
+        <button className="primary-button" disabled={Boolean(notebook.error)} onClick={generateExamples}>Добавить тестовые задания</button>
+        <button className="text-button delete-button" disabled={Boolean(notebook.error) || !testCount} onClick={deleteExamples}>Удалить тестовые задания ({testCount})</button>
+        {betaDeleted !== null && !notebook.error && <p role="status">Удалено тестовых записей: {betaDeleted}</p>}
+        {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
+      </div>
+    </Modal>}
+    {panel && panel !== 'beta' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
 

@@ -13,7 +13,7 @@ export function validateNotebook(value: unknown): value is Notebook {
   if (!value || typeof value !== 'object') return false
   const d = value as Notebook
   return d.version === 1 && ['light', 'dark', 'system'].includes(d.theme) && Array.isArray(d.collapsed) && d.collapsed.every(validDate) && Array.isArray(d.tasks) &&
-    new Set(d.tasks.map(t => t?.id)).size === d.tasks.length && d.tasks.every(t => t && typeof t.id === 'string' && t.id.length > 0 && typeof t.title === 'string' && t.title.trim().length > 0 && typeof t.subjectId === 'string' && typeof t.done === 'boolean' && validDate(t.due) && (t.lessonId === undefined || typeof t.lessonId === 'string') && (t.kind === undefined || ['lecture', 'seminar', 'lab', 'other'].includes(t.kind)))
+    new Set(d.tasks.map(t => t?.id)).size === d.tasks.length && d.tasks.every(t => t && typeof t.id === 'string' && t.id.length > 0 && typeof t.title === 'string' && t.title.trim().length > 0 && typeof t.subjectId === 'string' && typeof t.done === 'boolean' && validDate(t.due) && (t.lessonId === undefined || typeof t.lessonId === 'string') && (t.entryType === undefined || ['homework', 'note'].includes(t.entryType)) && (t.testBatchId === undefined || (typeof t.testBatchId === 'string' && t.testBatchId.trim().length > 0)) && (t.kind === undefined || ['lecture', 'seminar', 'lab', 'other'].includes(t.kind)))
 }
 export function readNotebook(storage: Pick<Storage, 'getItem'>) {
   const raw = storage.getItem(STORAGE_KEY)

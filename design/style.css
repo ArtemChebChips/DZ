@@ -229,3 +229,8 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 
 .storage-warning { padding: 14px; margin-bottom: 20px; border: 1px solid var(--danger); border-radius: 8px; font-size: 14px; line-height: 1.5; color: var(--danger); }
 .storage-warning button { min-height: 44px; text-decoration: underline; }
+
+.beta-panel { display: grid; gap: 16px; }
+.beta-panel p { margin: 0; }
+.beta-panel button { min-height: 44px; }
+button:disabled { opacity: .45; cursor: default; }
