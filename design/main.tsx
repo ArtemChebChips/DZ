@@ -146,10 +146,20 @@ function App() {
     <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`}>
       <div className="screen-header">
-      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
-      {tab === 'schedule' && <>
-        <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}</div></div>
-      </>}
+      {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
+      {tab === 'schedule' && <header className="agenda-heading">
+        <h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>
+        <div className="agenda-date-row">
+          <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
+          <div className="agenda-controls">
+            {date !== today && <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}
+            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={() => setCalendarOpen(true)}><IconCalendar size={22} /></button>
+          </div>
+        </div>
+        <div className="agenda-meta"><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p>
+          <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
+        </div>
+      </header>}
       </div>
       <div ref={mainRef} className="app-scroll" data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
@@ -172,7 +182,7 @@ function App() {
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(row)}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(row)}</section>}
-        <div className="agenda-actions"><button className="primary-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button></div>
+        <div className="agenda-actions"><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button><button className="primary-button" onClick={() => openNew()}>Добавить задание</button></div>
       </section></div>}
       {tab === 'settings' && <div className="settings-list">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
