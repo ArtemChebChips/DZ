@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
@@ -12,12 +12,13 @@ import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { useToday, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { useScrollBoundary } from './use-scroll-boundary'
+import { completedTasks } from './history'
 import './style.css'
 import './register-sw'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'system'
-type Panel = 'subjects' | 'backup' | 'about' | 'beta' | null
+type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | null
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
@@ -29,10 +30,23 @@ function SettingIcon({ kind }: { kind: 'book' | 'cloud' | 'info' | 'sun' }) {
   </svg>
 }
 
-function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void }) {
-  return <div className={`task-row ${task.done ? 'completed' : ''}`}>
-    <button className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
-    <button className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? `Заметка${task.subjectId ? ' · ' + subjectName(task.subjectId) : ''}` : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
+function TaskRow({ task, toggle, edit, leaving = false, onExited }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void; leaving?: boolean; onExited?: (id: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (!leaving || !ref.current || !onExited) return
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { onExited(task.id); return }
+    const el = ref.current
+    const height = `${el.getBoundingClientRect().height}px`
+    let finished = false
+    const finish = () => { if (!finished) { finished = true; onExited(task.id) } }
+    const animation = el.animate([{ height, opacity: 1 }, { height, opacity: .5, offset: .35 }, { height: '0px', opacity: 0 }], { duration: 260, easing: 'ease-in-out', fill: 'forwards' })
+    animation.finished.then(finish, () => {})
+    const fallback = setTimeout(finish, 340)
+    return () => { finished = true; clearTimeout(fallback); animation.cancel() }
+  }, [leaving, task.id, onExited])
+  return <div ref={ref} className={`task-row ${task.done ? 'completed' : ''} ${leaving ? 'task-leaving' : ''}`}>
+    <button disabled={leaving} className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
+    <button disabled={leaving} className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? `Заметка${task.subjectId ? ' · ' + subjectName(task.subjectId) : ''}` : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
   </div>
 }
 
@@ -49,7 +63,10 @@ function App() {
   const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
   const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${today}.json`)
   const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${today}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
-  const [showDone, setShowDone] = useState(false)
+  const [historyLimit, setHistoryLimit] = useState(20)
+  const [editingHistory, setEditingHistory] = useState(false)
+  const [exiting, setExiting] = useState<string[]>([])
+  const finishExit = useCallback((id: string) => setExiting(ids => ids.filter(value => value !== id)), [])
   const [date, setDate] = useState(today)
   const [dayDirection, setDayDirection] = useState(1)
   const selectDay = (next: string) => { setDayDirection(next < date ? -1 : 1); setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
@@ -63,7 +80,7 @@ function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
-  const [removed, setRemoved] = useState<DemoTask | null>(null)
+  const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
   useEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
@@ -72,14 +89,30 @@ function App() {
     return () => media.removeEventListener('change', apply)
   }, [theme])
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice])
-  const toggle = (id: string) => setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
+  useEffect(() => { if (!undo) return; const timer = setTimeout(() => setUndo(null), 5000); return () => clearTimeout(timer) }, [undo])
+  const toggle = (id: string) => {
+    const task = tasks.find(t => t.id === id)
+    if (!task || exiting.includes(id)) return
+    setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
+    setNotice('')
+    setUndo(task.done ? null : { type: 'complete', task })
+    if (!task.done && tab === 'tasks' && panel !== 'history' && !matchMedia('(prefers-reduced-motion: reduce)').matches) setExiting(ids => [...ids, id])
+  }
+  const undoLast = () => {
+    if (!undo) return
+    setTasks(items => undo.type === 'delete' ? (items.some(t => t.id === undo.task.id) ? items : [...items, undo.task]) : items.map(t => t.id === undo.task.id ? { ...t, done: false } : t))
+    finishExit(undo.task.id); setUndo(null)
+  }
+  const closeEditor = () => { setDraft(null); if (editingHistory) setPanel('history'); setEditingHistory(false) }
+  const openHistory = () => { setExiting([]); setHistoryLimit(20); setPanel('history') }
+  const editHistory = (task: DemoTask) => { setPanel(null); setEditingHistory(true); setDraft(task) }
   const openNew = (lesson?: Lesson) => setDraft({ entryType: 'homework', subjectId: lesson?.subjectId || '', title: '', due: tab === 'schedule' ? date : today, kind: lesson?.kind, lessonId: lesson?.id, locked: Boolean(lesson) })
   const save = (value: Draft) => {
     const { locked: _locked, ...record } = value
     setTasks(items => record.id ? items.map(t => t.id === record.id ? { ...t, ...record } : t) : [...items, { ...record, id: crypto.randomUUID(), done: false }])
-    setDraft(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
+    closeEditor(); setUndo(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
   }
-  const remove = (id: string) => { setRemoved(tasks.find(t => t.id === id) || null); setTasks(items => items.filter(t => t.id !== id)); setDraft(null) }
+  const remove = (id: string) => { const task = tasks.find(t => t.id === id); setUndo(task ? { type: 'delete', task } : null); setNotice(''); setTasks(items => items.filter(t => t.id !== id)); closeEditor() }
   const testCount = tasks.filter(isTestTask).length
   const generateExamples = () => {
     const days = Array.from({ length: 21 }, (_, i) => {
@@ -88,24 +121,24 @@ function App() {
     })
     const generated = generateTestTasks(days, crypto.randomUUID())
     setTasks(items => [...withoutTestTasks(items), ...generated])
-    setRemoved(null); setBetaDeleted(null)
+    setUndo(null); setBetaDeleted(null)
   }
   const deleteExamples = () => {
     setBetaDeleted(testCount)
     setTasks(withoutTestTasks)
-    setRemoved(null)
+    setUndo(null)
   }
-  const visible = tasks.filter(t => !t.done)
+  const visible = tasks.filter(t => !t.done || exiting.includes(t.id))
   const days = [...new Set(visible.map(t => t.due))].sort()
-  const done = tasks.filter(t => t.done)
+  const done = completedTasks(tasks)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
   const ownTasks = tasks.filter(t => t.due === date)
   const assigned = new Set<string>()
-  const row = (task: DemoTask) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} />
+  const row = (task: DemoTask) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} onExited={finishExit} />
   useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
   const changeTab = (next: Tab) => {
     if (next === 'schedule' && tab !== 'schedule') setDate(currentDay())
-    setTab(next); mainRef.current?.scrollTo({ top: 0 })
+    setExiting([]); setTab(next); mainRef.current?.scrollTo({ top: 0 })
   }
 
   return <div className="app-shell">
@@ -116,7 +149,7 @@ function App() {
     </nav>
     <main className={`app-main screen-${tab}`}>
       <div className="screen-header">
-      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1></header>
+      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
       {tab === 'schedule' && <>
         <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}</div></div>
       </>}
@@ -131,7 +164,7 @@ function App() {
           </button>
           {!collapsed.includes(day) && visible.filter(t => t.due === day).map(row)}
         </section>)}
-        {done.length > 0 && <section className="done-section"><button className="done-heading" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}><IconCheck size={18} />Выполнено <span>{done.length}</span><IconChevronDown size={16} className={!showDone ? 'rotated' : ''} /></button>{showDone && done.map(row)}</section>}
+
       </div>}
       {tab === 'schedule' && <div key={date} className={`schedule-layout day-enter day-direction-${dayDirection}`}><section className="agenda">
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
@@ -152,14 +185,15 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры заданий на три недели</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
-      {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
+      {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>}
       </div>
       {tab === 'tasks' && <button className="primary-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>}
-    {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
+      {undo ? <div className="toast" role="status">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}<button onClick={undoLast}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     </main>
 
-    {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
+    {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
     {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); setCalendarOpen(false) }} /><button className="outline-button today-button" onClick={() => { selectDay(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
+    {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}><div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption">По дате задания · {done.length}</p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={editHistory} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
@@ -171,7 +205,7 @@ function App() {
         {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
       </div>
     </Modal>}
-    {panel && panel !== 'beta' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
+    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
 

@@ -282,3 +282,11 @@ button:disabled { opacity: .45; cursor: default; }
 .tasks-empty h2 { font-size: 21px; letter-spacing: -.4px; }
 .app-main .toast { position: absolute; bottom: 16px; left: 50%; }
 .screen-tasks .toast { bottom: 84px; }
+
+.task-leaving { overflow: hidden; pointer-events: none; }
+.task-leaving button:disabled { opacity: 1; }
+.history-list { padding: 8px 20px 24px; }
+.history-caption, .history-empty { padding: 16px 0; color: var(--muted); font-size: 14px; }
+.history-date { font-size: 12px; color: var(--muted); padding-top: 18px; }
+.history-more { width: 100%; margin-top: 20px; }
+.history-button { flex-shrink: 0; }
