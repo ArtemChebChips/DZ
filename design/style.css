@@ -290,3 +290,14 @@ button:disabled { opacity: .45; cursor: default; }
 .history-date { font-size: 12px; color: var(--muted); padding-top: 18px; }
 .history-more { width: 100%; margin-top: 20px; }
 .history-button { flex-shrink: 0; }
+
+/* D5 — подложка перемещается, размеры кнопок и панели не меняются. */
+.nav-bubble { position: absolute; left: 0; top: 0; border-radius: 20px; background: #0665f511; border: 1px solid #0665f512; pointer-events: none; }
+:root[data-theme='dark'] .nav-bubble { background: #77aaff1c; border-color: #77aaff20; }
+.app-nav button { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: no-preference) and (max-width: 999px) {
+  .nav-bubble { transition: transform .24s cubic-bezier(.2,.8,.2,1), width .24s, height .24s; }
+  .app-nav button svg { transition: transform .24s ease; }
+  .app-nav button[aria-current='page'] svg { transform: scale(1.05); }
+}
+@media (min-width: 1000px) { .nav-bubble { display: none; } }

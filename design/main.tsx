@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
 import { lessonsOn, parityOf } from '../src/lib/week'
-import { IconList, IconCalendar, IconSettings, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconChevronLeft, IconChevronRight as IconDayNext, IconX } from '../src/components/icons'
+import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconChevronLeft, IconChevronRight as IconDayNext, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
@@ -13,6 +13,7 @@ import { useToday, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
+import { Navigation } from './navigation'
 import './style.css'
 import './register-sw'
 
@@ -142,11 +143,7 @@ function App() {
   }
 
   return <div className="app-shell">
-    <nav className="app-nav" aria-label="Основные вкладки">
-      <span className="desktop-brand">ДЗ<span>Учебный планер</span></span>
-      {([{ key: 'tasks', label: 'Задачи', icon: IconList }, { key: 'schedule', label: 'Расписание', icon: IconCalendar }, { key: 'settings', label: 'Настройки', icon: IconSettings }] as const).map(item => <button key={item.key} aria-current={tab === item.key ? 'page' : undefined} onClick={() => changeTab(item.key)}><item.icon size={25} /><span>{item.label}</span></button>)}
-      <span className="desktop-footer">Версия {version}</span>
-    </nav>
+    <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`}>
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
