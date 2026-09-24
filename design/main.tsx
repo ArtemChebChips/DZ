@@ -116,7 +116,7 @@ function App() {
     </nav>
     <main className={`app-main screen-${tab}`}>
       <div className="screen-header">
-      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
+      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1></header>
       {tab === 'schedule' && <>
         <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}</div></div>
       </>}
@@ -124,7 +124,7 @@ function App() {
       <div ref={mainRef} className="app-scroll" data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list">
-        {!visible.length && <div className="empty-state"><IconCheck size={30} /><h2>{tasks.length ? 'Всё выполнено' : 'Пока нет заданий'}</h2><p>{tasks.length ? 'Выполненные задания останутся внизу.' : 'Добавь первое — предмет и срок можно выбрать сразу.'}</p><button className="text-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button></div>}
+        {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
         {days.map(day => <section className={`day-section ${day < today ? 'overdue' : ''}`} key={day}>
           <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
             <span><span className="relative-date">{relativeDate(day, today)}</span><h2>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</h2></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
@@ -154,8 +154,10 @@ function App() {
       </div>}
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
       </div>
-    </main>
+      {tab === 'tasks' && <button className="primary-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>}
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
+    </main>
+
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
     {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); setCalendarOpen(false) }} /><button className="outline-button today-button" onClick={() => { selectDay(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
