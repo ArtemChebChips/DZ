@@ -257,3 +257,17 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-actions { display: grid; gap: 12px; margin-top: 24px; }
 .agenda-actions button { min-height: 48px; }
 @media (min-width: 600px) { .agenda-actions { grid-template-columns: 1fr 1fr; } }
+
+.day-stepper { display: flex; align-items: center; gap: 2px; margin-left: -10px; }
+.day-stepper p { margin: 0; font-size: 12px; }
+.day-stepper .icon-button { min-width: 36px; padding: 8px; }
+.calendar-sheet .sheet-inner { min-height: 100%; display: flex; flex-direction: column; }
+.calendar-sheet .calendar-picker { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+.calendar-sheet .calendar-date { min-height: 52px; }
+.calendar-sheet .calendar-picker > button { flex-shrink: 0; }
+@media (max-width: 600px) { .calendar-sheet { height: min(72dvh, 640px); height: min(calc(var(--sheet-height) * .72), 640px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .day-enter { animation: day-enter .18s ease-out; --day-shift: 12px; }
+  .day-direction--1 { --day-shift: -12px; }
+  @keyframes day-enter { from { opacity: .3; transform: translateX(var(--day-shift)); } to { opacity: 1; transform: translateX(0); } }
+}

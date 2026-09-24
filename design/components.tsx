@@ -6,7 +6,7 @@ import { homeworkLessons, isHomeworkKind, taskLesson, isDayNote } from './homewo
 import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
 
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function Modal({ title, onClose, children, variant }: { variant?: 'calendar'; title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const dialog = ref.current!
@@ -38,7 +38,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       dialog.close()
     }
   }, [])
-  return <dialog ref={ref} className="sheet" onCancel={e => { e.preventDefault(); onClose() }} onClick={e => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
+  return <dialog ref={ref} className={`sheet ${variant === 'calendar' ? 'calendar-sheet' : ''}`} onCancel={e => { e.preventDefault(); onClose() }} onClick={e => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
     <div className="sheet-inner"><header><h2>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><IconX /></button></header>{children}</div>
   </dialog>
 }

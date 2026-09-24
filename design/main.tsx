@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
 import { lessonsOn, parityOf } from '../src/lib/week'
-import { IconList, IconCalendar, IconSettings, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconX } from '../src/components/icons'
+import { IconList, IconCalendar, IconSettings, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconChevronLeft, IconChevronRight as IconDayNext, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
@@ -37,7 +37,6 @@ function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) 
 }
 
 function App() {
-  useScrollBoundary()
   const today = useToday()
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -52,6 +51,10 @@ function App() {
   const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${today}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
   const [showDone, setShowDone] = useState(false)
   const [date, setDate] = useState(today)
+  const [dayDirection, setDayDirection] = useState(1)
+  const selectDay = (next: string) => { setDayDirection(next < date ? -1 : 1); setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
+  const shiftDay = (direction: -1 | 1) => { setDayDirection(direction); setDate(current => addDays(current, direction)); mainRef.current?.scrollTo({ top: 0 }) }
+  useScrollBoundary(tab === 'schedule' && !calendarOpen ? shiftDay : undefined)
   useEffect(() => {
     const previous = previousToday.current
     setDate(selected => selected === previous ? today : selected)
@@ -115,10 +118,10 @@ function App() {
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
       {tab === 'schedule' && <>
-        <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => setDate(today)}>Сегодня</button>}</div></div>
+        <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}</div></div>
       </>}
       </div>
-      <div ref={mainRef} className="app-scroll" data-scroll-region>
+      <div ref={mainRef} className="app-scroll" data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="empty-state"><IconCheck size={30} /><h2>{tasks.length ? 'Всё выполнено' : 'Пока нет заданий'}</h2><p>{tasks.length ? 'Выполненные задания останутся внизу.' : 'Добавь первое — предмет и срок можно выбрать сразу.'}</p><button className="text-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button></div>}
@@ -130,7 +133,7 @@ function App() {
         </section>)}
         {done.length > 0 && <section className="done-section"><button className="done-heading" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}><IconCheck size={18} />Выполнено <span>{done.length}</span><IconChevronDown size={16} className={!showDone ? 'rotated' : ''} /></button>{showDone && done.map(row)}</section>}
       </div>}
-      {tab === 'schedule' && <div className="schedule-layout"><section className="agenda">
+      {tab === 'schedule' && <div key={date} className={`schedule-layout day-enter day-direction-${dayDirection}`}><section className="agenda">
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
         {lessons.map(lesson => {
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
@@ -154,7 +157,7 @@ function App() {
     </main>
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}
-    {calendarOpen && <Modal title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { setDate(selected); setCalendarOpen(false); mainRef.current?.scrollTo({ top: 0 }) }} /><button className="text-button today-button" onClick={() => { setDate(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
+    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); setCalendarOpen(false) }} /><button className="outline-button today-button" onClick={() => { selectDay(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
