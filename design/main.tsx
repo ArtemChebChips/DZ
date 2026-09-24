@@ -115,8 +115,7 @@ function App() {
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
       {tab === 'schedule' && <>
-        <div className="agenda-heading"><div><h2>{longDate(date)}</h2><p>{weekday(date)} · {parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><button className="text-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={20} />Календарь</button></div>
-        {date !== today && <button className="text-button today-button" onClick={() => setDate(today)}>Вернуться к сегодня</button>}
+        <div className="agenda-heading"><div className="agenda-date"><h2><span>{weekday(date)}</span><span>{longDate(date)}</span></h2><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><div className="agenda-controls"><button className="outline-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={19} />Календарь</button>{date === today ? <span className="today-badge">Сегодня</span> : <button className="outline-button today-button" onClick={() => setDate(today)}>Сегодня</button>}</div></div>
       </>}
       </div>
       <div ref={mainRef} className="app-scroll" data-scroll-region>
@@ -140,8 +139,7 @@ function App() {
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(row)}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(row)}</section>}
-        <button className="text-button agenda-add" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка на день</button>
-        <button className="text-button agenda-add" onClick={() => openNew()}><IconPlus size={19} />Добавить задание на этот день</button>
+        <div className="agenda-actions"><button className="primary-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button></div>
       </section></div>}
       {tab === 'settings' && <div className="settings-list">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
