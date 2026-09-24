@@ -205,8 +205,10 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
   .sheet { top: calc(var(--sheet-top, 0px) + var(--sheet-height, 100dvh)); transform: translateY(-100%); width: calc(100% - var(--safe-left) - var(--safe-right)); max-width: 100%; max-height: calc(var(--sheet-height, 100dvh) - var(--safe-top) - 16px); border-radius: 15px 15px 0 0; border-bottom: 0; }
 }
 @media (display-mode: standalone) {
-  /* Установленное приложение занимает всё окно, без вычета панелей Safari. */
-  .app-shell { height: 100%; }
+  /* Процентная высота iOS-контейнера может быть меньше окна старого ярлыка.
+     В standalone нет панелей Safari: используем полную высоту viewport. */
+  html, body, #root { height: 100vh; height: 100lvh; min-height: 100lvh; }
+  .app-shell { height: 100vh; height: max(100%, 100dvh, 100lvh); }
 }
 @media (min-width: 1000px) {
   .app-shell { grid-template-columns: 214px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
