@@ -35,8 +35,8 @@
   background: var(--bg);
 }
 * { box-sizing: border-box; }
-html, body, #root { height: 100%; overflow: hidden; }
-body { margin: 0; min-width: 320px; }
+html, body, #root { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { position: fixed; inset: 0; width: 100%; margin: 0; min-width: 320px; }
 button, select, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
 button:disabled { opacity: .45; cursor: default; }
@@ -76,7 +76,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .done-heading { min-height: 44px; display: flex; gap: 9px; align-items: center; color: var(--muted); padding: 0; width: 100%; text-align: left; font-size: 14px; }
 .done-heading > svg:last-child { margin-left: auto; }
 /* Компактный нижний край по проверке владельца на iPhone. */
-.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 0 max(12px, var(--safe-left)); }
+.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 12px max(12px, var(--safe-left)); touch-action: none; }
 .app-nav button { width: 33.333%; max-width: 200px; min-height: 53px; padding: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .app-nav button[aria-current='page'] { color: var(--accent); }
 .desktop-brand, .desktop-footer { display: none; }
@@ -207,8 +207,10 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 @media (display-mode: standalone) {
   /* Процентная высота iOS-контейнера может быть меньше окна старого ярлыка.
      В standalone нет панелей Safari: используем полную высоту viewport. */
-  html, body, #root { height: 100vh; height: 100lvh; min-height: 100lvh; }
-  .app-shell { height: 100vh; height: max(100%, 100dvh, 100lvh); }
+  /* Высокий viewport принадлежит фиксированной оболочке, не документу:
+     иначе iOS может прокручивать всю страницу вместе с навигацией. */
+  body { height: 100vh; height: 100lvh; }
+  #root, .app-shell { height: 100%; }
 }
 @media (min-width: 1000px) {
   .app-shell { grid-template-columns: 214px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
