@@ -11,6 +11,7 @@ import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
 import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { useToday, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
+import { useScrollBoundary } from './use-scroll-boundary'
 import './style.css'
 import './register-sw'
 
@@ -36,10 +37,11 @@ function TaskRow({ task, toggle, edit }: { task: DemoTask; toggle: (id: string) 
 }
 
 function App() {
+  useScrollBoundary()
   const today = useToday()
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
-  const mainRef = useRef<HTMLElement>(null)
+  const mainRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
@@ -109,9 +111,16 @@ function App() {
       {([{ key: 'tasks', label: 'Задачи', icon: IconList }, { key: 'schedule', label: 'Расписание', icon: IconCalendar }, { key: 'settings', label: 'Настройки', icon: IconSettings }] as const).map(item => <button key={item.key} aria-current={tab === item.key ? 'page' : undefined} onClick={() => changeTab(item.key)}><item.icon size={25} /><span>{item.label}</span></button>)}
       <span className="desktop-footer">Версия {version}</span>
     </nav>
-    <main ref={mainRef} className={`app-main screen-${tab}`}>
-      {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
+    <main className={`app-main screen-${tab}`}>
+      <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : tab === 'schedule' ? 'Расписание' : 'Настройки'}</h1>{tab === 'tasks' && <button className="text-button add-action" onClick={() => openNew()}><IconPlus size={23} />Добавить</button>}</header>
+      {tab === 'schedule' && <>
+        <div className="agenda-heading"><div><h2>{longDate(date)}</h2><p>{weekday(date)} · {parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><button className="text-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={20} />Календарь</button></div>
+        {date !== today && <button className="text-button today-button" onClick={() => setDate(today)}>Вернуться к сегодня</button>}
+      </>}
+      </div>
+      <div ref={mainRef} className="app-scroll" data-scroll-region>
+      {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="empty-state"><IconCheck size={30} /><h2>{tasks.length ? 'Всё выполнено' : 'Пока нет заданий'}</h2><p>{tasks.length ? 'Выполненные задания останутся внизу.' : 'Добавь первое — предмет и срок можно выбрать сразу.'}</p><button className="text-button" onClick={() => openNew()}><IconPlus size={19} />Добавить задание</button></div>}
         {days.map(day => <section className={`day-section ${day < today ? 'overdue' : ''}`} key={day}>
@@ -123,8 +132,6 @@ function App() {
         {done.length > 0 && <section className="done-section"><button className="done-heading" aria-expanded={showDone} onClick={() => setShowDone(!showDone)}><IconCheck size={18} />Выполнено <span>{done.length}</span><IconChevronDown size={16} className={!showDone ? 'rotated' : ''} /></button>{showDone && done.map(row)}</section>}
       </div>}
       {tab === 'schedule' && <div className="schedule-layout"><section className="agenda">
-        <div className="agenda-heading"><div><h2>{longDate(date)}</h2><p>{weekday(date)} · {parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p></div><button className="text-button calendar-toggle" onClick={() => setCalendarOpen(true)}><IconCalendar size={20} />Календарь</button></div>
-        {date !== today && <button className="text-button today-button" onClick={() => setDate(today)}>Вернуться к сегодня</button>}
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
         {lessons.map(lesson => {
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
@@ -145,6 +152,7 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setRemoved(null); setShowDone(false) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setShowDone(true); setRemoved(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setRemoved(null) }}>Пустой список</button></div></details>}
+      </div>
     </main>
     {removed ? <div className="toast" role="status">Задание удалено<button onClick={() => { setTasks(items => [...items, removed]); setRemoved(null) }}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setRemoved(null)}><IconX size={17} /></button></div> : notice && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={() => setDraft(null)} />}

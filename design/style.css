@@ -35,7 +35,7 @@
   background: var(--bg);
 }
 * { box-sizing: border-box; }
-html, body, #root { height: 100%; overflow: hidden; }
+html, body, #root { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; min-width: 320px; }
 button, select, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
@@ -48,8 +48,12 @@ h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { font-weight: 600; }
 /* Только содержимое прокручивается; навигация занимает собственную строку. */
 .app-shell { height: 100%; height: 100dvh; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
-.app-main { grid-area: 1 / 1; min-height: 0; width: 100%; max-width: 680px; margin: 0 auto; overflow-y: auto; overscroll-behavior-y: contain; padding: calc(24px + var(--safe-top)) max(var(--page-gutter), var(--safe-right)) 24px max(var(--page-gutter), var(--safe-left)); }
-.page-header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 14px; margin-bottom: 34px; }
+.app-main { grid-area: 1 / 1; display: flex; flex-direction: column; min-height: 0; width: 100%; max-width: 680px; margin: 0 auto; overflow: hidden; }
+.screen-header { flex: 0 0 auto; padding: calc(24px + var(--safe-top)) max(var(--page-gutter), var(--safe-right)) 34px max(var(--page-gutter), var(--safe-left)); }
+.app-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: none; padding: 0 max(var(--page-gutter), var(--safe-right)) 24px max(var(--page-gutter), var(--safe-left)); }
+.screen-schedule .screen-header { padding-bottom: 0; }
+.screen-schedule .page-header { margin-bottom: 24px; }
+.page-header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 14px; margin-bottom: 0; }
 h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .text-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; color: var(--accent); padding: 8px 0; font-size: 16px; font-weight: 500; }
 .add-action { flex-shrink: 0; }
@@ -76,7 +80,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .done-heading { min-height: 44px; display: flex; gap: 9px; align-items: center; color: var(--muted); padding: 0; width: 100%; text-align: left; font-size: 14px; }
 .done-heading > svg:last-child { margin-left: auto; }
 /* Компактный нижний край по проверке владельца на iPhone. */
-.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 0 max(12px, var(--safe-left)); }
+.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 20px max(12px, var(--safe-left)); }
 .app-nav button { width: 33.333%; max-width: 200px; min-height: 53px; padding: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .app-nav button[aria-current='page'] { color: var(--accent); }
 .desktop-brand, .desktop-footer { display: none; }
@@ -144,7 +148,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .preview-tools button { border: 1px solid var(--line); border-radius: 5px; padding: 9px 12px; min-height: 44px; }
 .sheet { position: fixed; inset: auto var(--safe-right) auto var(--safe-left); top: calc(var(--sheet-top, 0px) + var(--sheet-height, 100dvh) / 2); transform: translateY(-50%); margin: 0 auto; width: min(100% - var(--safe-left) - var(--safe-right) - 32px, 480px); max-height: calc(var(--sheet-height, 100dvh) - var(--safe-top) - var(--safe-bottom) - 32px); border: 1px solid var(--line); border-radius: 15px; padding: 0; background: var(--bg); color: var(--ink); overflow: auto; overscroll-behavior: contain; }
 .sheet::backdrop { background: #11182760; }
-.app-shell:has(.sheet[open]) .app-main { overflow: hidden; }
+.app-shell:has(.sheet[open]) .app-scroll { overflow: hidden; }
 .sheet-inner > header { display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 15px 20px; border-bottom: 1px solid var(--line); gap: 10px; }
 .sheet h2 { font-size: 20px; }
 .editor-fields { padding: 20px; }
@@ -219,8 +223,9 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
   .app-nav button[aria-current='page'] { background: var(--soft); }
   .app-nav button svg { width: 21px; height: 21px; }
   .desktop-footer { display: block; margin-top: auto; padding: 12px; font-size: 11px; color: var(--muted); }
-  .app-main { grid-area: 1 / 2; padding: max(55px, var(--safe-top)) max(40px, var(--safe-right)) 70px 40px; max-width: 770px; }
-  .page-header { margin-bottom: 42px; }
+  .app-main { grid-area: 1 / 2; max-width: 770px; }
+  .screen-header { padding: max(55px, var(--safe-top)) max(40px, var(--safe-right)) 42px 40px; }
+  .app-scroll { padding: 0 max(40px, var(--safe-right)) 70px 40px; }
   .screen-schedule { max-width: 850px; }
   .screen-settings { max-width: 740px; }
   .toast { bottom: 25px; left: calc(50% + 107px); }
