@@ -15,7 +15,7 @@ export function useScrollBoundary(onDaySwipe?: (direction: -1 | 1) => void) {
       x = touch.clientX; y = previousY = touch.clientY; dx = dy = 0; axis = null
       ignored = event.touches.length !== 1 || x < 24 || x > innerWidth - 24
       const target = event.target instanceof Element ? event.target : null
-      swipe = Boolean(callback.current && target?.closest('[data-swipe-days]') && !target.closest('dialog, input, textarea, select, button:not(.task-content)'))
+      swipe = Boolean(callback.current && target?.closest('[data-swipe-days]') && !target.closest('dialog, input, textarea, select, button:not(.task-content):not(.lesson-open)'))
     }
     const move = (event: TouchEvent) => {
       if (event.touches.length !== 1) { ignored = true; return }
