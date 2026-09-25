@@ -66,7 +66,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .rotated { transform: rotate(-90deg); }
 .overdue .relative-date { color: var(--danger); }
 .task-row { display: flex; align-items: stretch; min-width: 0; border-bottom: 1px solid var(--line); }
-.day-section .task-row:last-child { border-bottom: 0; }
+.day-section .task-collapse:last-child .task-row { border-bottom: 0; }
 .check-button { width: 46px; min-height: 64px; flex: 0 0 46px; padding: 12px 12px 12px 0; display: flex; align-items: center; justify-content: flex-start; }
 .check-button > span { width: 25px; height: 25px; border: 1.4px solid var(--muted); border-radius: 50%; display: grid; place-items: center; }
 .task-content { position: relative; text-align: left; flex: 1; min-width: 0; padding: 15px 25px 15px 0; }
@@ -307,3 +307,11 @@ button:disabled { opacity: .45; cursor: default; }
 .lesson-open:active { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .lesson-open:focus-visible { outline-offset: -3px; }
 .lesson-body .task-row { position: relative; z-index: 2; }
+
+.collapse { display: flow-root; }
+.collapse-leaving { overflow: hidden; pointer-events: none; }
+.screen-tasks .app-scroll { overflow-anchor: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .tasks-empty { animation: empty-appear .18s ease-out; }
+  @keyframes empty-appear { from { opacity: 0; } to { opacity: 1; } }
+}

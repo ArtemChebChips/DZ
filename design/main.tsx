@@ -14,6 +14,7 @@ import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
 import { Navigation } from './navigation'
+import { Collapse } from './collapse'
 import './style.css'
 import './register-sw'
 
@@ -31,24 +32,11 @@ function SettingIcon({ kind }: { kind: 'book' | 'cloud' | 'info' | 'sun' }) {
   </svg>
 }
 
-function TaskRow({ task, toggle, edit, leaving = false, onExited }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void; leaving?: boolean; onExited?: (id: string) => void }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    if (!leaving || !ref.current || !onExited) return
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { onExited(task.id); return }
-    const el = ref.current
-    const height = `${el.getBoundingClientRect().height}px`
-    let finished = false
-    const finish = () => { if (!finished) { finished = true; onExited(task.id) } }
-    const animation = el.animate([{ height, opacity: 1 }, { height, opacity: .5, offset: .35 }, { height: '0px', opacity: 0 }], { duration: 260, easing: 'ease-in-out', fill: 'forwards' })
-    animation.finished.then(finish, () => {})
-    const fallback = setTimeout(finish, 340)
-    return () => { finished = true; clearTimeout(fallback); animation.cancel() }
-  }, [leaving, task.id, onExited])
-  return <div ref={ref} className={`task-row ${task.done ? 'completed' : ''} ${leaving ? 'task-leaving' : ''}`}>
+function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, onExited }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void; leaving?: boolean; groupLeaving?: boolean; onExited?: (id: string) => void }) {
+  return <Collapse active={leaving && !groupLeaving} hold={groupLeaving} onEnd={() => onExited?.(task.id)} className="task-collapse"><div className={`task-row ${task.done ? 'completed' : ''} ${leaving ? 'task-leaving' : ''}`}>
     <button disabled={leaving} className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
     <button disabled={leaving} className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? `Заметка${task.subjectId ? ' · ' + subjectName(task.subjectId) : ''}` : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
-  </div>
+  </div></Collapse>
 }
 
 function App() {
@@ -67,6 +55,7 @@ function App() {
   const [historyLimit, setHistoryLimit] = useState(20)
   const [editingHistory, setEditingHistory] = useState(false)
   const [exiting, setExiting] = useState<string[]>([])
+  const finishGroup = useCallback((doneIds: string[]) => setExiting(ids => ids.filter(id => !doneIds.includes(id))), [])
   const finishExit = useCallback((id: string) => setExiting(ids => ids.filter(value => value !== id)), [])
   const [date, setDate] = useState(today)
   const [dayDirection, setDayDirection] = useState(1)
@@ -136,7 +125,7 @@ function App() {
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
   const ownTasks = tasks.filter(t => t.due === date)
   const assigned = new Set<string>()
-  const row = (task: DemoTask) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} onExited={finishExit} />
+  const row = (task: DemoTask, groupLeaving = false) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} groupLeaving={groupLeaving} onExited={finishExit} />
   useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
   const changeTab = (next: Tab) => {
     if (next === 'schedule' && tab !== 'schedule') setDate(currentDay())
@@ -166,12 +155,16 @@ function App() {
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
-        {days.map(day => <section className={`day-section ${day < today ? 'overdue' : ''}`} key={day}>
+        {days.map(day => {
+          const entries = visible.filter(t => t.due === day)
+          const groupLeaving = entries.every(t => exiting.includes(t.id))
+          return <Collapse key={day} className="day-collapse" active={groupLeaving} onEnd={() => finishGroup(entries.map(t => t.id))}><section className={`day-section ${day < today ? 'overdue' : ''}`}>
+
           <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
             <span><span className="relative-date">{relativeDate(day, today)}</span><h2>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</h2></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
           </button>
-          {!collapsed.includes(day) && visible.filter(t => t.due === day).map(row)}
-        </section>)}
+          {!collapsed.includes(day) && entries.map(t => row(t, groupLeaving))}
+        </section></Collapse>})}
 
       </div>}
       {tab === 'schedule' && <div key={date} className={`schedule-layout day-enter day-direction-${dayDirection}`}><section className="agenda">
@@ -179,10 +172,10 @@ function App() {
         {lessons.map(lesson => {
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
           attached.forEach(t => assigned.add(t.id))
-          return <article className="lesson" key={lesson.id}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(row)}</div></article>
+          return <article className="lesson" key={lesson.id}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article>
         })}
-        {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(row)}</section>}
-        {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(row)}</section>}
+        {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
+        {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}
         <div className="agenda-actions"><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button><button className="primary-button" onClick={() => openNew()}>Добавить задание</button></div>
       </section></div>}
       {tab === 'settings' && <div className="settings-list">
