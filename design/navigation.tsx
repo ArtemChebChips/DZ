@@ -4,7 +4,7 @@ import { version } from '../package.json'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 function ScheduleIcon({ size = 25 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6" /><path d="M9 5v4l2 2M18 5h3M18 10h3M4 19h17" /></svg>
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 3v18M10 5h10M10 12h7M10 19h10" /><circle cx="5" cy="5" r="1.5" fill="currentColor" stroke="none" /><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></svg>
 }
 const tabs = [
   { key: 'tasks', label: 'Задачи', icon: IconList },
