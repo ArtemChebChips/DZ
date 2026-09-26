@@ -80,7 +80,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .done-heading { min-height: 44px; display: flex; gap: 9px; align-items: center; color: var(--muted); padding: 0; width: 100%; text-align: left; font-size: 14px; }
 .done-heading > svg:last-child { margin-left: auto; }
 /* Компактный нижний край по проверке владельца на iPhone. */
-.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) 26px max(12px, var(--safe-left)); }
+.app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) max(8px, var(--safe-bottom)) max(12px, var(--safe-left)); }
 .app-nav button { width: 33.333%; max-width: 200px; min-height: 53px; padding: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .app-nav button[aria-current='page'] { color: var(--accent); }
 .desktop-brand, .desktop-footer { display: none; }
