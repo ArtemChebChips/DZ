@@ -1,0 +1,121 @@
+{
+  "before": {
+    "time": "2026-09-26T12:25:42.959Z",
+    "url": "http://127.0.0.1:4176/",
+    "standalone": true,
+    "navigatorStandalone": true,
+    "screen": [
+      402,
+      874
+    ],
+    "inner": [
+      402,
+      812
+    ],
+    "viewport": {
+      "w": 402,
+      "h": 812,
+      "top": 0,
+      "scale": 1
+    },
+    "theme": "light",
+    "heading": "Задачи",
+    "overflow": false,
+    "nav": {
+      "x": 0,
+      "y": 787,
+      "w": 402,
+      "h": 87,
+      "b": 874,
+      "scrollHeight": 86,
+      "scrollTop": 0,
+      "paddingBottom": "26px"
+    },
+    "shell": {
+      "x": 0,
+      "y": 0,
+      "w": 402,
+      "h": 874,
+      "b": 874,
+      "scrollHeight": 874,
+      "scrollTop": 0,
+      "paddingBottom": "0px"
+    },
+    "scroll": {
+      "x": 0,
+      "y": 92,
+      "w": 402,
+      "h": 695,
+      "b": 787,
+      "scrollHeight": 695,
+      "scrollTop": 0,
+      "paddingBottom": "96px"
+    },
+    "sheet": null,
+    "footer": null,
+    "focus": "BODY"
+  },
+  "after": {
+    "time": "2026-09-26T12:26:30.193Z",
+    "units": {
+      "100vh": 874,
+      "100dvh": 812,
+      "100svh": 812,
+      "100lvh": 874,
+      "100%": 812
+    },
+    "url": "http://127.0.0.1:4176/",
+    "standalone": true,
+    "navigatorStandalone": true,
+    "screen": [
+      402,
+      874
+    ],
+    "inner": [
+      402,
+      812
+    ],
+    "viewport": {
+      "w": 402,
+      "h": 812,
+      "top": 0,
+      "scale": 1
+    },
+    "theme": "light",
+    "heading": "Задачи",
+    "overflow": false,
+    "nav": {
+      "x": 0,
+      "y": 725,
+      "w": 402,
+      "h": 87,
+      "b": 812,
+      "scrollHeight": 86,
+      "scrollTop": 0,
+      "paddingBottom": "26px"
+    },
+    "shell": {
+      "x": 0,
+      "y": 0,
+      "w": 402,
+      "h": 812,
+      "b": 812,
+      "scrollHeight": 812,
+      "scrollTop": 0,
+      "paddingBottom": "0px"
+    },
+    "scroll": {
+      "x": 0,
+      "y": 92,
+      "w": 402,
+      "h": 633,
+      "b": 725,
+      "scrollHeight": 633,
+      "scrollTop": 0,
+      "paddingBottom": "96px"
+    },
+    "sheet": null,
+    "footer": null,
+    "focus": "BODY"
+  }
+}

@@ -46,7 +46,8 @@ button, summary { -webkit-user-select: none; user-select: none; }
 svg { flex-shrink: 0; }
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { font-weight: 600; }
-/* Только содержимое прокручивается; навигация занимает собственную строку. */
+/* Только содержимое прокручивается; навигация занимает собственную строку.
+   100dvh учитывает доступную высоту и в Safari, и под строкой состояния PWA. */
 .app-shell { height: 100%; height: 100dvh; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
 .app-main { grid-area: 1 / 1; display: flex; flex-direction: column; min-height: 0; width: 100%; max-width: 680px; margin: 0 auto; overflow: hidden; }
 .screen-header { flex: 0 0 auto; padding: calc(24px + var(--safe-top)) max(var(--page-gutter), var(--safe-right)) 34px max(var(--page-gutter), var(--safe-left)); }
@@ -204,12 +205,6 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 }
 @media (max-width: 600px) {
   .sheet { top: calc(var(--sheet-top, 0px) + var(--sheet-height, 100dvh)); transform: translateY(-100%); width: calc(100% - var(--safe-left) - var(--safe-right)); max-width: 100%; max-height: calc(var(--sheet-height, 100dvh) - var(--safe-top) - 16px); border-radius: 15px 15px 0 0; border-bottom: 0; }
-}
-@media (display-mode: standalone) {
-  /* Процентная высота iOS-контейнера может быть меньше окна старого ярлыка.
-     В standalone нет панелей Safari: используем полную высоту viewport. */
-  html, body, #root { height: 100vh; height: 100lvh; min-height: 100lvh; }
-  .app-shell { height: 100vh; height: max(100%, 100dvh, 100lvh); }
 }
 @media (min-width: 1000px) {
   .app-shell { grid-template-columns: 214px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
