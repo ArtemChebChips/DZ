@@ -49,7 +49,7 @@ h1, h2, h3 { font-weight: 600; }
 /* Только содержимое прокручивается; навигация занимает собственную строку. */
 .app-shell { background: var(--bg); height: 100%; height: 100dvh; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
 .app-main { grid-area: 1 / 1; display: flex; flex-direction: column; min-height: 0; width: 100%; max-width: 680px; margin: 0 auto; overflow: hidden; }
-.screen-header { flex: 0 0 auto; padding: calc(24px + var(--safe-top)) max(var(--page-gutter), var(--safe-right)) 34px max(var(--page-gutter), var(--safe-left)); }
+.screen-header { flex: 0 0 auto; padding: calc(16px + var(--safe-top)) max(var(--page-gutter), var(--safe-right)) 34px max(var(--page-gutter), var(--safe-left)); }
 .app-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: none; padding: 0 max(var(--page-gutter), var(--safe-right)) 24px max(var(--page-gutter), var(--safe-left)); }
 .screen-schedule .screen-header { padding-bottom: 0; }
 .page-header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 14px; margin-bottom: 0; }
@@ -245,7 +245,7 @@ button:disabled { opacity: .45; cursor: default; }
 /* D1 — одинаковый ритм времени, названия и действий. */
 .outline-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--accent); font-size: 14px; font-weight: 500; }
 /* R3 — выбранная композиция C + A, без повторного названия вкладки. */
-.agenda-heading { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+.agenda-heading { padding-bottom: 18px; }
 .agenda-day { font-size: 32px; line-height: 1.2; font-weight: 700; letter-spacing: -.8px; }
 .agenda-day::first-letter { text-transform: uppercase; }
 .agenda-date-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; margin-top: 2px; min-height: 44px; }
@@ -253,8 +253,7 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .agenda-controls .today-button { min-height: 48px; padding: 10px 12px; }
 .agenda-controls .calendar-toggle { width: 48px; height: 48px; padding: 0; }
-.agenda-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.week-parity { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.agenda-title-row { display: flex; align-items: center; min-height: 44px; }
 .agenda-title-row h1 { min-width: 0; overflow-wrap: anywhere; }
 .lesson-break { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--muted); font-size: 13px; padding: 15px 2px 3px; }
 .lesson-time time:first-child { font-weight: 600; }
@@ -333,5 +332,3 @@ button:disabled { opacity: .45; cursor: default; }
   .sheet[open] .sheet-inner { animation: tab-enter .16s ease-out; }
   .subject-picker, .sheet form:not([hidden]) { animation: tab-enter .1s ease-out; }
 }
-
-@media (max-width: 359px) { .agenda-day { font-size: 28px; } }

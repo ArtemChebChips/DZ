@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, ty
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
-import { lessonsOn, parityOf } from '../src/lib/week'
+import { lessonsOn } from '../src/lib/week'
 import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconChevronLeft, IconChevronRight as IconDayNext, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
@@ -163,7 +163,7 @@ function App() {
       <div className="screen-header">
       {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
       {tab === 'schedule' && <header className="agenda-heading">
-        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1><span className="week-parity">{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</span></div>
+        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1></div>
         <div className="agenda-date-row">
           <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
           <div className="agenda-controls">
