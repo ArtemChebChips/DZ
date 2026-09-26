@@ -21,14 +21,16 @@ import './register-sw'
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'system'
 type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | null
+const assessmentOrder = { exam: 0, dist: 1, credit: 2, other: 3 }
+const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.assessment] - assessmentOrder[b.assessment])
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
 const relativeDate = (date: string, today: string) => date < today ? 'Просрочено' : date === today ? 'Сегодня' : date === addDays(today, 1) ? 'Завтра' : 'Позже'
 
-function SettingIcon({ kind }: { kind: 'book' | 'cloud' | 'info' | 'sun' }) {
+function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
   return <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    {kind === 'book' ? <><path d="M12 5C9 3 5 3 2 5v15c3-2 7-2 10 0 3-2 7-2 10 0V5c-3-2-7-2-10 0Z" /><path d="M12 5v15" /></> : kind === 'cloud' ? <path d="M7 19h11a4 4 0 0 0 1-7.87A6 6 0 0 0 7.2 9 5 5 0 0 0 7 19Z" /> : kind === 'info' ? <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></> : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>}
+    {kind === 'book' ? <><path d="M12 5C9 3 5 3 2 5v15c3-2 7-2 10 0 3-2 7-2 10 0V5c-3-2-7-2-10 0Z" /><path d="M12 5v15" /></> : kind === 'download' ? <path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5" /> : kind === 'info' ? <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></> : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>}
   </svg>
 }
 
@@ -72,9 +74,14 @@ function App() {
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
-  useEffect(() => {
+  useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
-    const apply = () => { document.documentElement.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme }
+    const apply = () => {
+      const root = document.documentElement
+      root.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
+      const background = getComputedStyle(root).getPropertyValue('--bg').trim()
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
+    }
     apply(); media.addEventListener('change', apply)
     return () => media.removeEventListener('change', apply)
   }, [theme])
@@ -182,7 +189,7 @@ function App() {
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="cloud" /><span><strong>Резервная копия</strong><small>Сохранение и перенос данных</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры заданий на три недели</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
@@ -206,7 +213,7 @@ function App() {
         {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
       </div>
     </Modal>}
-    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{DEFAULT_SUBJECTS.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать резервную копию</button><p>Перенос из прежней версии и восстановление из файла подключим следующим этапом.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
+    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
   </div>
 }
 
