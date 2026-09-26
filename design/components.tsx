@@ -59,7 +59,7 @@ export function Calendar({ value, today, onChange, kinds }: { value: string; tod
         const date = addDays(start, week * 7 + day)
         const marks = kinds?.(date) || []
         const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-        return <button type="button" key={date} aria-label={`${label}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
+        return <button type="button" key={date} aria-current={date === today ? 'date' : undefined} aria-label={`${label}${date === today ? ', сегодня' : ''}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
       })}</div>)}
     </div>
   </div>
@@ -71,10 +71,13 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     return lesson ? { ...draft, kind: lesson.kind, lessonId: lesson.id } : draft
   })
   const [picking, setPicking] = useState(false)
+  const selectionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const returnFromPicker = () => { clearTimeout(selectionTimer.current); setPicking(false) }
+  useEffect(() => () => clearTimeout(selectionTimer.current), [])
   const subjectButton = useRef<HTMLButtonElement>(null)
   const subjectList = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (picking) subjectList.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus()
+    if (picking) subjectList.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus({ preventScroll: true })
     else subjectButton.current?.focus({ preventScroll: true })
   }, [picking])
   const note = isDayNote(value)
@@ -99,7 +102,9 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
       const kinds = [...new Set(homeworkLessons(subjectId, DEFAULT_LESSONS).map(l => l.kind))]
       changeContext({ subjectId, kind: kinds.length === 1 ? kinds[0] : undefined })
     }
-    setPicking(false)
+    clearTimeout(selectionTimer.current)
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) setPicking(false)
+    else selectionTimer.current = setTimeout(() => setPicking(false), 150)
   }
   const finish = () => {
     if (!value.title.trim() || needsChoice) return
@@ -107,10 +112,9 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     if (note) { save({ ...value, entryType: 'note', title: value.title.trim(), kind: undefined, lessonId: undefined }); return }
     save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
   }
-  return <Modal title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={() => picking ? setPicking(false) : close()}>
+  return <Modal title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={() => picking ? returnFromPicker() : close()}>
     {picking && <div className="subject-picker" ref={subjectList}>
       {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
-      <button type="button" className="text-button" onClick={() => setPicking(false)}>Назад к заданию</button>
     </div>}
     <form hidden={picking} onSubmit={e => { e.preventDefault(); finish() }}>
       <div className="editor-fields">

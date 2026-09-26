@@ -80,7 +80,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .done-heading > svg:last-child { margin-left: auto; }
 /* Компактный нижний край по проверке владельца на iPhone. */
 .app-nav { grid-area: 2 / 1; position: relative; z-index: 5; display: flex; justify-content: center; border-top: 1px solid var(--line); background: var(--bg); padding: 5px max(12px, var(--safe-right)) max(8px, var(--safe-bottom)) max(12px, var(--safe-left)); }
-.app-nav button { width: 33.333%; max-width: 200px; min-height: 53px; padding: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.app-nav button { width: 33.333%; max-width: 200px; min-height: 59px; padding: 7px 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
 .app-nav button[aria-current='page'] { color: var(--accent); }
 .desktop-brand, .desktop-footer { display: none; }
 .month-title { display: flex; align-items: center; gap: 0; margin-bottom: 15px; }
@@ -93,13 +93,17 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .calendar-date { position: relative; min-height: 44px; width: 100%; font-size: 16px; z-index: 0; padding: 0; }
 .calendar-date::before { content: ''; position: absolute; width: 39px; height: 39px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: -1; }
 .calendar-date.outside { color: var(--muted); opacity: .55; }
-.calendar-date.today:not(.selected) { color: var(--accent); }
-.lesson-marks { position: absolute; bottom: 1px; left: 0; right: 0; display: flex; justify-content: center; gap: 3px; }
-.calendar-date:has(.lesson-marks i)::before { width: 35px; height: 35px; top: calc(50% - 3px); }
-.lesson-marks i, .calendar-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
-.mark-seminar { background: var(--accent); }
-.mark-lab { background: #238b54; }
-:root[data-theme='dark'] .mark-lab { background: #70d99a; }
+/* Кольца обозначают виды занятий, заливки — сегодня и выбранную дату. */
+.calendar-date.today:not(.selected)::before { background: color-mix(in srgb, var(--muted) 20%, var(--bg)); }
+.calendar-date.today.selected::after { content: ''; position: absolute; width: 29px; height: 29px; border: 1px dashed var(--on-accent); border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.calendar-date::before { width: min(34px, calc(100% - 10px)); height: auto; aspect-ratio: 1; }
+.lesson-marks { position: absolute; inset: 0; pointer-events: none; }
+.lesson-marks i { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(40px, calc(100% - 4px)); aspect-ratio: 1; border: 1px solid; border-radius: 50%; }
+.lesson-marks i:nth-child(2) { width: min(44px, 100%); }
+.calendar-legend i { display: inline-block; width: 10px; height: 10px; border: 1px solid; border-radius: 50%; }
+.mark-seminar { color: var(--accent); }
+.mark-lab { color: #238b54; }
+:root[data-theme='dark'] .mark-lab { color: #70d99a; }
 .calendar-legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 14px; }
 .calendar-legend span { display: flex; align-items: center; gap: 6px; }
 .calendar-date.selected { color: var(--on-accent); opacity: 1; }
@@ -107,10 +111,10 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .today-button { font-size: 14px; }
 .calendar-picker { padding: 20px; }
 .calendar-toggle { font-size: 14px; flex-shrink: 0; }
-.lesson { position: relative; display: flex; gap: 16px; padding: 19px 0; border-bottom: 1px solid var(--line); }
-.lesson-time { flex: 0 0 70px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding-top: 0; font-size: 20px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.lesson { position: relative; display: flex; gap: 0; padding: 0; margin-top: 12px; border: 1px solid var(--line); border-radius: 18px; }
+.lesson-time { flex: 0 0 86px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 18px 12px; font-size: 20px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .lesson-time > span { display: none; }
-.lesson-body { flex: 1; min-width: 0; border-left: 2px solid var(--accent); padding-left: 15px; }
+.lesson-body { flex: 1; min-width: 0; border-left: 1px solid var(--line); padding: 18px 14px; }
 .lesson-title { position: relative; min-height: 26px; margin-bottom: 7px; }
 .lesson-title h3 { font-size: 19px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
 .lesson-title:has(button) h3 { padding-right: 42px; }
@@ -247,10 +251,12 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-date-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; margin-top: 2px; min-height: 44px; }
 .agenda-date { font-size: 26px; font-weight: 400; line-height: 1.3; letter-spacing: -.8px; }
 .agenda-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.agenda-controls .today-button { padding: 10px; }
-.agenda-controls .calendar-toggle { width: 44px; height: 44px; padding: 0; }
-.agenda-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-.agenda-meta p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.agenda-controls .today-button { min-height: 48px; padding: 10px 12px; }
+.agenda-controls .calendar-toggle { width: 48px; height: 48px; padding: 0; }
+.agenda-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.week-parity { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.agenda-title-row h1 { min-width: 0; overflow-wrap: anywhere; }
+.lesson-break { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--muted); font-size: 13px; padding: 15px 2px 3px; }
 .lesson-time time:first-child { font-weight: 600; }
 .lesson-time time:last-child { font-size: 18px; color: var(--muted); }
 .agenda-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 10px; margin-top: 24px; }
@@ -290,7 +296,7 @@ button:disabled { opacity: .45; cursor: default; }
 .history-button { flex-shrink: 0; }
 
 /* D5 — подложка перемещается, размеры кнопок и панели не меняются. */
-.nav-bubble { position: absolute; left: 0; top: 0; border-radius: 20px; background: #0665f511; border: 1px solid #0665f512; pointer-events: none; }
+.nav-bubble { position: absolute; left: 0; top: 0; border-radius: 999px; background: #0665f511; border: 1px solid #0665f512; pointer-events: none; }
 :root[data-theme='dark'] .nav-bubble { background: #77aaff1c; border-color: #77aaff20; }
 .app-nav button { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: no-preference) and (max-width: 999px) {
@@ -302,7 +308,7 @@ button:disabled { opacity: .45; cursor: default; }
 
 
 /* Вся пара — одно действие; вложенные задания остаются самостоятельными. */
-.lesson-open { position: absolute; inset: 0; z-index: 1; width: 100%; border-radius: 8px; }
+.lesson-open { position: absolute; inset: 0; z-index: 1; width: 100%; border-radius: 18px; }
 .lesson-open:active { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .lesson-open:focus-visible { outline-offset: -3px; }
 .lesson-body .task-row { position: relative; z-index: 2; }
@@ -314,3 +320,18 @@ button:disabled { opacity: .45; cursor: default; }
   .tasks-empty { animation: empty-appear .18s ease-out; }
   @keyframes empty-appear { from { opacity: 0; } to { opacity: 1; } }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab-enter { animation: tab-enter .18s ease-out; }
+  @keyframes tab-enter { from { opacity: .5; } to { opacity: 1; } }
+}
+
+.editor-fields .theme-options button { font-size: 16px; font-weight: 500; }
+.subject-picker > button { border-radius: 7px; }
+@media (prefers-reduced-motion: no-preference) {
+  .subject-picker > button, .editor-fields .theme-options button { transition: background-color .15s ease, color .15s ease; }
+  .sheet[open] .sheet-inner { animation: tab-enter .16s ease-out; }
+  .subject-picker, .sheet form:not([hidden]) { animation: tab-enter .1s ease-out; }
+}
+
+@media (max-width: 359px) { .agenda-day { font-size: 28px; } }

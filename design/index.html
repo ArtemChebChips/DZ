@@ -6,6 +6,17 @@
     <meta name="theme-color" content="#fdfcfb" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      // Тема до первого кадра, в том числе при обновлении iOS standalone.
+      try {
+        const query = new URLSearchParams(location.search)
+        const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : JSON.parse(localStorage.getItem('dz-next:v1') || '{}').theme || 'system'
+        const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        document.documentElement.style.backgroundColor = dark ? '#17191d' : '#fdfcfb'
+        document.querySelector('meta[name="theme-color"]').content = dark ? '#17191d' : '#fdfcfb'
+      } catch {}
+    </script>
     <link rel="apple-touch-icon" href="./icon-180.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>ДЗ</title>

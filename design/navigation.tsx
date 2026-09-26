@@ -1,11 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { IconList, IconCalendar, IconSettings } from '../src/components/icons'
+import { IconList, IconSettings } from '../src/components/icons'
 import { version } from '../package.json'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
+function ScheduleIcon({ size = 25 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6" /><path d="M9 5v4l2 2M18 5h3M18 10h3M4 19h17" /></svg>
+}
 const tabs = [
   { key: 'tasks', label: 'Задачи', icon: IconList },
-  { key: 'schedule', label: 'Расписание', icon: IconCalendar },
+  { key: 'schedule', label: 'Расписание', icon: ScheduleIcon },
   { key: 'settings', label: 'Настройки', icon: IconSettings },
 ] as const
 

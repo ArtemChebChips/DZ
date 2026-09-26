@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
@@ -7,7 +7,7 @@ import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, I
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
-import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
+import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
 import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { useToday, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
@@ -15,6 +15,7 @@ import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
 import { Navigation } from './navigation'
 import { Collapse } from './collapse'
+import { lessonBreaks } from './breaks'
 import './style.css'
 import './register-sw'
 
@@ -50,7 +51,22 @@ function App() {
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
   const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
-  const setTheme = (theme: Theme) => notebook.update(current => ({ ...current, theme }))
+  const setTheme = (nextTheme: Theme) => {
+    if (nextTheme === theme) return
+    const next = { ...notebook.data, theme: nextTheme }
+    // Home Screen на iOS кэширует цвет системной полосы до загрузки документа.
+    // Сначала сохраняем данные; при отказе хранилища остаёмся на странице.
+    if (!IS_DEMO && !notebook.blocked && navigator.onLine && (navigator as Navigator & { standalone?: boolean }).standalone) {
+      try {
+        persistNotebook(localStorage, next)
+        const url = new URL(location.href)
+        url.searchParams.set('screen', 'settings')
+        location.replace(url.href)
+        return
+      } catch { /* useNotebook покажет ошибку сохранения, не теряя данные в памяти. */ }
+    }
+    notebook.update(next)
+  }
   const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
   const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${today}.json`)
   const recoverRaw = () => { try { downloadBackup(localStorage.getItem(STORAGE_KEY) || '{}', `dz-recovery-${today}.json`) } catch { setNotice('Браузер не даёт прочитать данные устройства') } }
@@ -60,7 +76,7 @@ function App() {
   const finishGroup = useCallback((doneIds: string[]) => setExiting(ids => ids.filter(id => !doneIds.includes(id))), [])
   const finishExit = useCallback((id: string) => setExiting(ids => ids.filter(value => value !== id)), [])
   const [date, setDate] = useState(today)
-  const [dayDirection, setDayDirection] = useState(1)
+  const [dayDirection, setDayDirection] = useState(0)
   const selectDay = (next: string) => { setDayDirection(next < date ? -1 : 1); setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
   const shiftDay = (direction: -1 | 1) => { setDayDirection(direction); setDate(current => addDays(current, direction)); mainRef.current?.scrollTo({ top: 0 }) }
   useScrollBoundary(tab === 'schedule' && !calendarOpen ? shiftDay : undefined)
@@ -80,6 +96,7 @@ function App() {
       const root = document.documentElement
       root.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
       const background = getComputedStyle(root).getPropertyValue('--bg').trim()
+      root.style.backgroundColor = background
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
     }
     apply(); media.addEventListener('change', apply)
@@ -130,12 +147,13 @@ function App() {
   const days = [...new Set(visible.map(t => t.due))].sort()
   const done = completedTasks(tasks)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
+  const breaks = lessonBreaks(lessons)
   const ownTasks = tasks.filter(t => t.due === date)
   const assigned = new Set<string>()
   const row = (task: DemoTask, groupLeaving = false) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} groupLeaving={groupLeaving} onExited={finishExit} />
   useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
   const changeTab = (next: Tab) => {
-    if (next === 'schedule' && tab !== 'schedule') setDate(currentDay())
+    if (next === 'schedule' && tab !== 'schedule') { setDate(currentDay()); setDayDirection(0) }
     setExiting([]); setTab(next); mainRef.current?.scrollTo({ top: 0 })
   }
 
@@ -145,22 +163,20 @@ function App() {
       <div className="screen-header">
       {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
       {tab === 'schedule' && <header className="agenda-heading">
-        <h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>
+        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1><span className="week-parity">{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</span></div>
         <div className="agenda-date-row">
           <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
           <div className="agenda-controls">
             {date !== today && <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}
-            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={() => setCalendarOpen(true)}><IconCalendar size={22} /></button>
+            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={() => setCalendarOpen(true)}><IconCalendar size={26} /></button>
           </div>
         </div>
-        <div className="agenda-meta"><p>{parityOf(date, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'}</p>
-          <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
-        </div>
+        <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
       </header>}
       </div>
       <div ref={mainRef} className="app-scroll" data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
-      {tab === 'tasks' && <div className="task-list">
+      {tab === 'tasks' && <div className="task-list tab-enter">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
         {days.map(day => {
           const entries = visible.filter(t => t.due === day)
@@ -174,18 +190,19 @@ function App() {
         </section></Collapse>})}
 
       </div>}
-      {tab === 'schedule' && <div key={date} className={`schedule-layout day-enter day-direction-${dayDirection}`}><section className="agenda">
+      {tab === 'schedule' && <div key={date} className={`schedule-layout ${dayDirection ? 'day-enter' : 'tab-enter'} day-direction-${dayDirection}`}><section className="agenda">
         {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
         {lessons.map(lesson => {
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
           attached.forEach(t => assigned.add(t.id))
-          return <article className="lesson" key={lesson.id}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article>
+          const pause = breaks.get(lesson.id)
+          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span>Перерыв · {pause.minutes} мин</span></p>}<article className="lesson"><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}
         <div className="agenda-actions"><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button><button className="primary-button" onClick={() => openNew()}>Добавить задание</button></div>
       </section></div>}
-      {tab === 'settings' && <div className="settings-list">
+      {tab === 'settings' && <div className="settings-list tab-enter">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
