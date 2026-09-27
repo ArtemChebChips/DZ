@@ -93,7 +93,6 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
 export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: { value: string; today: string; onChange: (date: string) => void; showMonthShortcut?: boolean; kinds?: (date: string) => LessonKind[] }) {
   const pressMonth = usePressAction()
   const [page, setPage] = useState<{ month: string; previous: string | null; direction: number }>({ month: value, previous: null, direction: 1 })
-  const viewport = useRef<HTMLDivElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const showMonth = (month: string) => setPage(current => {
     if (current.month.slice(0, 7) === month.slice(0, 7)) return current
@@ -101,16 +100,21 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
   })
   useEffect(() => { showMonth(value) }, [value])
   useLayoutEffect(() => {
-    const element = track.current, container = viewport.current
-    if (!element || !container) return
-    const incoming = element.lastElementChild as HTMLElement
-    container.style.height = `${incoming.offsetHeight}px`
-    if (!page.previous) return
+    const element = track.current
+    if (!element || !page.previous) return
     const width = element.getBoundingClientRect().width
+    const timing = { duration: motionDuration(true) * 1.8, easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' as const }
     const animation = element.animate([
       { transform: 'translate3d(0, 0, 0)' },
       { transform: `translate3d(${-page.direction * width}px, 0, 0)` },
-    ], { duration: motionDuration(true) * 1.8, easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' })
+    ], timing)
+    // Измеряем только при перелистывании уже открытого календаря.
+    // В покое высота всегда естественная — закрытый dialog не может закрепить ноль.
+    const oldHeight = (element.firstElementChild as HTMLElement).offsetHeight
+    const newHeight = (element.lastElementChild as HTMLElement).offsetHeight
+    const heightAnimation = oldHeight !== newHeight ? element.parentElement!.animate([
+      { height: `${oldHeight}px` }, { height: `${newHeight}px` },
+    ], timing) : null
     const finish = () => setPage(current => current === page ? { ...current, previous: null } : current)
     animation.finished.then(finish, () => {})
     const reduced = matchMedia('(prefers-reduced-motion: reduce)')
@@ -118,7 +122,7 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     const resize = new ResizeObserver(() => { if (Math.abs(element.getBoundingClientRect().width - width) > .5) finish() })
     resize.observe(element)
     reduced.addEventListener('change', reduce)
-    return () => { animation.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
+    return () => { animation.cancel(); heightAnimation?.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
   }, [page])
   const d = parseISO(page.month)
   const shift = (n: number) => showMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
@@ -143,7 +147,7 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
   }
   return <div className="month-calendar">
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(-1))} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(1))} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-viewport" ref={viewport}><div className="month-track" ref={track}>
+    <div className="month-viewport"><div className="month-track" ref={track}>
       {page.previous && <div key={page.previous.slice(0, 7)} className="month-page month-previous">{grid(page.previous, true)}</div>}
       <div key={page.month.slice(0, 7)} className="month-page" style={{ left: page.previous ? `${page.direction * 100}%` : 0 }}>{grid(page.month)}</div>
     </div></div>
