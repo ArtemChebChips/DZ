@@ -29,6 +29,7 @@ const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
+const minutes = new Intl.NumberFormat('ru-RU', { style: 'unit', unit: 'minute', unitDisplay: 'long' })
 
 function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
   return <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -39,7 +40,7 @@ function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
 function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, onExited }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void; leaving?: boolean; groupLeaving?: boolean; onExited?: (id: string) => void }) {
   return <Collapse active={leaving && !groupLeaving} hold={groupLeaving} onEnd={() => onExited?.(task.id)} className="task-collapse"><div className={`task-row ${task.done ? 'completed' : ''} ${leaving ? 'task-leaving' : ''}`}>
     <button disabled={leaving} className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
-    <button disabled={leaving} className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? `Заметка${task.subjectId ? ' · ' + subjectName(task.subjectId) : ''}` : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
+    <button disabled={leaving} className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? <><span>Заметка</span>{task.subjectId && <span className="note-subject">{subjectName(task.subjectId)}</span>}</> : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
   </div></Collapse>
 }
 
@@ -91,6 +92,31 @@ function App() {
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
+  const toastRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const toast = toastRef.current
+    const scroll = mainRef.current
+    if (!toast || !scroll) return
+    const main = scroll.parentElement!
+    const actions = main.querySelector<HTMLElement>('.agenda-actions, .task-add-button')
+    // Кнопки расписания остаются в списке. Поднимаем только уведомление,
+    // когда прокрутка приводит ряд добавления к нижнему краю.
+    const place = () => {
+      const bounds = toast.getBoundingClientRect()
+      const bottom = main.getBoundingClientRect().bottom
+      const row = actions?.getBoundingClientRect()
+      const overlaps = row && row.left < bounds.right && row.right > bounds.left &&
+        row.bottom > bottom - 16 - bounds.height && row.top < bottom - 16
+      toast.style.setProperty('--toast-bottom', `${overlaps ? bottom - row.top + 12 : 16}px`)
+    }
+    place()
+    const observer = new ResizeObserver(place)
+    observer.observe(main)
+    observer.observe(toast)
+    if (actions) observer.observe(actions)
+    scroll.addEventListener('scroll', place, { passive: true })
+    return () => { observer.disconnect(); scroll.removeEventListener('scroll', place) }
+  }, [undo, notice, tab, date])
   useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
@@ -176,7 +202,7 @@ function App() {
         <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
       </header>}
       </div>
-      <div ref={mainRef} className="app-scroll" data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
+      <div ref={mainRef} className="app-scroll" tabIndex={tab === 'schedule' ? 0 : undefined} role={tab === 'schedule' ? 'region' : undefined} aria-label={tab === 'schedule' ? 'Расписание на выбранный день' : undefined} data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list tab-enter">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
@@ -210,11 +236,11 @@ function App() {
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
           attached.forEach(t => assigned.add(t.id))
           const pause = breaks.get(lesson.id)
-          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span>Перерыв · {pause.minutes} мин</span></p>}<article className="lesson"><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p>{kindName[lesson.kind]}{lesson.room && ` · ${/^каф\./i.test(lesson.room) ? lesson.room : 'Каб. ' + lesson.room}`}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
+          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span className="break-description"><span>Перерыв</span><span>{minutes.format(pause.minutes)}</span></span></p>}<article className="lesson"><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}
-        <div className="agenda-actions"><button className="outline-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={19} />Заметка</button><button className="primary-button" onClick={() => openNew()}>Добавить задание</button></div>
+        <div className="agenda-actions"><button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button><button className="primary-button entry-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button></div>
       </section></div>}
       {tab === 'settings' && <div className="settings-list tab-enter">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
@@ -226,13 +252,13 @@ function App() {
       </div>}
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>}
       </div>
-      {tab === 'tasks' && <button className="primary-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>}
-      {undo ? <div className="toast" role="status">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}<button onClick={undoLast}>Отменить</button><button aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div className="toast" role="status">{notice}<IconCheck size={18} /></div>}
+      {tab === 'tasks' && <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>}
+      {undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notice}</span><IconCheck size={18} /></div>}
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
     {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); setCalendarOpen(false) }} /><button className="outline-button today-button" onClick={() => { selectDay(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
-    {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}><div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption">По дате задания · {done.length}</p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={editHistory} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div></Modal>}
+    {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}><div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={editHistory} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
@@ -244,7 +270,7 @@ function App() {
         {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
       </div>
     </Modal>}
-    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}{IS_DEMO ? ' · демонстрация' : ' · для iPhone и компьютера'}.</p></>}</div></Modal>}
+    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}<br />{IS_DEMO ? 'Демонстрация' : 'Для iPhone и компьютера'}</p></>}</div></Modal>}
   </div>
 }
 

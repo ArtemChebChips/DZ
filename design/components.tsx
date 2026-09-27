@@ -9,8 +9,10 @@ import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName
 
 export function Modal({ title, onClose, children, variant }: { variant?: 'calendar'; title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
+  const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
     const dialog = ref.current!
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const viewport = window.visualViewport
     // Клавиатура iPhone уменьшает видимую область, не обязательно высоту страницы.
     const fit = () => {
@@ -29,6 +31,7 @@ export function Modal({ title, onClose, children, variant }: { variant?: 'calend
     }
     fit()
     dialog.showModal()
+    heading.current?.focus({ preventScroll: true })
     viewport?.addEventListener('resize', fit)
     viewport?.addEventListener('scroll', fit)
     window.addEventListener('resize', fit)
@@ -37,10 +40,11 @@ export function Modal({ title, onClose, children, variant }: { variant?: 'calend
       viewport?.removeEventListener('scroll', fit)
       window.removeEventListener('resize', fit)
       dialog.close()
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
   }, [])
   return <dialog ref={ref} className={`sheet ${variant === 'calendar' ? 'calendar-sheet' : ''}`} onCancel={e => { e.preventDefault(); onClose() }} onClick={e => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
-    <div className="sheet-inner"><header><h2>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><IconX /></button></header>{children}</div>
+    <div className="sheet-inner"><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><IconX /></button></header>{children}</div>
   </dialog>
 }
 
@@ -60,7 +64,7 @@ export function Calendar({ value, today, onChange, kinds }: { value: string; tod
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)
         const parity = parityOf(monday, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'
-        return <Fragment key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number} · ${parity}` : 'До начала семестра'}>{number ?? '—'}{number && <small aria-hidden="true">{parity === 'Числитель' ? 'Ч' : 'З'}</small>}</span><div className="month-row">{Array.from({ length: 7 }, (_, day) => {
+        return <Fragment key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number}, ${parity}` : 'До начала семестра'}>{number ?? '—'}</span><div className="month-row">{Array.from({ length: 7 }, (_, day) => {
         const date = addDays(start, week * 7 + day)
         const marks = kinds?.(date) || []
         const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -124,13 +128,13 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     <form hidden={picking} onSubmit={e => { e.preventDefault(); finish() }}>
       <div className="editor-fields">
         <div className="theme-options" aria-label="Тип записи"><button type="button" aria-pressed={!note} onClick={() => changeContext({ entryType: 'homework', kind: undefined })}>ДЗ</button><button type="button" aria-pressed={note} onClick={() => changeContext({ entryType: 'note', kind: undefined })}>Заметка</button></div>
-        <div className="field"><span id="subject-label">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
-        <label className="field">{note ? 'Текст заметки' : 'Что нужно сделать'}<textarea placeholder="Например, решить задачи 12–18" rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
+        <div className="field"><span id="subject-label" className="visually-hidden">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
+        <label className="field"><span className="visually-hidden">{note ? 'Текст заметки' : 'Что нужно сделать'}</span><textarea placeholder={note ? 'Например, взять конспект на пару' : 'Например, решить задачи 12–18'} rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
         {!note && availableKinds.length > 0 && <div className="kind-options" aria-label="Вид занятия">{availableKinds.map(kind => <button type="button" key={kind} className={`kind-${kind}`} aria-pressed={value.kind === kind} onClick={() => changeContext({ kind })}>{kind === 'lab' ? 'Лаба' : 'Семинар'}</button>)}</div>}
         {dates.length > 0 && <div className="date-presets">{dates.map((date, i) => <button type="button" key={date} aria-pressed={value.due === date} onClick={() => changeContext({ due: date })}>{value.kind === 'lab' ? (i === 0 ? 'Ближайший день лаб' : 'Следующий день лаб') : (i === 0 ? 'Следующий семинар' : 'Семинар после него')}<span>{formatDayMonth(date)}</span></button>)}</div>}
         <Calendar today={today} value={value.due} onChange={due => changeContext({ due })} kinds={note ? undefined : marks} />
         {!note && value.subjectId && <div className="calendar-legend"><span><i className="mark-seminar" />Семинар</span><span><i className="mark-lab" />Лаба</span></div>}
-        {!note && choices.length > 0 && <fieldset className="lesson-choices"><legend>{needsChoice ? 'Выбери время пары' : 'Занятие в этот день'}</legend>{choices.map(l => <button type="button" key={l.id} className={`kind-${l.kind}`} aria-pressed={value.lessonId === l.id} onClick={() => setValue({ ...value, kind: l.kind, lessonId: l.id })}><span>{l.kind === 'lab' ? 'Лаба' : 'Семинар'} · {l.start}–{l.end}</span>{value.lessonId === l.id && <IconCheck size={18} />}</button>)}</fieldset>}
+        {!note && choices.length > 0 && <fieldset className="lesson-choices"><legend>{needsChoice ? 'Выбери время пары' : 'Занятие в этот день'}</legend>{choices.map(l => <button type="button" key={l.id} className={`kind-${l.kind}`} aria-pressed={value.lessonId === l.id} onClick={() => setValue({ ...value, kind: l.kind, lessonId: l.id })}><span className="lesson-choice-label"><span>{l.kind === 'lab' ? 'Лаба' : 'Семинар'}</span><span>{l.start}–{l.end}</span></span>{value.lessonId === l.id && <IconCheck size={18} />}</button>)}</fieldset>}
         {!note && value.subjectId && !selected && <p className="binding-hint">{needsChoice ? 'В этот день несколько пар — выбери нужную.' : choices.length ? 'Можно выбрать пару выше или сохранить задание на эту дату без привязки.' : 'Подходящей пары в этот день нет. Задание останется на выбранной дате без привязки.'}</p>}
         {selected?.kind === 'lecture' && <p className="binding-hint">Прежняя привязка к лекции сохранена. Для смены выбери семинар или лабу.</p>}
       </div>
