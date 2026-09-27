@@ -313,7 +313,6 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* Вся пара — одно действие; вложенные задания остаются самостоятельными. */
 .lesson-open { position: absolute; inset: 0; z-index: 1; width: 100%; border-radius: 22px; }
-.lesson-open:active { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .lesson-open:focus-visible { outline-offset: -3px; }
 .lesson-body .task-row { position: relative; z-index: 2; }
 

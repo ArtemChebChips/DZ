@@ -162,11 +162,11 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     dismiss()
   }
   return <Modal variant="editor" title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close} onBack={picking ? returnFromPicker : undefined}>{dismiss => <>
-    {picking && <div className="subject-picker" ref={subjectList}>
+    {picking && <div className="subject-picker" ref={subjectList} data-scroll-region>
       {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
     </div>}
     <form hidden={picking} onSubmit={e => { e.preventDefault(); finish(dismiss) }}>
-      <div className="editor-fields">
+      <div className="editor-fields" data-scroll-region>
         <div className="theme-options entry-type" data-note={note} aria-label="Тип записи"><span className="entry-type-bubble" aria-hidden="true" /><button type="button" aria-pressed={!note} onClick={() => changeContext({ entryType: 'homework', kind: undefined })}>ДЗ</button><button type="button" aria-pressed={note} onClick={() => changeContext({ entryType: 'note', kind: undefined })}>Заметка</button></div>
         <div className="field"><span id="subject-label" className="visually-hidden">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
         <label className="field"><span className="visually-hidden">{note ? 'Текст заметки' : 'Что нужно сделать'}</span><textarea placeholder={note ? 'Например, взять конспект на пару' : 'Например, решить задачи 12–18'} rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>

@@ -50,7 +50,7 @@ function App() {
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
-  const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
+  const [tab, setTab] = useState<Tab>(query.get('screen') === 'tasks' ? 'tasks' : query.get('screen') === 'settings' ? 'settings' : 'schedule')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
   const animationSpeed = notebook.data.animationSpeed ?? 'normal'
@@ -84,7 +84,6 @@ function App() {
   const [dayDirection, setDayDirection] = useState(0)
   const selectDay = (next: string) => { setDayDirection(next < date ? -1 : 1); setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
   const shiftDay = (direction: -1 | 1) => { setDayDirection(direction); setDate(current => addDays(current, direction)); mainRef.current?.scrollTo({ top: 0 }) }
-  useScrollBoundary(tab === 'schedule' && !calendarOpen ? shiftDay : undefined)
   useEffect(() => {
     const previous = previousToday.current
     setDate(selected => selected === previous ? today : selected)
@@ -92,6 +91,7 @@ function App() {
   }, [today])
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
+  useScrollBoundary(tab === 'schedule' && !calendarOpen && !draft && !panel ? shiftDay : undefined)
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
@@ -196,7 +196,7 @@ function App() {
 
   return <div className="app-shell">
     <Navigation tab={tab} changeTab={changeTab} />
-    <main className={`app-main screen-${tab}`}>
+    <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
       <div className="screen-header">
       {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
       {tab === 'schedule' && <header className="agenda-heading">
@@ -211,7 +211,7 @@ function App() {
         <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
       </header>}
       </div>
-      <div ref={mainRef} className="app-scroll" tabIndex={tab === 'schedule' ? 0 : undefined} role={tab === 'schedule' ? 'region' : undefined} aria-label={tab === 'schedule' ? 'Расписание на выбранный день' : undefined} data-scroll-region data-swipe-days={tab === 'schedule' ? '' : undefined}>
+      <div ref={mainRef} className="app-scroll" tabIndex={tab === 'schedule' ? 0 : undefined} role={tab === 'schedule' ? 'region' : undefined} aria-label={tab === 'schedule' ? 'Расписание на выбранный день' : undefined} data-scroll-region>
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list tab-enter">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
