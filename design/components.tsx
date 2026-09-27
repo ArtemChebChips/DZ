@@ -9,7 +9,7 @@ import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
 
 type CloseModal = (after?: () => void) => void
-export function Modal({ title, onClose, onBack, children, variant }: { variant?: 'calendar'; title: string; onClose: () => void; onBack?: () => void; children: ReactNode | ((close: CloseModal) => ReactNode) }) {
+export function Modal({ title, onClose, onBack, children, variant }: { variant?: 'calendar' | 'editor'; title: string; onClose: () => void; onBack?: () => void; children: ReactNode | ((close: CloseModal) => ReactNode) }) {
   const ref = useRef<HTMLDialogElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const pending = useRef<(() => void) | null>(null)
@@ -43,13 +43,15 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
       const resized = dialog.style.getPropertyValue('--sheet-height') !== height
       dialog.style.setProperty('--sheet-height', height)
       dialog.style.setProperty('--sheet-top', `${viewport?.offsetTop ?? 0}px`)
+      dialog.dataset.keyboard = String((viewport?.scale ?? 1) === 1 && (viewport?.height ?? window.innerHeight) < document.documentElement.clientHeight - 150)
       const field = document.activeElement
       if (resized && dialog.open && field instanceof HTMLElement && dialog.contains(field) && field.matches('input, textarea, select')) {
         const bounds = field.getBoundingClientRect()
         const top = dialog.querySelector('header')!.getBoundingClientRect().bottom + 12
         const bottom = (dialog.querySelector('footer')?.getBoundingClientRect().top ?? dialog.getBoundingClientRect().bottom) - 12
-        if (bounds.bottom > bottom) dialog.scrollTop += bounds.bottom - bottom
-        else if (bounds.top < top) dialog.scrollTop -= top - bounds.top
+        const scroller = field.closest('.editor-fields') ?? dialog
+        if (bounds.bottom > bottom) scroller.scrollTop += bounds.bottom - bottom
+        else if (bounds.top < top) scroller.scrollTop -= top - bounds.top
       }
     }
     fit()
@@ -69,10 +71,12 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
       viewport?.removeEventListener('scroll', fit)
       window.removeEventListener('resize', fit)
       dialog.close()
-      if (opener?.isConnected) opener.focus({ preventScroll: true })
+      // Safari при касании кнопки может оставить фокус на списке. Возвращаем
+      // его только действию, а не всему расписанию с клавиатурной обводкой.
+      if (opener?.isConnected && opener.matches('button, a[href], input, textarea, select, summary, [role="button"]')) opener.focus({ preventScroll: true })
     }
   }, [])
-  return <dialog ref={ref} className={`sheet ${variant === 'calendar' ? 'calendar-sheet' : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
+  return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
     <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={dismiss}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
   </dialog>
 }
@@ -88,7 +92,7 @@ export function Calendar({ value, today, onChange, kinds }: { value: string; tod
   const shift = (n: number) => setMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
   return <div className="month-calendar">
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-grid month-enter" key={first}><span className="week-column-label" aria-label="Учебная неделя">№</span>{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+    <div className="month-grid month-enter" key={first}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
       {Array.from({ length: count / 7 }, (_, week) => {
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)
@@ -157,7 +161,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     else save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
     dismiss()
   }
-  return <Modal title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close} onBack={picking ? returnFromPicker : undefined}>{dismiss => <>
+  return <Modal variant="editor" title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close} onBack={picking ? returnFromPicker : undefined}>{dismiss => <>
     {picking && <div className="subject-picker" ref={subjectList}>
       {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
     </div>}

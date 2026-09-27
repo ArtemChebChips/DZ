@@ -105,7 +105,15 @@ function App() {
     // На узком экране отмена располагается над общим рядом добавления.
     const place = () => {
       const bounds = toast.getBoundingClientRect()
-      const bottom = main.getBoundingClientRect().bottom
+      const mainBounds = main.getBoundingClientRect()
+      const bottom = mainBounds.bottom
+      const anchor = actions?.querySelector('button')?.getBoundingClientRect()
+      if (!undo && anchor) {
+        toast.style.setProperty('--notice-left', `${anchor.left - mainBounds.left}px`)
+        toast.style.setProperty('--notice-width', `${anchor.width}px`)
+        toast.style.setProperty('--toast-bottom', `${bottom - anchor.top + 10}px`)
+        return
+      }
       const row = actions?.getBoundingClientRect()
       const overlaps = row && row.left < bounds.right && row.right > bounds.left &&
         row.bottom > bottom - 16 - bounds.height && row.top < bottom - 16
@@ -258,7 +266,7 @@ function App() {
         {tab === 'schedule' && <button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>}
         <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>
       </div></div>}
-      {undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notice}</span><IconCheck size={18} /></div>}
+      {undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}

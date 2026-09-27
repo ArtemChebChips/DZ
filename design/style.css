@@ -355,8 +355,7 @@ button:disabled { opacity: .45; cursor: default; }
 /* Номера за контуром, семь колонок дат внутри него. */
 .month-grid { position: relative; isolation: isolate; grid-template-columns: 28px repeat(7, minmax(0, 1fr)); padding: 12px 6px 12px 0; }
 .month-grid::before { content: ''; position: absolute; inset: 0 0 0 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); z-index: -1; pointer-events: none; }
-.week-column-label { color: var(--muted); font-size: 11px; text-align: center; }
-.calendar-week-number { align-self: center; text-align: center; color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; padding-right: 4px; }
+.calendar-week-number { align-self: center; justify-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-left: -5px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) {
   .calendar-sheet { height: min(calc(var(--sheet-height, 100dvh) * .9), 780px); }
 }
@@ -368,6 +367,20 @@ button:disabled { opacity: .45; cursor: default; }
 .sheet h2:focus { outline: none; }
 .sheet { border-radius: 22px; }
 @media (max-width: 600px) { .sheet { border-radius: 22px 22px 0 0; } }
+/* Поля прокручиваются отдельно: непрозрачный ряд сохранения доходит до края окна. */
+.editor-sheet { overflow: hidden; }
+.editor-sheet .sheet-inner { display: flex; flex-direction: column; height: 100%; max-height: inherit; }
+.editor-sheet .sheet-inner > header { position: static; flex-shrink: 0; }
+.editor-sheet form:not([hidden]) { display: flex; flex-direction: column; min-height: 0; }
+.editor-sheet .editor-fields, .editor-sheet .subject-picker { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.editor-sheet .editor-footer { position: static; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .editor-sheet { top: calc(var(--sheet-top, 0px) + var(--safe-top) + 16px); transform: none; height: calc(var(--sheet-height, 100dvh) - var(--safe-top) - 16px); }
+  .editor-sheet form:not([hidden]) { flex: 1; }
+  .editor-sheet .editor-fields { flex: 1; }
+  .editor-sheet[data-keyboard='true'] .editor-footer { padding-top: 8px; padding-bottom: 8px; }
+}
+.toast.toast-notice { left: var(--notice-left, max(var(--page-gutter), var(--safe-left))); width: var(--notice-width, 132px); height: 48px; min-height: 48px; padding: 6px 12px; justify-content: center; text-align: center; font-size: 13px; line-height: 17px; box-shadow: none; }
 .editor-fields .field textarea, .editor-fields .field select, .subject-trigger,
 .subject-picker > button, .subject-picker > button[aria-pressed='true'],
 .lesson-choices button { border-radius: 16px; }
