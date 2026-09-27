@@ -4,6 +4,9 @@
   background: #fdfcfb;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+  --motion-duration: 220ms;
+  --motion-height: 320ms;
+  --motion-ease: cubic-bezier(.2, .7, .2, 1);
   --bg: #fdfcfb;
   --surface: #fff;
   --ink: #171b24;
@@ -234,7 +237,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
   .toast { left: 40px; max-width: calc(100% - 80px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  button { transition: color .12s, background-color .12s; }
+  button { transition: color var(--motion-duration), background-color var(--motion-duration); }
 }
 
 .storage-warning { padding: 14px; margin-bottom: 20px; border: 1px solid var(--danger); border-radius: 8px; font-size: 14px; line-height: 1.5; color: var(--danger); }
@@ -275,7 +278,7 @@ button:disabled { opacity: .45; cursor: default; }
 .calendar-sheet .calendar-picker > button { flex-shrink: 0; }
 @media (max-width: 600px) { .calendar-sheet { height: min(72dvh, 640px); height: min(calc(var(--sheet-height) * .72), 640px); } }
 @media (prefers-reduced-motion: no-preference) {
-  .day-enter { animation: day-enter .18s ease-out; --day-shift: 12px; }
+  .day-enter { animation: day-enter var(--motion-duration) var(--motion-ease); --day-shift: 12px; }
   .day-direction--1 { --day-shift: -12px; }
   @keyframes day-enter { from { opacity: .3; transform: translateX(var(--day-shift)); } to { opacity: 1; transform: translateX(0); } }
 }
@@ -301,8 +304,8 @@ button:disabled { opacity: .45; cursor: default; }
 :root[data-theme='dark'] .nav-bubble { background: #77aaff1c; border-color: #77aaff20; }
 .app-nav button { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: no-preference) and (max-width: 999px) {
-  .nav-bubble { transition: transform .24s cubic-bezier(.2,.8,.2,1), width .24s, height .24s; }
-  .app-nav button svg { transition: transform .24s ease; }
+  .nav-bubble { transition: transform var(--motion-duration) var(--motion-ease), width var(--motion-duration), height var(--motion-duration); }
+  .app-nav button svg { transition: transform var(--motion-duration) var(--motion-ease); }
   .app-nav button[aria-current='page'] svg { transform: scale(1.05); }
 }
 @media (min-width: 1000px) { .nav-bubble { display: none; } }
@@ -318,21 +321,20 @@ button:disabled { opacity: .45; cursor: default; }
 .collapse-leaving { overflow: hidden; pointer-events: none; }
 .screen-tasks .app-scroll { overflow-anchor: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .tasks-empty { animation: empty-appear .18s ease-out; }
+  .tasks-empty { animation: empty-appear var(--motion-duration) var(--motion-ease); }
   @keyframes empty-appear { from { opacity: 0; } to { opacity: 1; } }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tab-enter { animation: tab-enter .18s ease-out; }
+  .tab-enter { animation: tab-enter var(--motion-duration) var(--motion-ease); }
   @keyframes tab-enter { from { opacity: .5; } to { opacity: 1; } }
 }
 
 .editor-fields .theme-options button { font-size: 16px; font-weight: 500; }
 .subject-picker > button { border-radius: 7px; }
 @media (prefers-reduced-motion: no-preference) {
-  .subject-picker > button, .editor-fields .theme-options button { transition: background-color .15s ease, color .15s ease; }
-  .sheet[open] .sheet-inner { animation: tab-enter .16s ease-out; }
-  .subject-picker, .sheet form:not([hidden]) { animation: tab-enter .1s ease-out; }
+  .subject-picker > button, .editor-fields .theme-options button { transition: background-color var(--motion-duration), color var(--motion-duration); }
+  .subject-picker, .sheet form:not([hidden]) { animation: tab-enter var(--motion-duration) var(--motion-ease); }
 }
 
 /* Временные группы задач: сроки не меняются, меняется только представление. */
@@ -358,10 +360,6 @@ button:disabled { opacity: .45; cursor: default; }
 @media (max-width: 600px) {
   .calendar-sheet { height: min(calc(var(--sheet-height, 100dvh) * .9), 780px); }
 }
-@media (prefers-reduced-motion: no-preference) and (max-width: 600px) {
-  .calendar-sheet[open] { animation: calendar-rise .24s cubic-bezier(.2, .7, .2, 1); }
-  @keyframes calendar-rise { from { transform: translateY(0); opacity: .7; } to { transform: translateY(-100%); opacity: 1; } }
-}
 .task-period .check-button { width: 48px; flex-basis: 48px; padding-left: 10px; padding-right: 8px; }
 .task-period .task-row { padding-right: 10px; }
 
@@ -384,3 +382,37 @@ button:disabled { opacity: .45; cursor: default; }
 .break-description { margin-left: auto; }
 .break-description > span:last-child { font-variant-numeric: tabular-nums; }
 .history-caption { justify-content: space-between; }
+
+/* Одна скорость для CSS-переходов и Web Animations. */
+:root[data-motion='fast'] { --motion-duration: 140ms; --motion-height: 220ms; }
+:root[data-motion='smooth'] { --motion-duration: 340ms; --motion-height: 460ms; }
+.animation-settings { padding-top: 24px; }
+.editor-fields .entry-type { position: relative; isolation: isolate; padding: 3px; }
+.entry-type-bubble { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 14px; background: var(--accent); pointer-events: none; transition: transform var(--motion-duration) var(--motion-ease); }
+.entry-type[data-note='true'] .entry-type-bubble { transform: translateX(100%); }
+.editor-fields .entry-type button { position: relative; background: transparent; }
+.editor-fields .entry-type button[aria-pressed='true'] { background: transparent; }
+.day-tasks { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows var(--motion-height) var(--motion-ease), opacity var(--motion-duration); }
+.day-tasks.folded { grid-template-rows: 0fr; opacity: 0; }
+.day-tasks > div { min-height: 0; overflow: hidden; }
+.day-tasks button:focus-visible { outline-offset: -3px; }
+.day-heading svg { transition: transform var(--motion-duration) var(--motion-ease); }
+.day-summary { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows var(--motion-height) var(--motion-ease), opacity var(--motion-duration), visibility 0s var(--motion-height); }
+.day-summary.visible { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
+.day-summary > span { min-height: 0; overflow: hidden; font-size: 12px; line-height: 1.7; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .month-enter { animation: tab-enter var(--motion-duration) var(--motion-ease); }
+  .sheet[open] { animation: sheet-enter var(--motion-duration) var(--motion-ease) both; }
+  .sheet[open]::backdrop { animation: backdrop-enter var(--motion-duration) both; }
+  .sheet.sheet-closing { animation: sheet-exit var(--motion-duration) var(--motion-ease) both; }
+  .sheet.sheet-closing::backdrop { animation: backdrop-exit var(--motion-duration) both; }
+  @keyframes sheet-enter { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes sheet-exit { from { opacity: var(--sheet-exit-opacity, 1); translate: var(--sheet-exit-translate, 0 0); } to { opacity: 0; translate: 0 18px; } }
+  @keyframes backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes backdrop-exit { from { opacity: 1; } to { opacity: 0; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root, :root[data-motion] { --motion-duration: 0ms; --motion-height: 0ms; }
+  .day-tasks, .day-summary, .entry-type-bubble, .day-heading svg { transition: none; }
+}

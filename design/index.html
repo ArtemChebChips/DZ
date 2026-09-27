@@ -10,7 +10,9 @@
       // Тема до первого кадра, в том числе при обновлении iOS standalone.
       try {
         const query = new URLSearchParams(location.search)
-        const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : JSON.parse(localStorage.getItem('dz-next:v1') || '{}').theme || 'system'
+        const saved = query.get('demo') === '1' ? {} : JSON.parse(localStorage.getItem('dz-next:v1') || '{}')
+        const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : saved.theme || 'system'
+        document.documentElement.dataset.motion = ['fast', 'normal', 'smooth'].includes(saved.animationSpeed) ? saved.animationSpeed : 'normal'
         const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
         document.documentElement.style.backgroundColor = dark ? '#17191d' : '#fdfcfb'

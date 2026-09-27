@@ -3,13 +3,36 @@ import { addDays, diffDays, formatDayMonth, mondayOf, parseISO, toISO, WEEKDAYS_
 import { lessonsOn, nextLessonDates, parityOf } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
 import { academicWeek } from './academic-week'
+import { motionDuration } from './motion'
 import { homeworkLessons, isHomeworkKind, taskLesson, isDayNote } from './homework'
 import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
 
-export function Modal({ title, onClose, children, variant }: { variant?: 'calendar'; title: string; onClose: () => void; children: ReactNode }) {
+type CloseModal = (after?: () => void) => void
+export function Modal({ title, onClose, onBack, children, variant }: { variant?: 'calendar'; title: string; onClose: () => void; onBack?: () => void; children: ReactNode | ((close: CloseModal) => ReactNode) }) {
   const ref = useRef<HTMLDialogElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
+  const pending = useRef<(() => void) | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [closing, setClosing] = useState(false)
+  const finishClose = () => {
+    const after = pending.current
+    pending.current = null
+    clearTimeout(timer.current)
+    after?.()
+  }
+  const close: CloseModal = (after = onClose) => {
+    if (pending.current) return
+    pending.current = after
+    const duration = motionDuration()
+    if (!duration) { finishClose(); return }
+    const style = getComputedStyle(ref.current!)
+    ref.current!.style.setProperty('--sheet-exit-opacity', style.opacity)
+    ref.current!.style.setProperty('--sheet-exit-translate', style.translate === 'none' ? '0 0' : style.translate)
+    setClosing(true)
+    timer.current = setTimeout(finishClose, duration + 100)
+  }
+  const dismiss = () => { if (!pending.current) { if (onBack) onBack(); else close() } }
   useEffect(() => {
     const dialog = ref.current!
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -35,7 +58,13 @@ export function Modal({ title, onClose, children, variant }: { variant?: 'calend
     viewport?.addEventListener('resize', fit)
     viewport?.addEventListener('scroll', fit)
     window.addEventListener('resize', fit)
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const reduce = () => { if (reduced.matches) finishClose() }
+    reduced.addEventListener('change', reduce)
     return () => {
+      clearTimeout(timer.current)
+      pending.current = null
+      reduced.removeEventListener('change', reduce)
       viewport?.removeEventListener('resize', fit)
       viewport?.removeEventListener('scroll', fit)
       window.removeEventListener('resize', fit)
@@ -43,8 +72,8 @@ export function Modal({ title, onClose, children, variant }: { variant?: 'calend
       if (opener?.isConnected) opener.focus({ preventScroll: true })
     }
   }, [])
-  return <dialog ref={ref} className={`sheet ${variant === 'calendar' ? 'calendar-sheet' : ''}`} onCancel={e => { e.preventDefault(); onClose() }} onClick={e => { if (e.target === e.currentTarget) onClose() }} aria-label={title}>
-    <div className="sheet-inner"><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><IconX /></button></header>{children}</div>
+  return <dialog ref={ref} className={`sheet ${variant === 'calendar' ? 'calendar-sheet' : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
+    <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={dismiss}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
   </dialog>
 }
 
@@ -59,7 +88,7 @@ export function Calendar({ value, today, onChange, kinds }: { value: string; tod
   const shift = (n: number) => setMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
   return <div className="month-calendar">
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-grid"><span className="week-column-label" aria-label="Учебная неделя">№</span>{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+    <div className="month-grid month-enter" key={first}><span className="week-column-label" aria-label="Учебная неделя">№</span>{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
       {Array.from({ length: count / 7 }, (_, week) => {
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)
@@ -81,8 +110,13 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
   })
   const [picking, setPicking] = useState(false)
   const selectionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const returnFromPicker = () => { clearTimeout(selectionTimer.current); setPicking(false) }
-  useEffect(() => () => clearTimeout(selectionTimer.current), [])
+  const returnFromPicker = () => { clearTimeout(selectionTimer.current); selectionTimer.current = undefined; setPicking(false) }
+  useEffect(() => {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const reduce = () => { if (reduced.matches && selectionTimer.current) returnFromPicker() }
+    reduced.addEventListener('change', reduce)
+    return () => { clearTimeout(selectionTimer.current); reduced.removeEventListener('change', reduce) }
+  }, [])
   const subjectButton = useRef<HTMLButtonElement>(null)
   const subjectList = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -112,22 +146,24 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
       changeContext({ subjectId, kind: kinds.length === 1 ? kinds[0] : undefined })
     }
     clearTimeout(selectionTimer.current)
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) setPicking(false)
-    else selectionTimer.current = setTimeout(() => setPicking(false), 150)
+    const duration = motionDuration()
+    if (!duration) setPicking(false)
+    else selectionTimer.current = setTimeout(() => { selectionTimer.current = undefined; setPicking(false) }, duration)
   }
-  const finish = () => {
+  const finish = (dismiss: CloseModal) => {
     if (!value.title.trim() || needsChoice) return
     // Старое отсутствующее lessonId сохраняет несопоставленную запись, пока пользователь не выберет пару.
-    if (note) { save({ ...value, entryType: 'note', title: value.title.trim(), kind: undefined, lessonId: undefined }); return }
-    save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
+    if (note) save({ ...value, entryType: 'note', title: value.title.trim(), kind: undefined, lessonId: undefined })
+    else save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
+    dismiss()
   }
-  return <Modal title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={() => picking ? returnFromPicker() : close()}>
+  return <Modal title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close} onBack={picking ? returnFromPicker : undefined}>{dismiss => <>
     {picking && <div className="subject-picker" ref={subjectList}>
       {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
     </div>}
-    <form hidden={picking} onSubmit={e => { e.preventDefault(); finish() }}>
+    <form hidden={picking} onSubmit={e => { e.preventDefault(); finish(dismiss) }}>
       <div className="editor-fields">
-        <div className="theme-options" aria-label="Тип записи"><button type="button" aria-pressed={!note} onClick={() => changeContext({ entryType: 'homework', kind: undefined })}>ДЗ</button><button type="button" aria-pressed={note} onClick={() => changeContext({ entryType: 'note', kind: undefined })}>Заметка</button></div>
+        <div className="theme-options entry-type" data-note={note} aria-label="Тип записи"><span className="entry-type-bubble" aria-hidden="true" /><button type="button" aria-pressed={!note} onClick={() => changeContext({ entryType: 'homework', kind: undefined })}>ДЗ</button><button type="button" aria-pressed={note} onClick={() => changeContext({ entryType: 'note', kind: undefined })}>Заметка</button></div>
         <div className="field"><span id="subject-label" className="visually-hidden">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
         <label className="field"><span className="visually-hidden">{note ? 'Текст заметки' : 'Что нужно сделать'}</span><textarea placeholder={note ? 'Например, взять конспект на пару' : 'Например, решить задачи 12–18'} rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
         {!note && availableKinds.length > 0 && <div className="kind-options" aria-label="Вид занятия">{availableKinds.map(kind => <button type="button" key={kind} className={`kind-${kind}`} aria-pressed={value.kind === kind} onClick={() => changeContext({ kind })}>{kind === 'lab' ? 'Лаба' : 'Семинар'}</button>)}</div>}
@@ -138,7 +174,8 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
         {!note && value.subjectId && !selected && <p className="binding-hint">{needsChoice ? 'В этот день несколько пар — выбери нужную.' : choices.length ? 'Можно выбрать пару выше или сохранить задание на эту дату без привязки.' : 'Подходящей пары в этот день нет. Задание останется на выбранной дате без привязки.'}</p>}
         {selected?.kind === 'lecture' && <p className="binding-hint">Прежняя привязка к лекции сохранена. Для смены выбери семинар или лабу.</p>}
       </div>
-      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => remove(draft.id!)}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim() || needsChoice} type="submit">{draft.id ? 'Сохранить' : note ? 'Добавить заметку' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
+      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => { remove(draft.id!); dismiss() }}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim() || needsChoice} type="submit">{draft.id ? 'Сохранить' : note ? 'Добавить заметку' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
     </form>
+    </>}
   </Modal>
 }

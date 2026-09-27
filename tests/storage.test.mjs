@@ -35,3 +35,24 @@ test('Отказ доступа и нехватка места не скрыва
   assert.throws(() => readNotebook({ getItem() { throw new Error('denied') } }), /denied/)
   assert.throws(() => persistNotebook({ setItem() { throw new Error('quota') } }, freshNotebook()), /quota/)
 })
+test('Старая запись без скорости читается без миграции; все скорости сохраняются вместе с заданиями', () => {
+  const original = { ...freshNotebook(), tasks: [{ id: 'old', title: 'Не менять', subjectId: 'phys', due: '2026-09-28', done: false, kind: 'lab', lessonId: 'pn-5' }] }
+  const raw = JSON.stringify(original)
+  const storage = memory({ [STORAGE_KEY]: raw, 'dz:data': 'legacy' })
+  const loaded = readNotebook(storage)
+  assert.equal(loaded.animationSpeed ?? 'normal', 'normal')
+  assert.equal(storage.getItem(STORAGE_KEY), raw)
+  for (const animationSpeed of ['fast', 'normal', 'smooth']) {
+    persistNotebook(storage, { ...loaded, animationSpeed })
+    const restored = readNotebook(storage)
+    assert.equal(restored.animationSpeed, animationSpeed)
+    assert.deepEqual(restored.tasks, original.tasks)
+  }
+  assert.equal(storage.getItem('dz:data'), 'legacy')
+})
+test('Неизвестная скорость отклоняется без перезаписи данных', () => {
+  const raw = JSON.stringify({ ...freshNotebook(), animationSpeed: 'broken' })
+  const storage = memory({ [STORAGE_KEY]: raw })
+  assert.throws(() => readNotebook(storage))
+  assert.equal(storage.getItem(STORAGE_KEY), raw)
+})

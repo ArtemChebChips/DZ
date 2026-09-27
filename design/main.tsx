@@ -18,6 +18,7 @@ import { Collapse } from './collapse'
 import { lessonBreaks } from './breaks'
 import { taskGroups } from './task-groups'
 import { academicWeek } from './academic-week'
+import { taskSummary } from './task-summary'
 import './style.css'
 import './register-sw'
 
@@ -52,6 +53,8 @@ function App() {
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'schedule' ? 'schedule' : query.get('screen') === 'settings' ? 'settings' : 'tasks')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
+  const animationSpeed = notebook.data.animationSpeed ?? 'normal'
+  useLayoutEffect(() => { document.documentElement.dataset.motion = animationSpeed }, [animationSpeed])
   const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
   const setTheme = (nextTheme: Theme) => {
     if (nextTheme === theme) return
@@ -127,8 +130,8 @@ function App() {
     apply(); media.addEventListener('change', apply)
     return () => media.removeEventListener('change', apply)
   }, [theme])
-  useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice])
-  useEffect(() => { if (!undo) return; const timer = setTimeout(() => setUndo(null), 5000); return () => clearTimeout(timer) }, [undo])
+  useEffect(() => { if (!notice || draft || panel) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice, draft, panel])
+  useEffect(() => { if (!undo || draft || panel) return; const timer = setTimeout(() => setUndo(null), 5000); return () => clearTimeout(timer) }, [undo, draft, panel])
   const toggle = (id: string) => {
     const task = tasks.find(t => t.id === id)
     if (!task || exiting.includes(id)) return
@@ -150,9 +153,9 @@ function App() {
   const save = (value: Draft) => {
     const { locked: _locked, ...record } = value
     setTasks(items => record.id ? items.map(t => t.id === record.id ? { ...t, ...record } : t) : [...items, { ...record, id: crypto.randomUUID(), done: false }])
-    closeEditor(); setUndo(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
+    setUndo(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
   }
-  const remove = (id: string) => { const task = tasks.find(t => t.id === id); setUndo(task ? { type: 'delete', task } : null); setNotice(''); setTasks(items => items.filter(t => t.id !== id)); closeEditor() }
+  const remove = (id: string) => { const task = tasks.find(t => t.id === id); setUndo(task ? { type: 'delete', task } : null); setNotice(''); setTasks(items => items.filter(t => t.id !== id)) }
   const testCount = tasks.filter(isTestTask).length
   const generateExamples = () => {
     const days = Array.from({ length: 21 }, (_, i) => {
@@ -214,12 +217,13 @@ function App() {
               {days.map(day => {
                 const entries = group.tasks.filter(t => t.due === day)
                 const dayLeaving = entries.every(t => exiting.includes(t.id))
+                const folded = collapsed.includes(day)
                 return <Collapse key={day} className="day-collapse" active={dayLeaving && !leaving} hold={leaving} onEnd={() => finishGroup(entries.map(t => t.id))}>
                   <section className="day-section">
-                    <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
-                      <span>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
+                    <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!folded} aria-controls={`day-tasks-${day}`}>
+                      <span><span>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</span><span className={`day-summary ${folded ? 'visible' : ''}`} aria-hidden={!folded}><span>{taskSummary(entries)}</span></span></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={folded ? 'rotated' : ''} /></span>
                     </button>
-                    {!collapsed.includes(day) && entries.map(t => row(t, dayLeaving || leaving))}
+                    <div id={`day-tasks-${day}`} className={`day-tasks ${folded ? 'folded' : ''}`} inert={folded} aria-hidden={folded}><div>{entries.map(t => row(t, dayLeaving || leaving))}</div></div>
                   </section>
                 </Collapse>
               })}
@@ -241,6 +245,7 @@ function App() {
       </section></div>}
       {tab === 'settings' && <div className="settings-list tab-enter">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
+        <section className="appearance animation-settings"><h2>Анимации</h2><div className="theme-options" aria-label="Скорость анимаций">{([{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }] as const).map(speed => <button key={speed.id} aria-pressed={animationSpeed === speed.id} onClick={() => notebook.update(current => ({ ...current, animationSpeed: speed.id }))}>{speed.label}</button>)}</div><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
@@ -257,8 +262,8 @@ function App() {
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
-    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}><div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); setCalendarOpen(false) }} /><button className="outline-button today-button" onClick={() => { selectDay(today); setCalendarOpen(false) }}>Сегодня</button></div></Modal>}
-    {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}><div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={editHistory} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div></Modal>}
+    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} /><button className="outline-button today-button" onClick={() => { selectDay(today); dismiss() }}>Сегодня</button></div>}</Modal>}
+    {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
