@@ -4,7 +4,7 @@ import { IS_DEMO, TODAY } from './data'
 
 // Живые часы демо нужны только для изолированной проверки границ и полуночи.
 const fixedDemo = IS_DEMO && new URLSearchParams(location.search).get('clock') !== 'live'
-export const currentMoment = () => fixedDemo ? new Date(TODAY + 'T14:30:00') : new Date()
+export const currentMoment = () => fixedDemo ? new Date(TODAY + (new URLSearchParams(location.search).get('highlight') === 'break' ? 'T13:35:00' : 'T14:30:00')) : new Date()
 export const currentDay = () => toISO(currentMoment())
 
 export function useScheduleClock() {

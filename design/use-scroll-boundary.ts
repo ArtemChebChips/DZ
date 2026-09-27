@@ -6,7 +6,7 @@ export function useScrollBoundary() {
     let previousY = 0
     const start = (event: TouchEvent) => { previousY = event.touches[0]?.clientY ?? 0 }
     const move = (event: TouchEvent) => {
-      if (event.touches.length !== 1 || !(event.target instanceof Element)) return
+      if (event.defaultPrevented || event.touches.length !== 1 || !(event.target instanceof Element)) return
       const delta = event.touches[0].clientY - previousY
       previousY = event.touches[0].clientY
       if (!delta) return

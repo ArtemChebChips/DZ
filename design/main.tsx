@@ -11,6 +11,8 @@ import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './sto
 import { isHomeworkKind, isDayNote } from './homework'
 import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
+import { FrameMeter } from './frame-meter'
+import { useGentleScroll } from './use-gentle-scroll'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
 import { Navigation } from './navigation'
@@ -95,6 +97,7 @@ function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
   useScrollBoundary()
+  useGentleScroll()
   useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel, shiftDay)
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
@@ -194,11 +197,17 @@ function App() {
   }
 
   const storageWarning = notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>
+  const highlightURL = (kind: 'lesson' | 'break' | 'exit') => {
+    const url = new URL(location.href)
+    url.search = kind === 'exit' ? '?screen=settings' : new URLSearchParams({ demo: '1', highlight: kind, theme, screen: 'schedule' }).toString()
+    return url.href
+  }
   const demoTools = IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>
 
   return <div className="app-shell">
     <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
+      {IS_DEMO && query.has('highlight') && <div className="highlight-preview"><p>Просмотр подсветки · 21 сентября, {query.get('highlight') === 'break' ? '13:35' : '14:30'}. Твои данные не меняются.</p><div><a href={highlightURL('lesson')}>Пара</a><a href={highlightURL('break')}>Перерыв</a><a href={highlightURL('exit')}>Выйти из просмотра</a></div></div>}
       {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
         <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
       </div> : <>
@@ -241,7 +250,7 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры заданий на три недели</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры, подсветка и плавность</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
       {demoTools}
@@ -259,6 +268,8 @@ function App() {
     {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
+        <a className="outline-button" href={highlightURL('lesson')}>Проверить подсветку</a>
+        <FrameMeter />
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>
         <p>Тестовых записей: {testCount}</p>
         {notebook.error && <p role="alert">{notebook.error}</p>}

@@ -37,6 +37,8 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     const dialog = ref.current!
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const viewport = window.visualViewport
+    const iosBrowser = (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !(navigator as Navigator & { standalone?: boolean }).standalone
+    dialog.dataset.iosBrowser = String(iosBrowser)
     // Клавиатура iPhone уменьшает видимую область, не обязательно высоту страницы.
     const fit = () => {
       const height = `${viewport?.height ?? window.innerHeight}px`
