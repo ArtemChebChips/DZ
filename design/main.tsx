@@ -16,6 +16,8 @@ import { completedTasks } from './history'
 import { Navigation } from './navigation'
 import { Collapse } from './collapse'
 import { lessonBreaks } from './breaks'
+import { taskGroups } from './task-groups'
+import { academicWeek } from './academic-week'
 import './style.css'
 import './register-sw'
 
@@ -27,7 +29,6 @@ const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
-const relativeDate = (date: string, today: string) => date < today ? 'Просрочено' : date === today ? 'Сегодня' : date === addDays(today, 1) ? 'Завтра' : 'Позже'
 
 function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
   return <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -144,7 +145,8 @@ function App() {
     setUndo(null)
   }
   const visible = tasks.filter(t => !t.done || exiting.includes(t.id))
-  const days = [...new Set(visible.map(t => t.due))].sort()
+  const grouped = taskGroups(visible, today)
+  const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const done = completedTasks(tasks)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
   const breaks = lessonBreaks(lessons)
@@ -163,7 +165,7 @@ function App() {
       <div className="screen-header">
       {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
       {tab === 'schedule' && <header className="agenda-heading">
-        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1></div>
+        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>{weekNumber && <button className="week-number-button" onClick={() => setCalendarOpen(true)} aria-label={`Учебная неделя ${weekNumber}, открыть календарь`}>Неделя {weekNumber}</button>}</div>
         <div className="agenda-date-row">
           <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
           <div className="agenda-controls">
@@ -178,16 +180,28 @@ function App() {
       {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
       {tab === 'tasks' && <div className="task-list tab-enter">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
-        {days.map(day => {
-          const entries = visible.filter(t => t.due === day)
-          const groupLeaving = entries.every(t => exiting.includes(t.id))
-          return <Collapse key={day} className="day-collapse" active={groupLeaving} onEnd={() => finishGroup(entries.map(t => t.id))}><section className={`day-section ${day < today ? 'overdue' : ''}`}>
-
-          <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
-            <span><span className="relative-date">{relativeDate(day, today)}</span><h2>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</h2></span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
-          </button>
-          {!collapsed.includes(day) && entries.map(t => row(t, groupLeaving))}
-        </section></Collapse>})}
+        {grouped.groups.map(group => {
+          const leaving = group.tasks.every(t => exiting.includes(t.id))
+          const days = [...new Set(group.tasks.map(t => t.due))]
+          return <Collapse key={group.id} className="task-period-collapse" active={leaving} onEnd={() => finishGroup(group.tasks.map(t => t.id))}>
+            <section className={`task-period ${group.id === 'overdue' ? 'overdue' : ''}`}>
+              <h2 className="task-period-title">{group.title}</h2>
+              {group.id === 'current' && <p className="task-period-range">{longDate(grouped.start)} — {longDate(grouped.end)}</p>}
+              {days.map(day => {
+                const entries = group.tasks.filter(t => t.due === day)
+                const dayLeaving = entries.every(t => exiting.includes(t.id))
+                return <Collapse key={day} className="day-collapse" active={dayLeaving && !leaving} hold={leaving} onEnd={() => finishGroup(entries.map(t => t.id))}>
+                  <section className="day-section">
+                    <button className="day-heading" onClick={() => setCollapsed(list => list.includes(day) ? list.filter(d => d !== day) : [...list, day])} aria-expanded={!collapsed.includes(day)}>
+                      <span>{longDate(day)}{parseISO(day).getFullYear() !== parseISO(today).getFullYear() && <small> {parseISO(day).getFullYear()}</small>}</span><span className="day-weekday">{weekday(day)}<IconChevronDown size={14} className={collapsed.includes(day) ? 'rotated' : ''} /></span>
+                    </button>
+                    {!collapsed.includes(day) && entries.map(t => row(t, dayLeaving || leaving))}
+                  </section>
+                </Collapse>
+              })}
+            </section>
+          </Collapse>
+        })}
 
       </div>}
       {tab === 'schedule' && <div key={date} className={`schedule-layout ${dayDirection ? 'day-enter' : 'tab-enter'} day-direction-${dayDirection}`}><section className="agenda">

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { addDays, diffDays, formatDayMonth, mondayOf, parseISO, toISO, WEEKDAYS_SHORT, MONTHS_NOM } from '../src/lib/dates'
-import { lessonsOn, nextLessonDates } from '../src/lib/week'
+import { lessonsOn, nextLessonDates, parityOf } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
+import { academicWeek } from './academic-week'
 import { homeworkLessons, isHomeworkKind, taskLesson, isDayNote } from './homework'
 import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
@@ -54,13 +55,17 @@ export function Calendar({ value, today, onChange, kinds }: { value: string; tod
   const shift = (n: number) => setMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
   return <div className="month-calendar">
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-grid">{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
-      {Array.from({ length: count / 7 }, (_, week) => <div className="month-row" key={week}>{Array.from({ length: 7 }, (_, day) => {
+    <div className="month-grid"><span className="week-column-label" aria-label="Учебная неделя">№</span>{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+      {Array.from({ length: count / 7 }, (_, week) => {
+        const monday = addDays(start, week * 7)
+        const number = academicWeek(monday, ANCHOR_MONDAY)
+        const parity = parityOf(monday, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'
+        return <Fragment key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number} · ${parity}` : 'До начала семестра'}>{number ?? '—'}{number && <small aria-hidden="true">{parity === 'Числитель' ? 'Ч' : 'З'}</small>}</span><div className="month-row">{Array.from({ length: 7 }, (_, day) => {
         const date = addDays(start, week * 7 + day)
         const marks = kinds?.(date) || []
         const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
         return <button type="button" key={date} aria-current={date === today ? 'date' : undefined} aria-label={`${label}${date === today ? ', сегодня' : ''}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
-      })}</div>)}
+      })}</div></Fragment>})}
     </div>
   </div>
 }
@@ -87,7 +92,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
   const candidates = homeworkLessons(value.subjectId, dayLessons, value.kind)
   const selected = taskLesson(value, dayLessons)
   const needsChoice = !note && candidates.length > 1 && !selected
-  const dates = !note && isHomeworkKind(value.kind) ? nextLessonDates(value.subjectId, value.due, DEFAULT_LESSONS, ANCHOR_MONDAY, 2, { kind: value.kind }) : []
+  const dates = !note && isHomeworkKind(value.kind) ? nextLessonDates(value.subjectId, today, DEFAULT_LESSONS, ANCHOR_MONDAY, 2, { kind: value.kind }) : []
   const marks = (date: string) => [...new Set(homeworkLessons(value.subjectId, lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)).map(l => l.kind))]
   const changeContext = (patch: Partial<Draft>) => {
     const next = { ...value, ...patch, lessonId: undefined }
@@ -122,8 +127,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
         <div className="field"><span id="subject-label">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
         <label className="field">{note ? 'Текст заметки' : 'Что нужно сделать'}<textarea placeholder="Например, решить задачи 12–18" rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
         {!note && availableKinds.length > 0 && <div className="kind-options" aria-label="Вид занятия">{availableKinds.map(kind => <button type="button" key={kind} className={`kind-${kind}`} aria-pressed={value.kind === kind} onClick={() => changeContext({ kind })}>{kind === 'lab' ? 'Лаба' : 'Семинар'}</button>)}</div>}
-        <div className="date-field-title"><span>{note ? 'На день' : 'Сдать к'}</span><strong>{formatDayMonth(value.due)}</strong></div>
-        {dates.length > 0 && <div className="date-presets">{dates.map((date, i) => <button type="button" key={date} onClick={() => changeContext({ due: date })}>{value.kind === 'lab' ? (i === 0 ? 'Ближайший день лаб' : 'Следующий день лаб') : (i === 0 ? 'Следующий семинар' : 'Семинар после него')}<span>{formatDayMonth(date)}</span></button>)}</div>}
+        {dates.length > 0 && <div className="date-presets">{dates.map((date, i) => <button type="button" key={date} aria-pressed={value.due === date} onClick={() => changeContext({ due: date })}>{value.kind === 'lab' ? (i === 0 ? 'Ближайший день лаб' : 'Следующий день лаб') : (i === 0 ? 'Следующий семинар' : 'Семинар после него')}<span>{formatDayMonth(date)}</span></button>)}</div>}
         <Calendar today={today} value={value.due} onChange={due => changeContext({ due })} kinds={note ? undefined : marks} />
         {!note && value.subjectId && <div className="calendar-legend"><span><i className="mark-seminar" />Семинар</span><span><i className="mark-lab" />Лаба</span></div>}
         {!note && choices.length > 0 && <fieldset className="lesson-choices"><legend>{needsChoice ? 'Выбери время пары' : 'Занятие в этот день'}</legend>{choices.map(l => <button type="button" key={l.id} className={`kind-${l.kind}`} aria-pressed={value.lessonId === l.id} onClick={() => setValue({ ...value, kind: l.kind, lessonId: l.id })}><span>{l.kind === 'lab' ? 'Лаба' : 'Семинар'} · {l.start}–{l.end}</span>{value.lessonId === l.id && <IconCheck size={18} />}</button>)}</fieldset>}
