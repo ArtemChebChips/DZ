@@ -111,7 +111,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .today-button { font-size: 14px; }
 .calendar-picker { padding: 20px; }
 .calendar-toggle { font-size: 14px; flex-shrink: 0; }
-.lesson { position: relative; display: flex; gap: 0; padding: 0; margin-top: 12px; border: 1px solid var(--line); border-radius: 18px; }
+.lesson { position: relative; display: flex; gap: 0; padding: 0; margin-top: 12px; border: 1px solid var(--line); border-radius: 22px; }
 .lesson-time { flex: 0 0 86px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 18px 12px; font-size: 20px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .lesson-time > span { display: none; }
 .lesson-body { flex: 1; min-width: 0; border-left: 1px solid var(--line); padding: 18px 14px; }
@@ -255,9 +255,9 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-controls .calendar-toggle { width: 48px; height: 48px; padding: 0; }
 .agenda-title-row { display: flex; align-items: center; min-height: 44px; }
 .agenda-title-row h1 { min-width: 0; overflow-wrap: anywhere; }
-.lesson-break { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 12px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line)); border-radius: 18px; color: var(--danger); font-size: 13px; }
+.lesson-break { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 12px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line)); border-radius: 18px; color: var(--danger); font-size: 14px; }
 .lesson-time time:first-child { font-weight: 600; }
-.lesson-time time:last-child { font-size: 18px; color: var(--muted); }
+.lesson-time time:last-child { font-size: 20px; color: var(--muted); }
 .agenda-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 10px; margin-top: 24px; }
 .agenda-actions button { min-height: 48px; }
 @media (max-width: 359px) { .agenda-actions { grid-template-columns: 1fr; } }
@@ -307,7 +307,7 @@ button:disabled { opacity: .45; cursor: default; }
 
 
 /* Вся пара — одно действие; вложенные задания остаются самостоятельными. */
-.lesson-open { position: absolute; inset: 0; z-index: 1; width: 100%; border-radius: 18px; }
+.lesson-open { position: absolute; inset: 0; z-index: 1; width: 100%; border-radius: 22px; }
 .lesson-open:active { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .lesson-open:focus-visible { outline-offset: -3px; }
 .lesson-body .task-row { position: relative; z-index: 2; }
