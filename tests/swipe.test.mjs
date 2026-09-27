@@ -1,6 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { daySwipeTarget, swipeSettleDuration, swipeSettleProgress } from '../design/swipe.ts'
+import { daySwipeTarget, swipeFollow, swipeSettleDuration, swipeSettleProgress } from '../design/swipe.ts'
+
+test('Сглаживание одинаково на 60/120 Гц, без перелёта при развороте', () => {
+  const at60 = swipeFollow(0, -200, 1000 / 60)
+  const at120 = swipeFollow(swipeFollow(0, -200, 1000 / 120), -200, 1000 / 120)
+  assert.ok(Math.abs(at60 - at120) < 1e-10)
+  assert.ok(at60 < 0 && at60 > -200)
+  const reversed = swipeFollow(at60, 100, 1000 / 60)
+  assert.ok(reversed > at60 && reversed < 100)
+  assert.ok(Math.abs(swipeFollow(0, 200, 100) - 200) < 4)
+  assert.equal(swipeFollow(10, 200, 0), 10)
+})
 
 test('Медленное перелистывание требует заметной части ширины страницы', () => {
   assert.equal(daySwipeTarget(-160, 390, 0), 1)

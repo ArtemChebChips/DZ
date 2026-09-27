@@ -1,3 +1,8 @@
+// Небольшое отставание (~24 мс), одинаковое на экранах 60 и 120 Гц.
+export function swipeFollow(current: number, target: number, elapsed: number): number {
+  return current + (target - current) * (1 - Math.exp(-Math.max(0, elapsed) / 24))
+}
+
 export function daySwipeTarget(offset: number, width: number, velocity: number): -1 | 0 | 1 {
   if (width <= 0 || Math.abs(offset) < 35) return 0
   const farEnough = Math.abs(offset) >= Math.max(60, width * .35)

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { flushSync } from 'react-dom'
 import { motionDuration } from './motion'
-import { daySwipeTarget, swipeSettleDuration, swipeSettleProgress } from './swipe'
+import { daySwipeTarget, swipeFollow, swipeSettleDuration, swipeSettleProgress } from './swipe'
 
 // Один offset и для пальца, и для доведения: без переключения CSS/WAAPI-слоёв.
 export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, trackRef: RefObject<HTMLDivElement | null>, date: string, enabled: boolean, changeDay: (direction: -1 | 1) => void) {
@@ -21,6 +21,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
     let frame: number | null = null
     let finishSettle: (() => void) | null = null
     let samples: { x: number; time: number }[] = []
+    let targetOffset = 0
     const draw = (x: number) => {
       offset = Math.max(-width, Math.min(width, x))
       track.style.transform = `translateX(${offset}px)`
@@ -28,6 +29,20 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
     const stop = () => {
       if (frame !== null) cancelAnimationFrame(frame)
       frame = null; finishSettle = null
+    }
+    const follow = (target: number) => {
+      targetOffset = Math.max(-width, Math.min(width, target))
+      if (reduced.matches) { draw(targetOffset); return }
+      if (frame !== null) return
+      let previous = performance.now()
+      const tick = (now: number) => {
+        frame = null
+        draw(swipeFollow(offset, targetOffset, now - previous))
+        previous = now
+        if (Math.abs(targetOffset - offset) > .1) frame = requestAnimationFrame(tick)
+        else draw(targetOffset)
+      }
+      frame = requestAnimationFrame(tick)
     }
     const clear = () => {
       stop(); touchId = null; axis = null; offset = 0
@@ -67,7 +82,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       if (event.touches.length !== 1) { cancel(); return }
       const target = event.target instanceof Element ? event.target : null
       if (!target || !root.contains(target) || target.closest('dialog, input, textarea, select, [contenteditable]')) return
-      const touch = event.touches[0], interrupted = frame !== null
+      const touch = event.touches[0], interrupted = finishSettle !== null
       stop(); suppressClick = false
       touchId = touch.identifier; startX = touch.clientX; startY = touch.clientY
       base = offset; axis = interrupted ? 'x' : null
@@ -86,7 +101,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       if (event.cancelable) event.preventDefault()
       samples.push({ x: touch.clientX, time: event.timeStamp })
       samples = samples.filter(item => event.timeStamp - item.time <= 100)
-      draw(base + dx)
+      follow(base + dx)
     }
     const end = (event: TouchEvent) => {
       const touch = Array.from(event.changedTouches).find(item => item.identifier === touchId)
@@ -94,10 +109,12 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       touchId = null; suppressClick = axis !== null
       if (axis === 'x') {
         if (event.cancelable) event.preventDefault()
-        draw(base + touch.clientX - startX)
+        // Решение — по пальцу, доведение — из реально показанной позиции.
+        // Не догоняем палец скачком в момент отпускания.
+        const releasedOffset = Math.max(-width, Math.min(width, base + touch.clientX - startX))
         const recent = samples[0], elapsed = recent ? event.timeStamp - recent.time : 0
         const velocity = elapsed > 0 && elapsed <= 100 ? (touch.clientX - recent.x) / elapsed : 0
-        settle(daySwipeTarget(offset, width, velocity), velocity)
+        settle(daySwipeTarget(releasedOffset, width, velocity), velocity)
       }
       axis = null
     }
