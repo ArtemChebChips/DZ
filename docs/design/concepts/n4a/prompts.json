@@ -1,0 +1,43 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "reference.png",
+  "date": "2026-09-27",
+  "prompts": [
+    {
+      "file": "1-contour.png",
+      "prompt": "Use case: ui-mockup. Edit the reference screenshot of the Russian student planner «ДЗ», A4 Лист design. Produce ONE complete vertical iPhone app screen, identical layout, proportions, typography, all existing text, lesson data, date, calendar, bottom buttons and navigation to reference. No phone frame, no new decoration. Reference image is edit target. Fixed demo time is 5 October 2026 14:30; only second lesson Физика 14:05–15:35 is current. Keep first/third lessons and red break exactly unchanged. Preserve white background, gray borders, existing blue accent. Change only the current lesson highlight specified below, without changing card dimensions. Add a small readable Russian label «Сейчас» inside the current card. Use a slightly stronger blue outline around the entire current card, no fill. Small blue «Сейчас» label at upper right inside card."
+    },
+    {
+      "file": "2-fill.png",
+      "prompt": "Use case: ui-mockup. Edit the reference screenshot of the Russian student planner «ДЗ», A4 Лист design. Produce ONE complete vertical iPhone app screen, identical layout, proportions, typography, all existing text, lesson data, date, calendar, bottom buttons and navigation to reference. No phone frame, no new decoration. Reference image is edit target. Fixed demo time is 5 October 2026 14:30; only second lesson Физика 14:05–15:35 is current. Keep first/third lessons and red break exactly unchanged. Preserve white background, gray borders, existing blue accent. Change only the current lesson highlight specified below, without changing card dimensions. Add a small readable Russian label «Сейчас» inside the current card. Use only a very light pale-blue fill inside current card, keep original thin gray outline. Small blue «Сейчас» label beside subject. No accent outline."
+    },
+    {
+      "file": "3-balanced.png",
+      "prompt": "Use case: ui-mockup. Edit the reference screenshot of the Russian student planner «ДЗ», A4 Лист design. Produce ONE complete vertical iPhone app screen, identical layout, proportions, typography, all existing text, lesson data, date, calendar, bottom buttons and navigation to reference. No phone frame, no new decoration. Reference image is edit target. Fixed demo time is 5 October 2026 14:30; only second lesson Физика 14:05–15:35 is current. Keep first/third lessons and red break exactly unchanged. Preserve white background, gray borders, existing blue accent. Change only the current lesson highlight specified below, without changing card dimensions. Add a small readable Russian label «Сейчас» inside the current card. Use a thin blue outline plus barely visible pale-blue fill inside current card. Small «Сейчас» label at upper right, elegant and understated."
+    },
+    {
+      "file": "4-time-badge.png",
+      "prompt": "Use case: ui-mockup. Edit the reference screenshot of the Russian student planner «ДЗ», A4 Лист design. Produce ONE complete vertical iPhone app screen, identical layout, proportions, typography, all existing text, lesson data, date, calendar, bottom buttons and navigation to reference. No phone frame, no new decoration. Reference image is edit target. Fixed demo time is 5 October 2026 14:30; only second lesson Физика 14:05–15:35 is current. Keep first/third lessons and red break exactly unchanged. Preserve white background, gray borders, existing blue accent. Change only the current lesson highlight specified below, without changing card dimensions. Add a small readable Russian label «Сейчас» inside the current card. Use a neutral light-gray fill across the current card, no blue outline. A small blue filled pill «Сейчас» with white text below the END time in the left time column. Keep start/end time unchanged."
+    },
+    {
+      "file": "5-time-column.png",
+      "prompt": "Use case: ui-mockup. Edit the reference screenshot of the Russian student planner «ДЗ», A4 Лист design. Produce ONE complete vertical iPhone app screen, identical layout, proportions, typography, all existing text, lesson data, date, calendar, bottom buttons and navigation to reference. No phone frame, no new decoration. Reference image is edit target. Fixed demo time is 5 October 2026 14:30; only second lesson Физика 14:05–15:35 is current. Keep first/third lessons and red break exactly unchanged. Preserve white background, gray borders, existing blue accent. Change only the current lesson highlight specified below, without changing card dimensions. Add a small readable Russian label «Сейчас» inside the current card. Keep body of current card white and original gray outline; highlight ONLY the left time column with pale-blue background and small blue «Сейчас» label beneath end time. No full-card fill."
+    },
+    {
+      "file": "break-a.png",
+      "prompt": "Use case: ui-mockup. Edit reference screenshot of Russian student planner «ДЗ», A4 Лист style. Produce ONE complete vertical iPhone app screen. Keep identical all lesson cards, text, date, calendar, typography, bottom buttons and navigation. White background, gray outlines, existing blue accent. NO current lesson highlight in these break variants. Change ONLY the red break separator between first and second lesson: preserve interval «13:20–14:05», title «Перерыв», duration «45 минут». It is a 45 minute break; all other data exactly as reference. Keep the break compact with calm muted red text/line, no dots as dividers, no new icons, no new colors, no phone frame. Variant: Single slim rounded capsule across full content width; entire string centered «13:20–14:05   Перерыв   45 минут», balanced spacing. Preserve same height."
+    },
+    {
+      "file": "break-b.png",
+      "prompt": "Use case: ui-mockup. Edit reference screenshot of Russian student planner «ДЗ», A4 Лист style. Produce ONE complete vertical iPhone app screen. Keep identical all lesson cards, text, date, calendar, typography, bottom buttons and navigation. White background, gray outlines, existing blue accent. NO current lesson highlight in these break variants. Change ONLY the red break separator between first and second lesson: preserve interval «13:20–14:05», title «Перерыв», duration «45 минут». It is a 45 minute break; all other data exactly as reference. Keep the break compact with calm muted red text/line, no dots as dividers, no new icons, no new colors, no phone frame. Variant: No enclosing outline. Compact horizontal row: interval left, right-aligned two-line stack «Перерыв» with «45 минут» beneath; subtle red horizontal rules above and below. Keep within original break area, no other layout changes."
+    },
+    {
+      "file": "break-c.png",
+      "prompt": "Use case: ui-mockup. Edit reference screenshot of Russian student planner «ДЗ», A4 Лист style. Produce ONE complete vertical iPhone app screen. Keep identical all lesson cards, text, date, calendar, typography, bottom buttons and navigation. White background, gray outlines, existing blue accent. NO current lesson highlight in these break variants. Change ONLY the red break separator between first and second lesson: preserve interval «13:20–14:05», title «Перерыв», duration «45 минут». It is a 45 minute break; all other data exactly as reference. Keep the break compact with calm muted red text/line, no dots as dividers, no new icons, no new colors, no phone frame. Variant: No enclosing capsule. Left two-line group: «Перерыв» above smaller «13:20–14:05». At right a compact red-outlined pill containing «45 минут». Balanced vertically, compact within original break area."
+    },
+    {
+      "file": "break-d.png",
+      "prompt": "Use case: ui-mockup. Edit reference screenshot of Russian student planner «ДЗ», A4 Лист style. Produce ONE complete vertical iPhone app screen. Keep identical all lesson cards, text, date, calendar, typography, bottom buttons and navigation. White background, gray outlines, existing blue accent. NO current lesson highlight in these break variants. Change ONLY the red break separator between first and second lesson: preserve interval «13:20–14:05», title «Перерыв», duration «45 минут». It is a 45 minute break; all other data exactly as reference. Keep the break compact with calm muted red text/line, no dots as dividers, no new icons, no new colors, no phone frame. Variant: Small two-line centered label without enclosing pill: top line «Перерыв   45 минут», bottom «13:20–14:05». Short fine red horizontal rules flank the centered label on both sides, calm whitespace. Preserve original break area."
+    }
+  ]
+}
