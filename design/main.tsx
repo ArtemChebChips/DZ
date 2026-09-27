@@ -98,9 +98,8 @@ function App() {
     const scroll = mainRef.current
     if (!toast || !scroll) return
     const main = scroll.parentElement!
-    const actions = main.querySelector<HTMLElement>('.agenda-actions, .task-add-button')
-    // Кнопки расписания остаются в списке. Поднимаем только уведомление,
-    // когда прокрутка приводит ряд добавления к нижнему краю.
+    const actions = main.querySelector<HTMLElement>('.entry-actions-buttons')
+    // На узком экране отмена располагается над общим рядом добавления.
     const place = () => {
       const bounds = toast.getBoundingClientRect()
       const bottom = main.getBoundingClientRect().bottom
@@ -114,8 +113,7 @@ function App() {
     observer.observe(main)
     observer.observe(toast)
     if (actions) observer.observe(actions)
-    scroll.addEventListener('scroll', place, { passive: true })
-    return () => { observer.disconnect(); scroll.removeEventListener('scroll', place) }
+    return () => observer.disconnect()
   }, [undo, notice, tab, date])
   useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
@@ -240,7 +238,6 @@ function App() {
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}
-        <div className="agenda-actions"><button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button><button className="primary-button entry-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button></div>
       </section></div>}
       {tab === 'settings' && <div className="settings-list tab-enter">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
@@ -252,7 +249,10 @@ function App() {
       </div>}
       {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>}
       </div>
-      {tab === 'tasks' && <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>}
+      {tab !== 'settings' && <div className="entry-actions"><div className="entry-actions-buttons">
+        {tab === 'schedule' && <button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>}
+        <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>
+      </div></div>}
       {undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notice}</span><IconCheck size={18} /></div>}
     </main>
 
