@@ -90,7 +90,8 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
   </dialog>
 }
 
-export function Calendar({ value, today, onChange, onToday, kinds }: { value: string; today: string; onChange: (date: string) => void; onToday?: () => void; kinds?: (date: string) => LessonKind[] }) {
+export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: { value: string; today: string; onChange: (date: string) => void; showMonthShortcut?: boolean; kinds?: (date: string) => LessonKind[] }) {
+  const pressMonth = usePressAction()
   const [page, setPage] = useState<{ month: string; previous: string | null; direction: number }>({ month: value, previous: null, direction: 1 })
   const viewport = useRef<HTMLDivElement>(null)
   const track = useRef<HTMLDivElement>(null)
@@ -101,19 +102,23 @@ export function Calendar({ value, today, onChange, onToday, kinds }: { value: st
   useEffect(() => { showMonth(value) }, [value])
   useLayoutEffect(() => {
     const element = track.current, container = viewport.current
-    if (!page.previous || !element || !container) return
-    const oldPage = element.children[0] as HTMLElement, nextPage = element.children[1] as HTMLElement
-    const duration = motionDuration(true) * 1.4
-    const animations = [
-      element.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${-page.direction * 100}%)` }], { duration, easing: 'cubic-bezier(.25, .1, .25, 1)', fill: 'both' }),
-      container.animate([{ height: `${oldPage.offsetHeight}px` }, { height: `${nextPage.offsetHeight}px` }], { duration, easing: 'ease-in-out', fill: 'both' }),
-    ]
+    if (!element || !container) return
+    const incoming = element.lastElementChild as HTMLElement
+    container.style.height = `${incoming.offsetHeight}px`
+    if (!page.previous) return
+    const width = element.getBoundingClientRect().width
+    const animation = element.animate([
+      { transform: 'translate3d(0, 0, 0)' },
+      { transform: `translate3d(${-page.direction * width}px, 0, 0)` },
+    ], { duration: motionDuration(true) * 1.8, easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' })
     const finish = () => setPage(current => current === page ? { ...current, previous: null } : current)
-    animations[0].finished.then(finish, () => {})
+    animation.finished.then(finish, () => {})
     const reduced = matchMedia('(prefers-reduced-motion: reduce)')
     const reduce = () => { if (reduced.matches) finish() }
+    const resize = new ResizeObserver(() => { if (Math.abs(element.getBoundingClientRect().width - width) > .5) finish() })
+    resize.observe(element)
     reduced.addEventListener('change', reduce)
-    return () => { animations.forEach(animation => animation.cancel()); reduced.removeEventListener('change', reduce) }
+    return () => { animation.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
   }, [page])
   const d = parseISO(page.month)
   const shift = (n: number) => showMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
@@ -137,12 +142,12 @@ export function Calendar({ value, today, onChange, onToday, kinds }: { value: st
     </div>
   }
   return <div className="month-calendar">
-    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
+    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(-1))} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(1))} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
     <div className="month-viewport" ref={viewport}><div className="month-track" ref={track}>
-      {page.previous && <div className="month-previous">{grid(page.previous, true)}</div>}
-      <div style={{ transform: page.previous ? `translateX(${page.direction * 100}%)` : undefined }}>{grid(page.month)}</div>
+      {page.previous && <div key={page.previous.slice(0, 7)} className="month-page month-previous">{grid(page.previous, true)}</div>}
+      <div key={page.month.slice(0, 7)} className="month-page" style={{ left: page.previous ? `${page.direction * 100}%` : 0 }}>{grid(page.month)}</div>
     </div></div>
-    {onToday && <button type="button" className="outline-button today-button calendar-today" onClick={() => { showMonth(today); onToday() }}>Сегодня</button>}
+    {showMonthShortcut && page.month.slice(0, 7) !== today.slice(0, 7) && <button type="button" className="outline-button calendar-today" disabled={Boolean(page.previous)} onClick={pressMonth(() => showMonth(today))}>Текущий месяц</button>}
   </div>
 }
 

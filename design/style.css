@@ -475,29 +475,34 @@ button:disabled { opacity: .45; cursor: default; }
 .current-label { flex-shrink: 0; visibility: hidden; margin-top: 2px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; white-space: nowrap; }
 .lesson-current .current-label { visibility: visible; }
 .lesson { transition: background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
-.lesson.lesson-tapped { background: color-mix(in srgb, var(--accent) 28%, var(--bg)); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.lesson-tapped .lesson-body { border-color: var(--accent); }
-.lesson-tapped .lesson-body > p, .lesson-tapped .lesson-time time:last-child, .lesson-tapped .task-subject { color: var(--ink); }
+.lesson.lesson-tapped { background: color-mix(in srgb, var(--bg) 60%, #000); }
 @media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
 
 :root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root[data-theme-transition] body { transition: background-color var(--motion-height) var(--motion-ease); }
   :root[data-theme-transition] {
-    transition-property: background-color, --bg, --surface, --ink, --muted, --line, --soft, --accent, --on-accent, --danger;
+    transition-property: --bg, --surface, --ink, --muted, --line, --soft, --accent, --on-accent, --danger;
     transition-duration: var(--motion-height);
     transition-timing-function: var(--motion-ease);
   }
 }
 
-/* Неподвижный реальный элемент у края: Safari использует его фон для системной области. */
+/* Цвет темы у верхнего края; системную полосу iOS проверяем отдельно на устройстве. */
 #system-top { position: fixed; inset: 0 0 auto; height: max(1px, env(safe-area-inset-top, 0px)); background: var(--bg); z-index: 20; pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) {
-  #system-top { transition: background-color var(--motion-height) var(--motion-ease); }
   .sheet[open] { will-change: translate, opacity; }
 }
 .month-viewport { overflow: hidden; margin: 0 -6px; padding: 0 6px; }
-.month-track { position: relative; }
-.month-previous { position: absolute; inset: 0 0 auto; }
+.month-track { position: relative; width: 100%; height: 100%; }
+.month-page { position: absolute; top: 0; left: 0; width: 100%; background: var(--bg); }
 .calendar-today { width: 100%; margin-top: 16px; min-height: 44px; }
+
+/* Только подложка, без обводки, масштабирования и изменения геометрии. */
+button[data-pressed], a[data-pressed], summary[data-pressed] { box-shadow: inset 0 0 0 100vmax rgb(0 0 0 / 18%); }
+:root:is([data-theme='dark'], [data-theme='black']) :is(button, a, summary)[data-pressed] { box-shadow: inset 0 0 0 100vmax rgb(0 0 0 / 38%); }
+:root[data-theme='light'] .lesson.lesson-tapped { background: color-mix(in srgb, var(--bg) 88%, #000); }
+:root[data-theme='black'] .lesson.lesson-tapped { background: #101216; }
+@media (prefers-reduced-motion: no-preference) {
+  .month-viewport { transition: height var(--motion-height) var(--motion-ease); }
+}
