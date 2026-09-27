@@ -14,7 +14,7 @@ const tabs = [
 
 export function Navigation({ tab, changeTab }: { tab: Tab; changeTab: (tab: Tab) => void }) {
   const ref = useRef<HTMLElement>(null)
-  const [bubble, setBubble] = useState({ x: 0, y: 0, width: 0, height: 0 })
+  const [bubble, setBubble] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   useLayoutEffect(() => {
     const nav = ref.current!
     const measure = () => {
@@ -28,7 +28,8 @@ export function Navigation({ tab, changeTab }: { tab: Tab; changeTab: (tab: Tab)
   }, [tab])
   return <nav ref={ref} className="app-nav" aria-label="Основные вкладки">
     <span className="desktop-brand">ДЗ<span>Учебный планер</span></span>
-    <span className="nav-bubble" aria-hidden="true" style={{ transform: `translate(${bubble.x}px, ${bubble.y}px)`, width: bubble.width, height: bubble.height, visibility: bubble.width ? 'visible' : 'hidden' }} />
+    {/* Монтируем сразу в измеренной позиции, без перехода из нулевых координат. */}
+    {bubble && <span className="nav-bubble" aria-hidden="true" style={{ transform: `translate(${bubble.x}px, ${bubble.y}px)`, width: bubble.width, height: bubble.height }} />}
     {tabs.map(item => <button key={item.key} aria-current={tab === item.key ? 'page' : undefined} onClick={() => changeTab(item.key)}><item.icon size={25} /><span>{item.label}</span></button>)}
     <span className="desktop-footer">Версия {version}</span>
   </nav>
