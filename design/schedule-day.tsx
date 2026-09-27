@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode, type RefObject } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import type { Lesson } from '../src/types'
 import { parseISO } from '../src/lib/dates'
 import { lessonsOn } from '../src/lib/week'
@@ -7,22 +7,47 @@ import { ANCHOR_MONDAY, DEFAULT_LESSONS, subjectName, kindName, type DemoTask } 
 import { academicWeek } from './academic-week'
 import { lessonBreaks } from './breaks'
 import { taskLesson, isHomeworkKind, isDayNote } from './homework'
+import { motionDuration } from './motion'
 
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
 const minutes = new Intl.NumberFormat('ru-RU', { style: 'unit', unit: 'minute', unitDisplay: 'long' })
 
-export function ScheduleDay({ date, today, tasks, preview, scrollRef, openCalendar, selectDay, shiftDay, openLesson, row, banner, children }: {
-  date: string; today: string; tasks: DemoTask[]; preview: boolean; scrollRef?: RefObject<HTMLDivElement | null>;
+export function ScheduleDay({ date, today, tasks, preview, position, scrollRef, openCalendar, selectDay, shiftDay, openLesson, row, banner, children }: {
+  date: string; today: string; tasks: DemoTask[]; preview: boolean; position: number; scrollRef?: RefObject<HTMLDivElement | null>;
   openCalendar: () => void; selectDay: (date: string) => void; shiftDay: (direction: -1 | 1) => void;
   openLesson: (lesson: Lesson) => void; row: (task: DemoTask) => ReactNode; banner?: ReactNode; children?: ReactNode;
 }) {
+  const [pressed, setPressed] = useState<string | null>(null)
+  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const cancelTap = () => { clearTimeout(pending.current); pending.current = undefined; setPressed(null) }
+  useLayoutEffect(() => { cancelTap() }, [date, preview])
+  useEffect(() => {
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelTap() }
+    const hidden = () => { if (document.hidden) cancelTap() }
+    document.addEventListener('pointerdown', cancelTap, true)
+    document.addEventListener('keydown', escape, true)
+    document.addEventListener('visibilitychange', hidden)
+    return () => {
+      clearTimeout(pending.current)
+      document.removeEventListener('pointerdown', cancelTap, true)
+      document.removeEventListener('keydown', escape, true)
+      document.removeEventListener('visibilitychange', hidden)
+    }
+  }, [])
+  const tapLesson = (lesson: Lesson) => {
+    if (preview || pending.current) return
+    const duration = motionDuration()
+    if (!duration) { openLesson(lesson); return }
+    setPressed(lesson.id)
+    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, Math.min(420, Math.max(220, duration * 1.5)))
+  }
   const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
   const breaks = lessonBreaks(lessons)
   const ownTasks = tasks.filter(t => t.due === date)
   const assigned = new Set<string>()
-  return <div className="day-page" data-current={!preview || undefined} aria-hidden={preview || undefined} inert={preview}>
+  return <div className="day-page" style={{ '--day-position': position } as CSSProperties} data-current={!preview || undefined} aria-hidden={preview || undefined} inert={preview}>
     <div className="screen-header">
       <header className="agenda-heading">
         <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>{weekNumber && <button className="week-number-button" onClick={() => openCalendar()} aria-label={`Учебная неделя ${weekNumber}, открыть календарь`}>Неделя {weekNumber}</button>}</div>
@@ -44,7 +69,7 @@ export function ScheduleDay({ date, today, tasks, preview, scrollRef, openCalend
           const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
           attached.forEach(t => assigned.add(t.id))
           const pause = breaks.get(lesson.id)
-          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span className="break-description"><span>Перерыв</span><span>{minutes.format(pause.minutes)}</span></span></p>}<article className="lesson"><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
+          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span className="break-description"><span>Перерыв</span><span>{minutes.format(pause.minutes)}</span></span></p>}<article className={`lesson ${pressed === lesson.id ? 'lesson-tapped' : ''}`}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => tapLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}

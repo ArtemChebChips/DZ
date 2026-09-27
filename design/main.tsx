@@ -17,6 +17,7 @@ import { Navigation } from './navigation'
 import { Collapse } from './collapse'
 import { ScheduleDay } from './schedule-day'
 import { useDaySwipe } from './use-day-swipe'
+import { useInputMethod } from './use-input-method'
 import { taskGroups } from './task-groups'
 import { taskSummary } from './task-summary'
 import './style.css'
@@ -45,6 +46,7 @@ function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, on
 }
 
 function App() {
+  useInputMethod()
   const today = useToday()
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -197,7 +199,7 @@ function App() {
     <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
-        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={addDays(date, offset)} date={addDays(date, offset)} today={today} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
+        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
       </div> : <>
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>

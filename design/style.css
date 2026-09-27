@@ -57,7 +57,7 @@ h1, h2, h3 { font-weight: 600; }
 .screen-schedule .screen-header { padding-bottom: 0; }
 .screen-schedule .app-scroll { scrollbar-width: none; }
 .screen-schedule .app-scroll::-webkit-scrollbar { display: none; }
-.screen-schedule .app-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+:root[data-input='keyboard'] .screen-schedule .app-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .page-header { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 14px; margin-bottom: 0; }
 h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .text-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; color: var(--accent); padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 16px; font-weight: 500; }
@@ -425,11 +425,21 @@ button:disabled { opacity: .45; cursor: default; }
 }
 
 /* Соседние дни — реальные страницы, движение не затрагивает нижние действия. */
-.day-viewport { flex: 1; min-height: 0; overflow: hidden; }
-.day-track { display: flex; width: 100%; height: 100%; transform: translate3d(-100%, 0, 0); }
-.day-page { position: relative; display: flex; flex-direction: column; flex: 0 0 100%; width: 100%; min-width: 0; height: 100%; background: var(--bg); }
+.day-viewport { position: relative; flex: 1; min-height: 0; overflow: clip; }
+.day-track { position: relative; width: 100%; height: 100%; }
+.day-page { position: absolute; top: 0; left: calc(var(--day-position) * 100%); display: flex; flex-direction: column; width: 100%; min-width: 0; height: 100%; background: var(--bg); }
 .day-page::after { content: ''; position: absolute; inset: 0 0 0 auto; width: 1px; background: var(--line); pointer-events: none; }
 .screen-schedule, .screen-schedule .app-scroll, .screen-schedule button { touch-action: pan-y pinch-zoom; }
 .screen-schedule, .screen-schedule * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-.screen-schedule[data-day-dragging] .day-track { will-change: transform; }
+.screen-schedule { overflow: clip; }
+.screen-schedule .app-scroll { outline: none; overflow-x: hidden; }
 .screen-schedule[data-day-dragging] button { outline: none; }
+
+/* Подтверждённый тап: короткое затемнение перед редактором, без :active. */
+.lesson { transition: background-color 100ms, color 100ms, border-color 100ms; }
+.lesson.lesson-tapped { background: #0d0f12; color: #fff; border-color: #0d0f12; }
+.lesson-tapped .lesson-body { border-color: #484b52; }
+.lesson-tapped .lesson-body > p, .lesson-tapped .lesson-time time:last-child, .lesson-tapped .task-subject { color: #c8ccd4; }
+@media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
+
+:root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }

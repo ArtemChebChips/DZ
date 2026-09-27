@@ -71,9 +71,13 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
       viewport?.removeEventListener('scroll', fit)
       window.removeEventListener('resize', fit)
       dialog.close()
-      // Safari при касании кнопки может оставить фокус на списке. Возвращаем
-      // его только действию, а не всему расписанию с клавиатурной обводкой.
-      if (opener?.isConnected && opener.matches('button, a[href], input, textarea, select, summary, [role="button"]')) opener.focus({ preventScroll: true })
+      // dialog.close() в WebKit сам возвращает фокус даже прокручиваемому div.
+      // После касания этот возврат не нужен; клавиатуре оставляем её действие.
+      if (document.documentElement.dataset.input === 'keyboard') {
+        if (opener?.isConnected && opener.matches('button, a[href], input, textarea, select, summary, [role="button"]')) opener.focus({ preventScroll: true })
+      } else if (document.activeElement instanceof HTMLElement && document.activeElement.closest('.app-main')) {
+        document.activeElement.blur()
+      }
     }
   }, [])
   return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
