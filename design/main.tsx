@@ -7,7 +7,7 @@ import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, I
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
-import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
+import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
 import { isHomeworkKind, isDayNote } from './homework'
 import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
@@ -64,19 +64,7 @@ function App() {
   const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
   const setTheme = (nextTheme: Theme) => {
     if (nextTheme === theme) return
-    const next = { ...notebook.data, theme: nextTheme }
-    // Home Screen на iOS кэширует цвет системной полосы до загрузки документа.
-    // Сначала сохраняем данные; при отказе хранилища остаёмся на странице.
-    if (!IS_DEMO && !notebook.blocked && navigator.onLine && (navigator as Navigator & { standalone?: boolean }).standalone) {
-      try {
-        persistNotebook(localStorage, next)
-        const url = new URL(location.href)
-        url.searchParams.set('screen', 'settings')
-        location.replace(url.href)
-        return
-      } catch { /* useNotebook покажет ошибку сохранения, не теряя данные в памяти. */ }
-    }
-    notebook.update(next)
+    notebook.update(current => ({ ...current, theme: nextTheme }))
   }
   const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
   const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${today}.json`)
@@ -138,11 +126,17 @@ function App() {
   }, [undo, notice, tab, date])
   useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
+    const root = document.documentElement
+    // Ранний фон index.html сменяется той же палитрой, без перезагрузки standalone.
+    root.style.backgroundColor = 'var(--bg)'
     const apply = () => {
-      const root = document.documentElement
-      root.dataset.theme = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
-      const background = getComputedStyle(root).getPropertyValue('--bg').trim()
-      root.style.backgroundColor = background
+      const resolved = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
+      if (root.dataset.theme === resolved) return
+      root.dataset.themeTransition = 'true'
+      // Фиксируем прежний цвет перед началом перехода, в том числе при первом клике.
+      getComputedStyle(root).getPropertyValue('--bg')
+      root.dataset.theme = resolved
+      const background = { light: '#fdfcfb', dark: '#17191d', black: '#000000' }[resolved]
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
     }
     apply(); media.addEventListener('change', apply)

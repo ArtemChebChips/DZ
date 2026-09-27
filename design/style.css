@@ -1,7 +1,17 @@
+/* Цвета меняются вместе на корневом элементе, без снимков и перезагрузки. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #fdfcfb; }
+@property --surface { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #171b24; }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #626c7d; }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #e7e7e8; }
+@property --soft { syntax: "<color>"; inherits: true; initial-value: #f3f3f2; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #0665f5; }
+@property --on-accent { syntax: "<color>"; inherits: true; initial-value: #fff; }
+@property --danger { syntax: "<color>"; inherits: true; initial-value: #b3453c; }
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #171b24;
-  background: #fdfcfb;
+  color: var(--ink);
+  background: var(--bg);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   --motion-duration: 220ms;
@@ -472,3 +482,11 @@ button:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
 
 :root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-theme-transition] {
+    transition-property: --bg, --surface, --ink, --muted, --line, --soft, --accent, --on-accent, --danger;
+    transition-duration: var(--motion-height);
+    transition-timing-function: var(--motion-ease);
+  }
+}
