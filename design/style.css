@@ -106,7 +106,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 10px; border-radius: 14px; }
 .month-title .icon-button { color: var(--muted); background: var(--soft); border: 1px solid var(--line); flex-shrink: 0; }
 .month-grid { display: flex; flex-direction: column; gap: 3px; }
-.month-row { display: grid; grid-template-columns: 28px repeat(7, minmax(0, 1fr)); }
+.month-row { display: grid; grid-template-columns: 34px repeat(7, minmax(0, 1fr)); }
 .weekday { color: var(--muted); text-align: center; font-size: 13px; height: 31px; }
 .calendar-date { position: relative; min-height: 44px; width: 100%; font-size: 16px; z-index: 0; padding: 0; }
 .calendar-date::before { content: ''; position: absolute; width: 39px; height: 39px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: -1; }
@@ -376,8 +376,8 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* Номера за контуром, семь колонок дат внутри него. */
 .month-grid { position: relative; isolation: isolate; padding: 12px 6px 12px 0; }
-.month-grid::before { content: ''; position: absolute; inset: 0 0 0 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); z-index: -1; pointer-events: none; }
-.calendar-week-number { align-self: center; justify-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-left: -5px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.month-grid::before { content: ''; position: absolute; inset: 0 0 0 34px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); z-index: -1; pointer-events: none; }
+.calendar-week-number { align-self: center; justify-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-left: 1px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) {
   .calendar-sheet { height: min(calc(var(--sheet-height, 100dvh) * .9), 780px); }
 }
@@ -498,7 +498,7 @@ button:disabled { opacity: .45; cursor: default; }
 .month-calendar button:disabled { opacity: 1; }
 .month-track { position: relative; width: 100%; }
 /* Текущая сетка сама задаёт высоту, даже при монтировании в закрытом dialog. */
-.month-page { position: relative; width: 100%; background: var(--bg); }
+.month-page { position: relative; width: 100%; overflow: hidden; background: var(--bg); }
 .month-previous { position: absolute; top: 0; left: 0; }
 .calendar-today { width: 100%; margin-top: 16px; min-height: 44px; }
 

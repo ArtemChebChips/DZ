@@ -1,6 +1,6 @@
-// Небольшое отставание (~24 мс), одинаковое на экранах 60 и 120 Гц.
+// Небольшое отставание (~17 мс), одинаковое на экранах 60 и 120 Гц.
 export function swipeFollow(current: number, target: number, elapsed: number): number {
-  return current + (target - current) * (1 - Math.exp(-Math.max(0, elapsed) / 24))
+  return current + (target - current) * (1 - Math.exp(-Math.max(0, elapsed) / 17))
 }
 
 export function daySwipeTarget(offset: number, width: number, velocity: number): -1 | 0 | 1 {
@@ -13,7 +13,7 @@ export function daySwipeTarget(offset: number, width: number, velocity: number):
 export function swipeSettleDuration(distance: number, width: number, duration: number): number {
   if (!duration || width <= 0) return 0
   // Свайп — прямой жест: не задерживаем следующий взмах настройкой плавности.
-  return Math.min(180, Math.max(100, duration * Math.min(1, distance / width)))
+  return .7 * Math.min(180, Math.max(100, duration * Math.min(1, distance / width)))
 }
 
 // Непрерывное доведение: стартовая скорость ограничена, к концу скорость нулевая.

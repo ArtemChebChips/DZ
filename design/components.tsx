@@ -105,15 +105,23 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     // Выбор предмета может менять месяц, пока форма скрыта.
     // Не запускаем переход с нулевыми размерами скрытого календаря.
     if (!width) { setPage(current => current === page ? { ...current, previous: null } : current); return }
-    const timing = { duration: Math.min(260, motionDuration()), easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' as const }
-    const animation = element.animate([
-      { transform: 'translate3d(0, 0, 0)' },
-      { transform: `translate3d(${-page.direction * width}px, 0, 0)` },
+    const timing = { duration: Math.min(260, motionDuration()), easing: 'cubic-bezier(.2, .65, .3, 1)', fill: 'both' as const }
+    const previous = element.firstElementChild as HTMLElement
+    const current = element.lastElementChild as HTMLElement
+    // Новая страница заканчивает в своей постоянной позиции: без сброса ленты.
+    const animation = current.animate([
+      { transform: `translateX(${page.direction * 100}%)` },
+      { transform: 'translateX(0)' },
+    ], timing)
+    const outgoing = previous.animate([
+      { transform: 'translateX(0)', opacity: 1 },
+      { transform: `translateX(${-page.direction * 65}%)`, opacity: 0, offset: .65 },
+      { transform: `translateX(${-page.direction * 100}%)`, opacity: 0 },
     ], timing)
     // Измеряем только при перелистывании уже открытого календаря.
     // В покое высота всегда естественная — закрытый dialog не может закрепить ноль.
-    const oldHeight = (element.firstElementChild as HTMLElement).offsetHeight
-    const newHeight = (element.lastElementChild as HTMLElement).offsetHeight
+    const oldHeight = previous.offsetHeight
+    const newHeight = current.offsetHeight
     const heightAnimation = oldHeight !== newHeight ? element.parentElement!.animate([
       { height: `${oldHeight}px` }, { height: `${newHeight}px` },
     ], timing) : null
@@ -124,7 +132,7 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     const resize = new ResizeObserver(() => { if (Math.abs(element.getBoundingClientRect().width - width) > .5) finish() })
     resize.observe(element)
     reduced.addEventListener('change', reduce)
-    return () => { animation.cancel(); heightAnimation?.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
+    return () => { animation.cancel(); outgoing.cancel(); heightAnimation?.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
   }, [page])
   const d = parseISO(page.month)
   const shift = (n: number) => showMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
@@ -151,7 +159,7 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
     <div className="month-viewport"><div className="month-track" ref={track}>
       {page.previous && <div key={page.previous.slice(0, 7)} className="month-page month-previous">{grid(page.previous, true)}</div>}
-      <div key={page.month.slice(0, 7)} className="month-page" style={{ left: page.previous ? `${page.direction * 100}%` : 0 }}>{grid(page.month)}</div>
+      <div key={page.month.slice(0, 7)} className="month-page">{grid(page.month)}</div>
     </div></div>
     {showMonthShortcut && page.month.slice(0, 7) !== today.slice(0, 7) && <button type="button" className="outline-button calendar-today" disabled={Boolean(page.previous)} onClick={() => showMonth(today)}>Текущий месяц</button>}
   </div>

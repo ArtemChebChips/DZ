@@ -46,11 +46,11 @@ test('Доведение непрерывно, без выхода за край
   }
   assert.ok(swipeSettleProgress(.1, 0) < .04, 'спокойный старт после неподвижного пальца')
 })
-test('Доведение свайпа занимает не больше 180 мс даже при плавной настройке', () => {
+test('Доведение свайпа занимает на 30% короче прежних 100–180 мс даже при плавной настройке', () => {
   for (const duration of [220, 320, 550]) {
     for (const distance of [5, 195, 390]) {
       const settle = swipeSettleDuration(distance, 390, duration)
-      assert.ok(settle >= 100 && settle <= 180)
+      assert.ok(settle >= 70 && settle <= 126)
     }
   }
   assert.ok(swipeSettleDuration(5, 390, 320) < swipeSettleDuration(195, 390, 320))
