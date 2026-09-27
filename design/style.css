@@ -462,8 +462,9 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* Подтверждённый тап: короткое затемнение перед редактором, без :active. */
 .lesson-current { background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
-.lesson-title h3 { display: inline; }
-.current-label { display: inline-block; visibility: hidden; margin-left: 8px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; vertical-align: middle; white-space: nowrap; }
+.lesson-title { display: flex; align-items: flex-start; gap: 8px; }
+.lesson-title h3 { flex: 1; min-width: 0; }
+.current-label { flex-shrink: 0; visibility: hidden; margin-top: 2px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; white-space: nowrap; }
 .lesson-current .current-label { visibility: visible; }
 .lesson { transition: background-color 100ms, color 100ms, border-color 100ms; }
 .lesson.lesson-tapped { background: #0d0f12; color: #fff; border-color: #0d0f12; }
