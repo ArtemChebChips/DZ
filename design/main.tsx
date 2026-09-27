@@ -92,7 +92,7 @@ function App() {
   const [panel, setPanel] = useState<Panel>(null)
   useScrollBoundary()
   useGentleScroll()
-  const [travelDay, travelling] = useDayTravel(dayViewport, dayTrack, date, selectDay, tab === 'schedule' && !calendarOpen && !draft && !panel)
+  const [travelDay, travelling, travelPages] = useDayTravel(dayViewport, dayTrack, date, selectDay, tab === 'schedule' && !calendarOpen && !draft && !panel)
   useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel && !travelling, shiftDay)
   useButtonFeedback()
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
@@ -145,6 +145,7 @@ function App() {
       const background = { light: '#fdfcfb', dark: '#17191d', black: '#000000' }[resolved]
       root.style.backgroundColor = background
       document.body.style.backgroundColor = background
+      document.getElementById('system-top')?.style.setProperty('background-color', background)
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
     }
     apply(); media.addEventListener('change', apply)
@@ -228,7 +229,7 @@ function App() {
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {IS_DEMO && query.has('highlight') && <div className="highlight-preview"><p>Просмотр подсветки · 21 сентября, {query.get('highlight') === 'break' ? '13:35' : '14:30'}. Твои данные не меняются.</p><div><a href={highlightURL('lesson')}>Пара</a><a href={highlightURL('break')}>Перерыв</a><a href={highlightURL('exit')}>Выйти из просмотра</a></div></div>}
       {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
-        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={travelDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
+        <div className="day-track" ref={dayTrack}>{(travelPages ?? [-1, 0, 1].map(offset => ({ date: addDays(date, offset), position: offset, preview: offset !== 0 }))).map(page => <ScheduleDay key={page.position} position={page.position} date={page.date} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={page.preview} scrollRef={!page.preview ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={travelDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={!page.preview ? storageWarning : undefined}>{!page.preview ? demoTools : undefined}</ScheduleDay>)}</div>
       </div> : <>
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={press(openHistory)}><IconCheck size={18} />История</button>}</header>
@@ -283,7 +284,7 @@ function App() {
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
-    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} /><button className="outline-button today-button" onClick={press(() => dismiss(() => { setCalendarOpen(false); travelDay(today) }))}>Сегодня</button></div>}</Modal>}
+    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} onToday={() => selectDay(today)} /></div>}</Modal>}
     {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">

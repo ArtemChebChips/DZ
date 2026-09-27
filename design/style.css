@@ -301,7 +301,7 @@ button:disabled { opacity: .45; cursor: default; }
 .day-stepper { display: none; }
 @media (min-width: 1000px) { .day-stepper { display: flex; gap: 4px; } }
 .calendar-sheet .sheet-inner { min-height: 100%; display: flex; flex-direction: column; }
-.calendar-sheet .calendar-picker { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+.calendar-sheet .calendar-picker { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; gap: 20px; }
 .calendar-sheet .calendar-date { min-height: 52px; }
 .calendar-sheet .calendar-picker > button { flex-shrink: 0; }
 @media (max-width: 600px) { .calendar-sheet { height: min(72dvh, 640px); height: min(calc(var(--sheet-height) * .72), 640px); } }
@@ -356,7 +356,7 @@ button:disabled { opacity: .45; cursor: default; }
 .subject-picker > button { border-radius: 7px; }
 @media (prefers-reduced-motion: no-preference) {
   .subject-picker > button, .editor-fields .theme-options button { transition: background-color var(--motion-duration), color var(--motion-duration); }
-  .subject-picker, .sheet form:not([hidden]) { animation: tab-enter var(--motion-duration) var(--motion-ease); }
+  .subject-picker { animation: tab-enter var(--motion-duration) var(--motion-ease); }
 }
 
 /* Временные группы задач: сроки не меняются, меняется только представление. */
@@ -442,12 +442,12 @@ button:disabled { opacity: .45; cursor: default; }
 .day-summary.visible { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
 .day-summary > span { min-height: 0; overflow: hidden; font-size: 12px; line-height: 1.7; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  .sheet[open] { animation: sheet-enter var(--motion-duration) var(--motion-ease) both; }
-  .sheet[open]::backdrop { animation: backdrop-enter var(--motion-duration) both; }
-  .sheet.sheet-closing { animation: sheet-exit var(--motion-duration) var(--motion-ease) both; }
-  .sheet.sheet-closing::backdrop { animation: backdrop-exit var(--motion-duration) both; }
-  @keyframes sheet-enter { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
-  @keyframes sheet-exit { from { opacity: var(--sheet-exit-opacity, 1); translate: var(--sheet-exit-translate, 0 0); } to { opacity: 0; translate: 0 18px; } }
+  .sheet[open] { animation: sheet-enter calc(var(--motion-height) * 1.4) var(--motion-ease) both; }
+  .sheet[open]::backdrop { animation: backdrop-enter calc(var(--motion-height) * 1.4) both; }
+  .sheet.sheet-closing { animation: sheet-exit calc(var(--motion-height) * 1.4) var(--motion-ease) both; }
+  .sheet.sheet-closing::backdrop { animation: backdrop-exit calc(var(--motion-height) * 1.4) both; }
+  @keyframes sheet-enter { from { opacity: 0; translate: 0 64px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes sheet-exit { from { opacity: var(--sheet-exit-opacity, 1); translate: var(--sheet-exit-translate, 0 0); } to { opacity: 0; translate: 0 64px; } }
   @keyframes backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
   @keyframes backdrop-exit { from { opacity: 1; } to { opacity: 0; } }
 }
@@ -474,10 +474,10 @@ button:disabled { opacity: .45; cursor: default; }
 .lesson-title h3 { flex: 1; min-width: 0; }
 .current-label { flex-shrink: 0; visibility: hidden; margin-top: 2px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; white-space: nowrap; }
 .lesson-current .current-label { visibility: visible; }
-.lesson { transform-origin: center; transition: scale var(--motion-duration) var(--motion-ease), background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
-.lesson.lesson-tapped { scale: .975; background: #0d0f12; color: #fff; border-color: #0d0f12; }
-.lesson-tapped .lesson-body { border-color: #484b52; }
-.lesson-tapped .lesson-body > p, .lesson-tapped .lesson-time time:last-child, .lesson-tapped .task-subject { color: #c8ccd4; }
+.lesson { transition: background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
+.lesson.lesson-tapped { background: color-mix(in srgb, var(--accent) 28%, var(--bg)); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.lesson-tapped .lesson-body { border-color: var(--accent); }
+.lesson-tapped .lesson-body > p, .lesson-tapped .lesson-time time:last-child, .lesson-tapped .task-subject { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
 
 :root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }
@@ -490,3 +490,14 @@ button:disabled { opacity: .45; cursor: default; }
     transition-timing-function: var(--motion-ease);
   }
 }
+
+/* Неподвижный реальный элемент у края: Safari использует его фон для системной области. */
+#system-top { position: fixed; inset: 0 0 auto; height: max(1px, env(safe-area-inset-top, 0px)); background: var(--bg); z-index: 20; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  #system-top { transition: background-color var(--motion-height) var(--motion-ease); }
+  .sheet[open] { will-change: translate, opacity; }
+}
+.month-viewport { overflow: hidden; margin: 0 -6px; padding: 0 6px; }
+.month-track { position: relative; }
+.month-previous { position: absolute; inset: 0 0 auto; }
+.calendar-today { width: 100%; margin-top: 16px; min-height: 44px; }

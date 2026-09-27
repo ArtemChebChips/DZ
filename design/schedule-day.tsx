@@ -40,10 +40,10 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
   }, [])
   const tapLesson = (lesson: Lesson) => {
     if (preview || pending.current) return
-    const duration = motionDuration()
+    const duration = motionDuration(true) * 2
     if (!duration) { openLesson(lesson); return }
     setPressed(lesson.id)
-    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, duration * 1.05)
+    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, duration)
   }
   const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)

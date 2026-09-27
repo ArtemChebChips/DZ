@@ -27,7 +27,7 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
   const close: CloseModal = (after = onClose) => {
     if (pending.current) return
     pending.current = after
-    const duration = motionDuration()
+    const duration = motionDuration(true) * 1.4
     if (!duration) { finishClose(); return }
     const style = getComputedStyle(ref.current!)
     ref.current!.style.setProperty('--sheet-exit-opacity', style.opacity)
@@ -36,7 +36,7 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     timer.current = setTimeout(finishClose, duration + 100)
   }
   const dismiss = () => { if (!pending.current) { if (onBack) onBack(); else close() } }
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = ref.current!
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const viewport = window.visualViewport
@@ -85,48 +85,64 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
       }
     }
   }, [])
-  return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
+  return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && e.animationName === 'sheet-exit' && closing) finishClose() }} aria-label={title}>
     <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={press(dismiss)}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
   </dialog>
 }
 
-export function Calendar({ value, today, onChange, kinds }: { value: string; today: string; onChange: (date: string) => void; kinds?: (date: string) => LessonKind[] }) {
-  const [month, setMonth] = useState(value)
-  const grid = useRef<HTMLDivElement>(null)
-  const direction = useRef(0)
+export function Calendar({ value, today, onChange, onToday, kinds }: { value: string; today: string; onChange: (date: string) => void; onToday?: () => void; kinds?: (date: string) => LessonKind[] }) {
+  const [page, setPage] = useState<{ month: string; previous: string | null; direction: number }>({ month: value, previous: null, direction: 1 })
+  const viewport = useRef<HTMLDivElement>(null)
+  const track = useRef<HTMLDivElement>(null)
+  const showMonth = (month: string) => setPage(current => {
+    if (current.month.slice(0, 7) === month.slice(0, 7)) return current
+    return { month, previous: motionDuration() ? current.month : null, direction: month > current.month ? 1 : -1 }
+  })
+  useEffect(() => { showMonth(value) }, [value])
   useLayoutEffect(() => {
-    const element = grid.current, duration = motionDuration()
-    if (!element || !duration || !direction.current) return
-    // Фон и рамка остаются непрозрачными, двигаются только числа.
-    const animations = [...element.querySelectorAll('.calendar-date, .calendar-week-number')].map(cell => cell.animate([
-      { transform: `translateX(${direction.current * 10}px)` }, { transform: 'translateX(0)' },
-    ], { duration, easing: 'cubic-bezier(.2, .7, .2, 1)' }))
+    const element = track.current, container = viewport.current
+    if (!page.previous || !element || !container) return
+    const oldPage = element.children[0] as HTMLElement, nextPage = element.children[1] as HTMLElement
+    const duration = motionDuration(true) * 1.4
+    const animations = [
+      element.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${-page.direction * 100}%)` }], { duration, easing: 'cubic-bezier(.25, .1, .25, 1)', fill: 'both' }),
+      container.animate([{ height: `${oldPage.offsetHeight}px` }, { height: `${nextPage.offsetHeight}px` }], { duration, easing: 'ease-in-out', fill: 'both' }),
+    ]
+    const finish = () => setPage(current => current === page ? { ...current, previous: null } : current)
+    animations[0].finished.then(finish, () => {})
     const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-    const cancel = () => animations.forEach(animation => animation.cancel())
-    reduced.addEventListener('change', cancel)
-    return () => { cancel(); reduced.removeEventListener('change', cancel) }
-  }, [month])
-  useEffect(() => { setMonth(value) }, [value])
-  const d = parseISO(month)
-  const first = toISO(new Date(d.getFullYear(), d.getMonth(), 1))
-  const last = toISO(new Date(d.getFullYear(), d.getMonth() + 1, 0))
-  const start = mondayOf(first)
-  const count = Math.ceil((diffDays(start, last) + 1) / 7) * 7
-  const shift = (n: number) => { direction.current = n; setMonth(current => { const date = parseISO(current); return toISO(new Date(date.getFullYear(), date.getMonth() + n, 1)) }) }
-  return <div className="month-calendar">
-    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-grid" ref={grid}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
-      {Array.from({ length: count / 7 }, (_, week) => {
+    const reduce = () => { if (reduced.matches) finish() }
+    reduced.addEventListener('change', reduce)
+    return () => { animations.forEach(animation => animation.cancel()); reduced.removeEventListener('change', reduce) }
+  }, [page])
+  const d = parseISO(page.month)
+  const shift = (n: number) => showMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
+  const grid = (month: string, preview = false) => {
+    const date = parseISO(month)
+    const first = toISO(new Date(date.getFullYear(), date.getMonth(), 1))
+    const last = toISO(new Date(date.getFullYear(), date.getMonth() + 1, 0))
+    const start = mondayOf(first)
+    const weeks = Math.ceil((diffDays(start, last) + 1) / 7)
+    return <div className="month-grid" inert={preview} aria-hidden={preview || undefined}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+      {Array.from({ length: weeks }, (_, week) => {
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)
         const parity = parityOf(monday, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'
         return <Fragment key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number}, ${parity}` : 'До начала семестра'}>{number ?? '—'}</span><div className="month-row">{Array.from({ length: 7 }, (_, day) => {
-        const date = addDays(start, week * 7 + day)
-        const marks = kinds?.(date) || []
-        const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-        return <button type="button" key={date} aria-current={date === today ? 'date' : undefined} aria-label={`${label}${date === today ? ', сегодня' : ''}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
-      })}</div></Fragment>})}
+          const date = addDays(start, week * 7 + day)
+          const marks = kinds?.(date) || []
+          const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+          return <button type="button" key={date} aria-current={date === today ? 'date' : undefined} aria-label={`${label}${date === today ? ', сегодня' : ''}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
+        })}</div></Fragment>})}
     </div>
+  }
+  return <div className="month-calendar">
+    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
+    <div className="month-viewport" ref={viewport}><div className="month-track" ref={track}>
+      {page.previous && <div className="month-previous">{grid(page.previous, true)}</div>}
+      <div style={{ transform: page.previous ? `translateX(${page.direction * 100}%)` : undefined }}>{grid(page.month)}</div>
+    </div></div>
+    {onToday && <button type="button" className="outline-button today-button calendar-today" onClick={() => { showMonth(today); onToday() }}>Сегодня</button>}
   </div>
 }
 
