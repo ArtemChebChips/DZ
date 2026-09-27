@@ -111,10 +111,10 @@ function App() {
       const mainBounds = main.getBoundingClientRect()
       const bottom = mainBounds.bottom
       const anchor = actions?.querySelector('button')?.getBoundingClientRect()
-      if (!undo && anchor) {
+      if ((!undo || undo.type === 'complete') && anchor) {
         toast.style.setProperty('--notice-left', `${anchor.left - mainBounds.left}px`)
         toast.style.setProperty('--notice-width', `${anchor.width}px`)
-        toast.style.setProperty('--toast-bottom', `${bottom - anchor.top + 10}px`)
+        toast.style.setProperty('--toast-bottom', `${undo?.type === 'complete' && tab === 'tasks' ? bottom - anchor.bottom : bottom - anchor.top + 10}px`)
         return
       }
       const row = actions?.getBoundingClientRect()
@@ -247,10 +247,10 @@ function App() {
       </div>
       </>}
       {tab !== 'settings' && <div className="entry-actions"><div className="entry-actions-buttons">
-        {tab === 'schedule' && <button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>}
+        <button className={`outline-button entry-add-button note-add-button ${tab === 'tasks' ? 'note-placeholder' : ''}`} aria-hidden={tab === 'tasks' || undefined} tabIndex={tab === 'tasks' ? -1 : undefined} onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>
         <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>
       </div></div>}
-      {undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
+      {undo?.type === 'complete' && tab !== 'settings' ? <div ref={toastRef} className="toast toast-notice toast-complete" role="status"><button onClick={undoLast} aria-label="Отменить выполнение"><span>{notebook.error ? 'Не сохранено' : 'Выполнено'}</span><strong>Отменить</strong></button></div> : undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}

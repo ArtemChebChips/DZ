@@ -375,6 +375,11 @@ button:disabled { opacity: .45; cursor: default; }
   .editor-sheet[data-keyboard='true'] .editor-footer { padding-top: 8px; padding-bottom: 8px; }
 }
 .toast.toast-notice { left: var(--notice-left, max(var(--page-gutter), var(--safe-left))); width: var(--notice-width, 132px); height: 48px; min-height: 48px; padding: 6px 12px; justify-content: center; text-align: center; font-size: 13px; line-height: 17px; box-shadow: none; }
+.note-placeholder { visibility: hidden; }
+.toast.toast-complete { padding: 0; }
+.toast-complete button { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 48px; padding: 0 8px; line-height: 17px; }
+.toast-complete button > span { font-size: 11px; }
+.toast-complete button > strong { font-size: 13px; font-weight: 600; }
 .editor-fields .field textarea, .editor-fields .field select, .subject-trigger,
 .subject-picker > button, .subject-picker > button[aria-pressed='true'],
 .lesson-choices button { border-radius: 16px; }
