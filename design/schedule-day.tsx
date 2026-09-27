@@ -40,7 +40,7 @@ export function ScheduleDay({ date, today, tasks, preview, position, scrollRef, 
     const duration = motionDuration()
     if (!duration) { openLesson(lesson); return }
     setPressed(lesson.id)
-    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, Math.min(420, Math.max(220, duration * 1.5)))
+    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, Math.min(420, Math.max(220, duration * 1.5)) * .7)
   }
   const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
