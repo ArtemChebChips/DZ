@@ -91,7 +91,6 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
 }
 
 export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: { value: string; today: string; onChange: (date: string) => void; showMonthShortcut?: boolean; kinds?: (date: string) => LessonKind[] }) {
-  const pressMonth = usePressAction()
   const [page, setPage] = useState<{ month: string; previous: string | null; direction: number }>({ month: value, previous: null, direction: 1 })
   const track = useRef<HTMLDivElement>(null)
   const showMonth = (month: string) => setPage(current => {
@@ -106,7 +105,7 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     // Выбор предмета может менять месяц, пока форма скрыта.
     // Не запускаем переход с нулевыми размерами скрытого календаря.
     if (!width) { setPage(current => current === page ? { ...current, previous: null } : current); return }
-    const timing = { duration: motionDuration(true) * 1.8, easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' as const }
+    const timing = { duration: Math.min(260, motionDuration()), easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' as const }
     const animation = element.animate([
       { transform: 'translate3d(0, 0, 0)' },
       { transform: `translate3d(${-page.direction * width}px, 0, 0)` },
@@ -149,12 +148,12 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     </div>
   }
   return <div className="month-calendar">
-    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(-1))} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={pressMonth(() => shift(1))} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
+    <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" disabled={Boolean(page.previous)} className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
     <div className="month-viewport"><div className="month-track" ref={track}>
       {page.previous && <div key={page.previous.slice(0, 7)} className="month-page month-previous">{grid(page.previous, true)}</div>}
       <div key={page.month.slice(0, 7)} className="month-page" style={{ left: page.previous ? `${page.direction * 100}%` : 0 }}>{grid(page.month)}</div>
     </div></div>
-    {showMonthShortcut && page.month.slice(0, 7) !== today.slice(0, 7) && <button type="button" className="outline-button calendar-today" disabled={Boolean(page.previous)} onClick={pressMonth(() => showMonth(today))}>Текущий месяц</button>}
+    {showMonthShortcut && page.month.slice(0, 7) !== today.slice(0, 7) && <button type="button" className="outline-button calendar-today" disabled={Boolean(page.previous)} onClick={() => showMonth(today)}>Текущий месяц</button>}
   </div>
 }
 

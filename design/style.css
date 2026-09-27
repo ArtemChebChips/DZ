@@ -493,7 +493,9 @@ button:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: no-preference) {
   .sheet[open] { will-change: translate, opacity; }
 }
-.month-viewport { overflow: hidden; margin: 0 -6px; padding: 0 6px; }
+.month-viewport { overflow: hidden; }
+/* На короткое время блокируем повторный переход, не меняя вид управления. */
+.month-calendar button:disabled { opacity: 1; }
 .month-track { position: relative; width: 100%; }
 /* Текущая сетка сама задаёт высоту, даже при монтировании в закрытом dialog. */
 .month-page { position: relative; width: 100%; background: var(--bg); }

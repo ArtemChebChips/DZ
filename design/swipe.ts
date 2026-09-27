@@ -12,7 +12,8 @@ export function daySwipeTarget(offset: number, width: number, velocity: number):
 
 export function swipeSettleDuration(distance: number, width: number, duration: number): number {
   if (!duration || width <= 0) return 0
-  return Math.max(180, duration * (.7 + .8 * Math.sqrt(Math.min(1, distance / width))))
+  // Свайп — прямой жест: не задерживаем следующий взмах настройкой плавности.
+  return Math.min(180, Math.max(100, duration * Math.min(1, distance / width)))
 }
 
 // Непрерывное доведение: стартовая скорость ограничена, к концу скорость нулевая.
