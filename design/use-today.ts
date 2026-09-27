@@ -2,19 +2,21 @@ import { useEffect, useState } from 'react'
 import { toISO } from '../src/lib/dates'
 import { IS_DEMO, TODAY } from './data'
 
-export const currentDay = () => IS_DEMO ? TODAY : toISO(new Date())
+// Живые часы демо нужны только для изолированной проверки границ и полуночи.
+const fixedDemo = IS_DEMO && new URLSearchParams(location.search).get('clock') !== 'live'
+export const currentMoment = () => fixedDemo ? new Date(TODAY + 'T14:30:00') : new Date()
+export const currentDay = () => toISO(currentMoment())
 
-export function useToday() {
-  const [today, setToday] = useState(currentDay)
+export function useScheduleClock() {
+  const [now, setNow] = useState(currentMoment)
   useEffect(() => {
-    if (IS_DEMO) return
+    if (fixedDemo) return
     let timer: ReturnType<typeof setTimeout>
     const refresh = () => {
-      setToday(currentDay())
+      setNow(currentMoment())
       clearTimeout(timer)
       const now = new Date()
-      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
-      timer = setTimeout(refresh, midnight.getTime() - now.getTime() + 50)
+      timer = setTimeout(refresh, 60_000 - now.getSeconds() * 1000 - now.getMilliseconds() + 20)
     }
     refresh()
     window.addEventListener('focus', refresh)
@@ -25,5 +27,5 @@ export function useToday() {
       document.removeEventListener('visibilitychange', refresh)
     }
   }, [])
-  return today
+  return now
 }

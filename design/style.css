@@ -23,7 +23,7 @@
   --page-gutter: 24px;
   color-scheme: light;
 }
-:root[data-theme='dark'] {
+:root:is([data-theme='dark'], [data-theme='black']) {
   --bg: #17191d;
   --surface: #202328;
   --ink: #eff0f3;
@@ -38,6 +38,7 @@
   background: var(--bg);
 }
 * { box-sizing: border-box; }
+:root[data-theme='black'] { --bg: #000; --surface: #121417; --soft: #191c21; --line: #34383f; }
 html, body, #root { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; min-width: 320px; background: var(--bg); }
 button, select, textarea { font: inherit; }
@@ -109,7 +110,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .calendar-legend i { display: inline-block; width: 10px; height: 10px; border: 1px solid; border-radius: 50%; }
 .mark-seminar { color: var(--accent); }
 .mark-lab { color: #238b54; }
-:root[data-theme='dark'] .mark-lab { color: #70d99a; }
+:root:is([data-theme='dark'], [data-theme='black']) .mark-lab { color: #70d99a; }
 .calendar-legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 14px; }
 .calendar-legend span { display: flex; align-items: center; gap: 6px; }
 .calendar-date.selected { color: var(--on-accent); opacity: 1; }
@@ -141,6 +142,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .theme-options { display: flex; border: 1px solid var(--line); border-radius: 9px; background: var(--soft); }
 .theme-options button { flex: 1; min-width: 0; min-height: 44px; padding: 10px 4px; font-size: 13px; border-radius: 8px; }
 .theme-options button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
+.theme-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .setting-row { width: 100%; min-height: 99px; display: flex; align-items: center; gap: 19px; padding: 22px 0; text-align: left; border-bottom: 1px solid var(--line); }
 .setting-row > span { flex: 1; min-width: 0; }
 .setting-row strong { font-size: 18px; font-weight: 500; display: block; }
@@ -170,7 +172,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .kind-options button, .lesson-choices button { min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; }
 .kind-options button[aria-pressed='true'], .lesson-choices button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); background: var(--soft); }
 .kind-options .kind-lab[aria-pressed='true'], .lesson-choices .kind-lab[aria-pressed='true'] { color: #238b54; border-color: #238b54; }
-:root[data-theme='dark'] .kind-lab[aria-pressed='true'] { color: #70d99a; border-color: #70d99a; }
+:root:is([data-theme='dark'], [data-theme='black']) .kind-lab[aria-pressed='true'] { color: #70d99a; border-color: #70d99a; }
 .lesson-choices { border: 0; padding: 0; margin: 20px 0 0; min-width: 0; }
 .lesson-choices legend { font-size: 13px; color: var(--muted); padding: 0; margin-bottom: 10px; }
 .lesson-choices button { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; width: 100%; margin-top: 6px; font-size: 14px; }
@@ -261,7 +263,15 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-controls .calendar-toggle { width: 48px; height: 48px; padding: 0; border-radius: 14px; }
 .agenda-title-row { display: flex; align-items: center; min-height: 44px; }
 .agenda-title-row h1 { min-width: 0; overflow-wrap: anywhere; }
-.lesson-break { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 12px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line)); border-radius: 18px; color: var(--danger); font-size: 14px; }
+.lesson-break { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 4px; margin-top: 12px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line)); border-radius: 18px; color: var(--danger); font-size: 14px; }
+.lesson-break time, .break-duration { white-space: nowrap; }
+.break-duration { text-align: right; }
+.break-label { position: relative; text-align: center; }
+.break-label strong { font-weight: 600; }
+.break-current .break-label strong { display: inline-block; transform: translateY(-4px); }
+.break-now { position: absolute; top: calc(100% - 4px); left: 50%; transform: translateX(-50%); font-size: 10px; line-height: 11px; }
+.break-current { background: color-mix(in srgb, var(--danger) 9%, var(--bg)); }
+@media (max-width: 380px) { .lesson-break { padding-inline: 10px; font-size: 12px; } }
 .lesson-time time:first-child { font-weight: 600; }
 .lesson-time time:last-child { font-size: 20px; color: var(--muted); }
 .entry-actions { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 770px; display: flex; justify-content: flex-end; padding: 16px max(var(--page-gutter), var(--safe-right)) 16px max(var(--page-gutter), var(--safe-left)); pointer-events: none; z-index: 6; }
@@ -296,7 +306,7 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* D5 — подложка перемещается, размеры кнопок и панели не меняются. */
 .nav-bubble { position: absolute; left: 0; top: 0; border-radius: 999px; background: #0665f511; border: 1px solid #0665f512; pointer-events: none; }
-:root[data-theme='dark'] .nav-bubble { background: #77aaff1c; border-color: #77aaff20; }
+:root:is([data-theme='dark'], [data-theme='black']) .nav-bubble { background: #77aaff1c; border-color: #77aaff20; }
 .app-nav button { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: no-preference) and (max-width: 999px) {
   .nav-bubble { transition: transform var(--motion-duration) var(--motion-ease), width var(--motion-duration), height var(--motion-duration); }
@@ -441,6 +451,10 @@ button:disabled { opacity: .45; cursor: default; }
 .screen-schedule[data-day-dragging] button { outline: none; }
 
 /* Подтверждённый тап: короткое затемнение перед редактором, без :active. */
+.lesson-current { background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
+.lesson-title h3 { display: inline; }
+.current-label { display: inline-block; visibility: hidden; margin-left: 8px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; vertical-align: middle; white-space: nowrap; }
+.lesson-current .current-label { visibility: visible; }
 .lesson { transition: background-color 100ms, color 100ms, border-color 100ms; }
 .lesson.lesson-tapped { background: #0d0f12; color: #fff; border-color: #0d0f12; }
 .lesson-tapped .lesson-body { border-color: #484b52; }

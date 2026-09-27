@@ -2,7 +2,7 @@ import { useEffect, useState, type SetStateAction } from 'react'
 import type { DemoTask } from './data'
 
 export const STORAGE_KEY = 'dz-next:v1'
-export type Notebook = { version: 1; tasks: DemoTask[]; theme: 'light' | 'dark' | 'system'; collapsed: string[]; animationSpeed?: 'fast' | 'normal' | 'smooth' }
+export type Notebook = { version: 1; tasks: DemoTask[]; theme: 'light' | 'dark' | 'black' | 'system'; collapsed: string[]; animationSpeed?: 'fast' | 'normal' | 'smooth' }
 export const freshNotebook = (): Notebook => ({ version: 1, tasks: [], theme: 'system', collapsed: [] })
 export function validDate(value: unknown): value is string {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
@@ -12,7 +12,7 @@ export function validDate(value: unknown): value is string {
 export function validateNotebook(value: unknown): value is Notebook {
   if (!value || typeof value !== 'object') return false
   const d = value as Notebook
-  return (d.animationSpeed === undefined || ['fast', 'normal', 'smooth'].includes(d.animationSpeed)) && d.version === 1 && ['light', 'dark', 'system'].includes(d.theme) && Array.isArray(d.collapsed) && d.collapsed.every(validDate) && Array.isArray(d.tasks) &&
+  return (d.animationSpeed === undefined || ['fast', 'normal', 'smooth'].includes(d.animationSpeed)) && d.version === 1 && ['light', 'dark', 'black', 'system'].includes(d.theme) && Array.isArray(d.collapsed) && d.collapsed.every(validDate) && Array.isArray(d.tasks) &&
     new Set(d.tasks.map(t => t?.id)).size === d.tasks.length && d.tasks.every(t => t && typeof t.id === 'string' && t.id.length > 0 && typeof t.title === 'string' && t.title.trim().length > 0 && typeof t.subjectId === 'string' && typeof t.done === 'boolean' && validDate(t.due) && (t.lessonId === undefined || typeof t.lessonId === 'string') && (t.entryType === undefined || ['homework', 'note'].includes(t.entryType)) && (t.testBatchId === undefined || (typeof t.testBatchId === 'string' && t.testBatchId.trim().length > 0)) && (t.kind === undefined || ['lecture', 'seminar', 'lab', 'other'].includes(t.kind)))
 }
 export function readNotebook(storage: Pick<Storage, 'getItem'>) {

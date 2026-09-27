@@ -5,6 +5,16 @@ function memory(initial = {}) {
   const values = new Map(Object.entries(initial))
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), values }
 }
+test('Чёрная и прежние темы читаются без миграции и изменений заданий', () => {
+  const task = { id: 'saved', title: 'Сохранённый срок', subjectId: 'phys', due: '2026-09-28', done: false, lessonId: 'pn-5', kind: 'lab' }
+  for (const theme of ['light', 'dark', 'black', 'system']) {
+    const data = { ...freshNotebook(), theme, tasks: [task] }
+    const storage = memory({ [STORAGE_KEY]: JSON.stringify(data) })
+    assert.deepEqual(readNotebook(storage), data)
+    persistNotebook(storage, { ...data, theme: 'black' })
+    assert.deepEqual(readNotebook(storage).tasks, [task])
+  }
+})
 test('Задание, контекст семинара, тема и свёрнутые дни переживают повторное чтение', () => {
   const storage = memory({ 'dz:data': 'legacy untouched' })
   const data = freshNotebook()

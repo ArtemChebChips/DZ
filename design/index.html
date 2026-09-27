@@ -14,9 +14,9 @@
         const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : saved.theme || 'system'
         document.documentElement.dataset.motion = ['fast', 'normal', 'smooth'].includes(saved.animationSpeed) ? saved.animationSpeed : 'normal'
         const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
-        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-        document.documentElement.style.backgroundColor = dark ? '#17191d' : '#fdfcfb'
-        document.querySelector('meta[name="theme-color"]').content = dark ? '#17191d' : '#fdfcfb'
+        document.documentElement.dataset.theme = theme === 'black' ? 'black' : dark ? 'dark' : 'light'
+        document.documentElement.style.backgroundColor = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
+        document.querySelector('meta[name="theme-color"]').content = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
       } catch {}
     </script>
     <link rel="apple-touch-icon" href="./icon-180.png" />

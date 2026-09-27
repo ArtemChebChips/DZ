@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
-import { addDays, parseISO } from '../src/lib/dates'
+import { addDays, parseISO, toISO } from '../src/lib/dates'
 import { lessonsOn } from '../src/lib/week'
 import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
@@ -9,7 +9,7 @@ import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASK
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
 import { isHomeworkKind, isDayNote } from './homework'
-import { useToday, currentDay } from './use-today'
+import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
@@ -24,7 +24,7 @@ import './style.css'
 import './register-sw'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
-type Theme = 'light' | 'dark' | 'system'
+type Theme = 'light' | 'dark' | 'black' | 'system'
 type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | null
 const assessmentOrder = { exam: 0, dist: 1, credit: 2, other: 3 }
 const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.assessment] - assessmentOrder[b.assessment])
@@ -47,12 +47,13 @@ function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, on
 
 function App() {
   useInputMethod()
-  const today = useToday()
+  const now = useScheduleClock()
+  const today = toISO(now)
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'tasks' ? 'tasks' : query.get('screen') === 'settings' ? 'settings' : 'schedule')
-  const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'dark' ? 'dark' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
+  const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'black' ? 'black' : query.get('theme') === 'dark' ? 'dark' : query.get('theme') === 'system' ? 'system' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
   const { tasks, theme, collapsed } = notebook.data
   const animationSpeed = notebook.data.animationSpeed ?? 'normal'
   useLayoutEffect(() => { document.documentElement.dataset.motion = animationSpeed }, [animationSpeed])
@@ -199,7 +200,7 @@ function App() {
     <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
-        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
+        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
       </div> : <>
       <div className="screen-header">
       <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
@@ -235,7 +236,7 @@ function App() {
       </div>}
 
       {tab === 'settings' && <div className="settings-list tab-enter">
-        <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
+        <section className="appearance"><h2>Оформление</h2><div className="theme-options theme-colors" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'black', label: 'Чёрная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
         <section className="appearance animation-settings"><h2>Анимации</h2><div className="theme-options" aria-label="Скорость анимаций">{([{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }] as const).map(speed => <button key={speed.id} aria-pressed={animationSpeed === speed.id} onClick={() => notebook.update(current => ({ ...current, animationSpeed: speed.id }))}>{speed.label}</button>)}</div><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
