@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
 import { addDays, diffDays, formatDayMonth, mondayOf, parseISO, toISO, WEEKDAYS_SHORT, MONTHS_NOM } from '../src/lib/dates'
 import { lessonsOn, nextLessonDates, parityOf } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
@@ -103,6 +103,9 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     const element = track.current
     if (!element || !page.previous) return
     const width = element.getBoundingClientRect().width
+    // Выбор предмета может менять месяц, пока форма скрыта.
+    // Не запускаем переход с нулевыми размерами скрытого календаря.
+    if (!width) { setPage(current => current === page ? { ...current, previous: null } : current); return }
     const timing = { duration: motionDuration(true) * 1.8, easing: 'cubic-bezier(.35, 0, .25, 1)', fill: 'both' as const }
     const animation = element.animate([
       { transform: 'translate3d(0, 0, 0)' },
@@ -132,17 +135,17 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     const last = toISO(new Date(date.getFullYear(), date.getMonth() + 1, 0))
     const start = mondayOf(first)
     const weeks = Math.ceil((diffDays(start, last) + 1) / 7)
-    return <div className="month-grid" inert={preview} aria-hidden={preview || undefined}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+    return <div className="month-grid" inert={preview} aria-hidden={preview || undefined}><div className="month-row"><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}</div>
       {Array.from({ length: weeks }, (_, week) => {
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)
         const parity = parityOf(monday, ANCHOR_MONDAY) === 'num' ? 'Числитель' : 'Знаменатель'
-        return <Fragment key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number}, ${parity}` : 'До начала семестра'}>{number ?? '—'}</span><div className="month-row">{Array.from({ length: 7 }, (_, day) => {
+        return <div className="month-row" key={monday}><span className="calendar-week-number" aria-label={number ? `Учебная неделя ${number}, ${parity}` : 'До начала семестра'} title={number ? `Неделя ${number}, ${parity}` : 'До начала семестра'}>{number ?? '—'}</span>{Array.from({ length: 7 }, (_, day) => {
           const date = addDays(start, week * 7 + day)
           const marks = kinds?.(date) || []
           const label = parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
           return <button type="button" key={date} aria-current={date === today ? 'date' : undefined} aria-label={`${label}${date === today ? ', сегодня' : ''}${marks.length ? ', ' + marks.map(kind => kindName[kind]).join(', ') : ''}`} aria-pressed={value === date} className={`calendar-date ${date === value ? 'selected' : ''} ${date === today ? 'today' : ''} ${date < first || date > last ? 'outside' : ''}`} onClick={() => onChange(date)}>{parseISO(date).getDate()}<span className="lesson-marks" aria-hidden="true">{marks.map(kind => <i key={kind} className={`mark-${kind}`} />)}</span></button>
-        })}</div></Fragment>})}
+        })}</div>})}
     </div>
   }
   return <div className="month-calendar">

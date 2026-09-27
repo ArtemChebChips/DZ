@@ -105,8 +105,8 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .month-title strong { font-size: 20px; font-weight: 600; letter-spacing: -.4px; margin-right: auto; }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 10px; border-radius: 14px; }
 .month-title .icon-button { color: var(--muted); background: var(--soft); border: 1px solid var(--line); flex-shrink: 0; }
-.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 3px; }
-.month-row { display: contents; }
+.month-grid { display: flex; flex-direction: column; gap: 3px; }
+.month-row { display: grid; grid-template-columns: 28px repeat(7, minmax(0, 1fr)); }
 .weekday { color: var(--muted); text-align: center; font-size: 13px; height: 31px; }
 .calendar-date { position: relative; min-height: 44px; width: 100%; font-size: 16px; z-index: 0; padding: 0; }
 .calendar-date::before { content: ''; position: absolute; width: 39px; height: 39px; border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: -1; }
@@ -375,7 +375,7 @@ button:disabled { opacity: .45; cursor: default; }
 .agenda-title-row h1 { overflow-wrap: normal; }
 
 /* Номера за контуром, семь колонок дат внутри него. */
-.month-grid { position: relative; isolation: isolate; grid-template-columns: 28px repeat(7, minmax(0, 1fr)); padding: 12px 6px 12px 0; }
+.month-grid { position: relative; isolation: isolate; padding: 12px 6px 12px 0; }
 .month-grid::before { content: ''; position: absolute; inset: 0 0 0 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); z-index: -1; pointer-events: none; }
 .calendar-week-number { align-self: center; justify-self: start; display: grid; place-items: center; width: 26px; height: 26px; margin-left: -5px; border: 1px solid var(--line); border-radius: 50%; color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 @media (max-width: 600px) {

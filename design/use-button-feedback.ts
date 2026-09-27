@@ -9,7 +9,7 @@ export function useButtonFeedback() {
     let timer: ReturnType<typeof setTimeout> | undefined
     const buttonAt = (target: EventTarget | null) => {
       const button = target instanceof Element ? target.closest<HTMLElement>('button, a, summary') : null
-      return button && !button.matches('.lesson-open, .app-nav button') ? button : null
+      return button && !button.matches('.lesson-open, .app-nav button, .segmented button') ? button : null
     }
     const clear = () => {
       clearTimeout(timer)

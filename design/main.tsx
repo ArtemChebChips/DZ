@@ -7,7 +7,7 @@ import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, I
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
-import { useNotebook, downloadBackup, STORAGE_KEY } from './storage'
+import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
 import { isHomeworkKind, isDayNote } from './homework'
 import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
@@ -68,7 +68,20 @@ function App() {
   const setTasks = (value: SetStateAction<DemoTask[]>) => notebook.update(current => ({ ...current, tasks: typeof value === 'function' ? value(current.tasks) : value }))
   const setTheme = (nextTheme: Theme) => {
     if (nextTheme === theme) return
-    notebook.update(current => ({ ...current, theme: nextTheme }))
+    const next = { ...notebook.data, theme: nextTheme }
+    // iOS сохраняет цвет системной полосы запуска. Меняем его новым запуском
+    // страницы только после успешного сохранения; офлайн оставляем текущую.
+    if (!IS_DEMO && !notebook.blocked && navigator.onLine &&
+        (navigator as Navigator & { standalone?: boolean }).standalone) {
+      try {
+        persistNotebook(localStorage, next)
+        const url = new URL(location.href)
+        url.searchParams.set('screen', 'settings')
+        location.replace(url.href)
+        return
+      } catch { /* Ошибку сохранения покажет useNotebook без перезагрузки. */ }
+    }
+    notebook.update(next)
   }
   const setCollapsed = (value: SetStateAction<string[]>) => notebook.update(current => ({ ...current, collapsed: typeof value === 'function' ? value(current.collapsed) : value }))
   const backup = () => downloadBackup(JSON.stringify(notebook.data, null, 2), `dz-${today}.json`)
