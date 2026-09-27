@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { scrollStep } from './scroll-motion'
+import { scrollStep, scrollReleaseVelocity } from './scroll-motion'
 
 export function useGentleScroll() {
   useEffect(() => {
@@ -35,7 +35,8 @@ export function useGentleScroll() {
       e.preventDefault(); suppress = true
       target = top - dy
       samples.push({ y: t.clientY, time: e.timeStamp })
-      samples = samples.filter(s => e.timeStamp - s.time <= 90)
+      // Оставляем точку перед окном: редкие события не должны обнулять скорость.
+      while (samples.length > 2 && samples[1].time < e.timeStamp - 100) samples.shift()
       if (!frame) frame = requestAnimationFrame(() => { frame = 0; draw(target) })
     }
     const end = (e: TouchEvent) => {
@@ -43,22 +44,23 @@ export function useGentleScroll() {
       if (!t || axis !== 'y' || !suppress || !region) { id = null; return }
       id = null; stop(); if (e.cancelable) e.preventDefault()
       draw(target)
-      const sample = samples[0], last = samples.at(-1)
-      const elapsed = sample && last ? last.time - sample.time : 0
-      const pause = last ? e.timeStamp - last.time : Infinity
-      let velocity = elapsed > 0 && pause < 100 ? Math.max(-2.5, Math.min(2.5, (sample.y - last!.y) / elapsed)) * Math.exp(-pause / 140) : 0
+      let velocity = scrollReleaseVelocity(samples, e.timeStamp)
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       let previous = performance.now()
+      let position = region.scrollTop
       const tick = (time: number) => {
         frame = 0
         if (!region?.isConnected || Math.abs(region.scrollTop - expected) > 1) return
-        const step = scrollStep(velocity, time - previous), before = region.scrollTop
-        previous = time; velocity = step.velocity; draw(before + step.distance)
-        if (Math.abs(velocity) > .02 && Math.abs(region.scrollTop - before) > .1) frame = requestAnimationFrame(tick)
+        const step = scrollStep(velocity, time - previous)
+        previous = time; velocity = step.velocity; position += step.distance; draw(position)
+        // Не теряем дробные пиксели на 90/120 Гц из-за округления scrollTop.
+        if (Math.abs(velocity) > .02 && position > 0 && position < region.scrollHeight - region.clientHeight) frame = requestAnimationFrame(tick)
       }
       if (Math.abs(velocity) > .02) frame = requestAnimationFrame(tick)
     }
     const cancel = () => { stop(); id = null }
+    let width = window.innerWidth
+    const resize = () => { if (window.innerWidth !== width) { width = window.innerWidth; cancel() } }
     const click = (e: MouseEvent) => { if (suppress && e.detail !== 0 && region?.contains(e.target as Node)) { e.preventDefault(); e.stopPropagation(); suppress = false } }
     const pointer = (e: PointerEvent) => { if (e.pointerType === 'mouse') { cancel(); suppress = false } }
     document.addEventListener('touchstart', start, { capture: true, passive: true })
@@ -70,12 +72,12 @@ export function useGentleScroll() {
     document.addEventListener('wheel', cancel, { passive: true })
     document.addEventListener('keydown', cancel, true)
     document.addEventListener('visibilitychange', cancel)
-    window.addEventListener('resize', cancel)
+    window.addEventListener('resize', resize)
     return () => {
       cancel()
       document.removeEventListener('touchstart', start, true); document.removeEventListener('touchmove', move, true); document.removeEventListener('touchend', end, true)
       document.removeEventListener('touchcancel', cancel, true); document.removeEventListener('click', click, true); document.removeEventListener('pointerdown', pointer, true)
-      document.removeEventListener('wheel', cancel); document.removeEventListener('keydown', cancel, true); document.removeEventListener('visibilitychange', cancel); window.removeEventListener('resize', cancel)
+      document.removeEventListener('wheel', cancel); document.removeEventListener('keydown', cancel, true); document.removeEventListener('visibilitychange', cancel); window.removeEventListener('resize', resize)
     }
   }, [])
 }
