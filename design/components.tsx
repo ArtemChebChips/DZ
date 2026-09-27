@@ -4,6 +4,7 @@ import { lessonsOn, nextLessonDates, parityOf } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
 import { academicWeek } from './academic-week'
 import { motionDuration } from './motion'
+import { Segmented } from './segmented'
 import { homeworkLessons, isHomeworkKind, taskLesson, isDayNote } from './homework'
 import type { LessonKind } from '../src/types'
 import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName, type Draft } from './data'
@@ -173,7 +174,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     </div>}
     <form hidden={picking} onSubmit={e => { e.preventDefault(); finish(dismiss) }}>
       <div className="editor-fields" data-scroll-region>
-        <div className="theme-options entry-type" data-note={note} aria-label="Тип записи"><span className="entry-type-bubble" aria-hidden="true" /><button type="button" aria-pressed={!note} onClick={() => changeContext({ entryType: 'homework', kind: undefined })}>ДЗ</button><button type="button" aria-pressed={note} onClick={() => changeContext({ entryType: 'note', kind: undefined })}>Заметка</button></div>
+        <Segmented className="entry-type" label="Тип записи" value={note ? 'note' : 'homework'} onChange={entryType => changeContext({ entryType, kind: undefined })} options={[{ id: 'homework', label: 'ДЗ' }, { id: 'note', label: 'Заметка' }]} />
         <div className="field"><span id="subject-label" className="visually-hidden">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
         <label className="field"><span className="visually-hidden">{note ? 'Текст заметки' : 'Что нужно сделать'}</span><textarea placeholder={note ? 'Например, взять конспект на пару' : 'Например, решить задачи 12–18'} rows={3} value={value.title} onChange={e => setValue({ ...value, title: e.target.value })} required /></label>
         {!note && availableKinds.length > 0 && <div className="kind-options" aria-label="Вид занятия">{availableKinds.map(kind => <button type="button" key={kind} className={`kind-${kind}`} aria-pressed={value.kind === kind} onClick={() => changeContext({ kind })}>{kind === 'lab' ? 'Лаба' : 'Семинар'}</button>)}</div>}

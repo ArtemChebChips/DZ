@@ -12,6 +12,8 @@ import { isHomeworkKind, isDayNote } from './homework'
 import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { FrameMeter } from './frame-meter'
+import { Segmented } from './segmented'
+import { useButtonFeedback } from './use-button-feedback'
 import { useGentleScroll } from './use-gentle-scroll'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
@@ -99,6 +101,7 @@ function App() {
   useScrollBoundary()
   useGentleScroll()
   useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel, shiftDay)
+  useButtonFeedback()
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
@@ -245,8 +248,8 @@ function App() {
       </div>}
 
       {tab === 'settings' && <div className="settings-list tab-enter">
-        <section className="appearance"><h2>Оформление</h2><div className="theme-options theme-colors" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'black', label: 'Чёрная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
-        <section className="appearance animation-settings"><h2>Анимации</h2><div className="theme-options" aria-label="Скорость анимаций">{([{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }] as const).map(speed => <button key={speed.id} aria-pressed={animationSpeed === speed.id} onClick={() => notebook.update(current => ({ ...current, animationSpeed: speed.id }))}>{speed.label}</button>)}</div><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
+        <section className="appearance"><h2>Оформление</h2><Segmented label="Оформление" value={theme} columns={2} onChange={setTheme} options={[{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'black', label: 'Чёрная' }, { id: 'system', label: 'Системная' }]} /></section>
+        <section className="appearance animation-settings"><h2>Анимации</h2><Segmented label="Скорость анимаций" value={animationSpeed} onChange={animationSpeed => notebook.update(current => ({ ...current, animationSpeed }))} options={[{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }]} /><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
         <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
