@@ -1,23 +1,23 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type SetStateAction } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { Lesson } from '../src/types'
 import { addDays, parseISO } from '../src/lib/dates'
 import { lessonsOn } from '../src/lib/week'
-import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconChevronLeft, IconChevronRight as IconDayNext, IconX } from '../src/components/icons'
+import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, IconX } from '../src/components/icons'
 import { Calendar, Editor, Modal } from './components'
-import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, kindName, type DemoTask, type Draft } from './data'
+import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
 import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
-import { taskLesson, isHomeworkKind, isDayNote } from './homework'
+import { isHomeworkKind, isDayNote } from './homework'
 import { useToday, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
 import { Navigation } from './navigation'
 import { Collapse } from './collapse'
-import { lessonBreaks } from './breaks'
+import { ScheduleDay } from './schedule-day'
+import { useDaySwipe } from './use-day-swipe'
 import { taskGroups } from './task-groups'
-import { academicWeek } from './academic-week'
 import { taskSummary } from './task-summary'
 import './style.css'
 import './register-sw'
@@ -30,7 +30,6 @@ const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.
 const query = new URLSearchParams(location.search)
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
-const minutes = new Intl.NumberFormat('ru-RU', { style: 'unit', unit: 'minute', unitDisplay: 'long' })
 
 function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
   return <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -81,9 +80,10 @@ function App() {
   const finishGroup = useCallback((doneIds: string[]) => setExiting(ids => ids.filter(id => !doneIds.includes(id))), [])
   const finishExit = useCallback((id: string) => setExiting(ids => ids.filter(value => value !== id)), [])
   const [date, setDate] = useState(today)
-  const [dayDirection, setDayDirection] = useState(0)
-  const selectDay = (next: string) => { setDayDirection(next < date ? -1 : 1); setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
-  const shiftDay = (direction: -1 | 1) => { setDayDirection(direction); setDate(current => addDays(current, direction)); mainRef.current?.scrollTo({ top: 0 }) }
+  const dayViewport = useRef<HTMLDivElement>(null)
+  const dayTrack = useRef<HTMLDivElement>(null)
+  const selectDay = (next: string) => { setDate(next); mainRef.current?.scrollTo({ top: 0 }) }
+  const shiftDay = (direction: -1 | 1) => { setDate(current => addDays(current, direction)); mainRef.current?.scrollTo({ top: 0 }) }
   useEffect(() => {
     const previous = previousToday.current
     setDate(selected => selected === previous ? today : selected)
@@ -91,7 +91,8 @@ function App() {
   }, [today])
   const [draft, setDraft] = useState<Draft | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
-  useScrollBoundary(tab === 'schedule' && !calendarOpen && !draft && !panel ? shiftDay : undefined)
+  useScrollBoundary()
+  useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel, shiftDay)
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
   const [notice, setNotice] = useState('')
@@ -100,7 +101,7 @@ function App() {
     const toast = toastRef.current
     const scroll = mainRef.current
     if (!toast || !scroll) return
-    const main = scroll.parentElement!
+    const main = scroll.closest<HTMLElement>('.app-main')!
     const actions = main.querySelector<HTMLElement>('.entry-actions-buttons')
     // На узком экране отмена располагается над общим рядом добавления.
     const place = () => {
@@ -181,38 +182,28 @@ function App() {
   }
   const visible = tasks.filter(t => !t.done || exiting.includes(t.id))
   const grouped = taskGroups(visible, today)
-  const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const done = completedTasks(tasks)
-  const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
-  const breaks = lessonBreaks(lessons)
-  const ownTasks = tasks.filter(t => t.due === date)
-  const assigned = new Set<string>()
   const row = (task: DemoTask, groupLeaving = false) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} groupLeaving={groupLeaving} onExited={finishExit} />
   useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
   const changeTab = (next: Tab) => {
-    if (next === 'schedule' && tab !== 'schedule') { setDate(currentDay()); setDayDirection(0) }
+    if (next === 'schedule' && tab !== 'schedule') { setDate(currentDay()) }
     setExiting([]); setTab(next); mainRef.current?.scrollTo({ top: 0 })
   }
+
+  const storageWarning = notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>
+  const demoTools = IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>
 
   return <div className="app-shell">
     <Navigation tab={tab} changeTab={changeTab} />
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
+      {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
+        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={addDays(date, offset)} date={addDays(date, offset)} today={today} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
+      </div> : <>
       <div className="screen-header">
-      {tab !== 'schedule' && <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>}
-      {tab === 'schedule' && <header className="agenda-heading">
-        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>{weekNumber && <button className="week-number-button" onClick={() => setCalendarOpen(true)} aria-label={`Учебная неделя ${weekNumber}, открыть календарь`}>Неделя {weekNumber}</button>}</div>
-        <div className="agenda-date-row">
-          <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
-          <div className="agenda-controls">
-            {date !== today && <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}
-            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={() => setCalendarOpen(true)}><IconCalendar size={26} /></button>
-          </div>
-        </div>
-        <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconDayNext size={18} /></button></div>
-      </header>}
+      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
       </div>
-      <div ref={mainRef} className="app-scroll" tabIndex={tab === 'schedule' ? 0 : undefined} role={tab === 'schedule' ? 'region' : undefined} aria-label={tab === 'schedule' ? 'Расписание на выбранный день' : undefined} data-scroll-region>
-      {notebook.error && <div className="storage-warning" role="alert"><p>{notebook.error}</p><button onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button></div>}
+      <div ref={mainRef} className="app-scroll" data-scroll-region>
+      {storageWarning}
       {tab === 'tasks' && <div className="task-list tab-enter">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
         {grouped.groups.map(group => {
@@ -240,17 +231,7 @@ function App() {
         })}
 
       </div>}
-      {tab === 'schedule' && <div key={date} className={`schedule-layout ${dayDirection ? 'day-enter' : 'tab-enter'} day-direction-${dayDirection}`}><section className="agenda">
-        {!lessons.length && <div className="empty-state"><IconCalendar size={28} /><h2>День без пар</h2><p>Задания на этот день можно добавить отдельно.</p></div>}
-        {lessons.map(lesson => {
-          const attached = ownTasks.filter(t => taskLesson(t, lessons)?.id === lesson.id)
-          attached.forEach(t => assigned.add(t.id))
-          const pause = breaks.get(lesson.id)
-          return <Fragment key={lesson.id}>{pause && <p className="lesson-break"><time>{pause.start}–{pause.end}</time><span className="break-description"><span>Перерыв</span><span>{minutes.format(pause.minutes)}</span></span></p>}<article className="lesson"><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => openLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
-        })}
-        {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
-        {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}
-      </section></div>}
+
       {tab === 'settings' && <div className="settings-list tab-enter">
         <section className="appearance"><h2>Оформление</h2><div className="theme-options" aria-label="Оформление">{([{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'system', label: 'Системная' }] as const).map(t => <button key={t.id} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>{t.label}</button>)}</div></section>
         <section className="appearance animation-settings"><h2>Анимации</h2><div className="theme-options" aria-label="Скорость анимаций">{([{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }] as const).map(speed => <button key={speed.id} aria-pressed={animationSpeed === speed.id} onClick={() => notebook.update(current => ({ ...current, animationSpeed: speed.id }))}>{speed.label}</button>)}</div><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
@@ -260,8 +241,9 @@ function App() {
         <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры заданий на три недели</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
-      {IS_DEMO && <details className="preview-tools"><summary>Демонстрационный макет</summary><p>Изменения хранятся до перезагрузки. Сегодня в примерах — 21 сентября 2026.</p><div><button onClick={() => { setTasks(INITIAL_TASKS); setCollapsed([]); setUndo(null); setExiting([]) }}>Исходный список</button><button onClick={() => { setTasks([...INITIAL_TASKS, ...EXTRA_TASKS]); setCollapsed([]); setExiting([]); setUndo(null) }}>Длинные записи и просрочка</button><button onClick={() => { setTasks([]); setUndo(null) }}>Пустой список</button></div></details>}
+      {demoTools}
       </div>
+      </>}
       {tab !== 'settings' && <div className="entry-actions"><div className="entry-actions-buttons">
         {tab === 'schedule' && <button className="outline-button entry-add-button" onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>}
         <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>

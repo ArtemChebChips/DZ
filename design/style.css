@@ -277,11 +277,6 @@ button:disabled { opacity: .45; cursor: default; }
 .calendar-sheet .calendar-date { min-height: 52px; }
 .calendar-sheet .calendar-picker > button { flex-shrink: 0; }
 @media (max-width: 600px) { .calendar-sheet { height: min(72dvh, 640px); height: min(calc(var(--sheet-height) * .72), 640px); } }
-@media (prefers-reduced-motion: no-preference) {
-  .day-enter { animation: day-enter var(--motion-duration) var(--motion-ease); --day-shift: 12px; }
-  .day-direction--1 { --day-shift: -12px; }
-  @keyframes day-enter { from { opacity: .3; transform: translateX(var(--day-shift)); } to { opacity: 1; transform: translateX(0); } }
-}
 
 /* D3 — одно доступное действие и спокойное пустое состояние. */
 .app-main { position: relative; }
@@ -428,3 +423,13 @@ button:disabled { opacity: .45; cursor: default; }
   :root, :root[data-motion] { --motion-duration: 0ms; --motion-height: 0ms; }
   .day-tasks, .day-summary, .entry-type-bubble, .day-heading svg { transition: none; }
 }
+
+/* Соседние дни — реальные страницы, движение не затрагивает нижние действия. */
+.day-viewport { flex: 1; min-height: 0; overflow: hidden; }
+.day-track { display: flex; width: 100%; height: 100%; transform: translate3d(-100%, 0, 0); }
+.day-page { position: relative; display: flex; flex-direction: column; flex: 0 0 100%; width: 100%; min-width: 0; height: 100%; background: var(--bg); }
+.day-page::after { content: ''; position: absolute; inset: 0 0 0 auto; width: 1px; background: var(--line); pointer-events: none; }
+.screen-schedule, .screen-schedule .app-scroll, .screen-schedule button { touch-action: pan-y pinch-zoom; }
+.screen-schedule, .screen-schedule * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.screen-schedule[data-day-dragging] .day-track { will-change: transform; }
+.screen-schedule[data-day-dragging] button { outline: none; }
