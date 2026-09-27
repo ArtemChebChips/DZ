@@ -442,7 +442,6 @@ button:disabled { opacity: .45; cursor: default; }
 .day-summary.visible { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
 .day-summary > span { min-height: 0; overflow: hidden; font-size: 12px; line-height: 1.7; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  .month-enter { animation: tab-enter var(--motion-duration) var(--motion-ease); }
   .sheet[open] { animation: sheet-enter var(--motion-duration) var(--motion-ease) both; }
   .sheet[open]::backdrop { animation: backdrop-enter var(--motion-duration) both; }
   .sheet.sheet-closing { animation: sheet-exit var(--motion-duration) var(--motion-ease) both; }
@@ -475,8 +474,8 @@ button:disabled { opacity: .45; cursor: default; }
 .lesson-title h3 { flex: 1; min-width: 0; }
 .current-label { flex-shrink: 0; visibility: hidden; margin-top: 2px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; white-space: nowrap; }
 .lesson-current .current-label { visibility: visible; }
-.lesson { transition: background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
-.lesson.lesson-tapped { background: #0d0f12; color: #fff; border-color: #0d0f12; }
+.lesson { transform-origin: center; transition: scale var(--motion-duration) var(--motion-ease), background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
+.lesson.lesson-tapped { scale: .975; background: #0d0f12; color: #fff; border-color: #0d0f12; }
 .lesson-tapped .lesson-body { border-color: #484b52; }
 .lesson-tapped .lesson-body > p, .lesson-tapped .lesson-time time:last-child, .lesson-tapped .task-subject { color: #c8ccd4; }
 @media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
@@ -484,8 +483,9 @@ button:disabled { opacity: .45; cursor: default; }
 :root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }
 
 @media (prefers-reduced-motion: no-preference) {
+  :root[data-theme-transition] body { transition: background-color var(--motion-height) var(--motion-ease); }
   :root[data-theme-transition] {
-    transition-property: --bg, --surface, --ink, --muted, --line, --soft, --accent, --on-accent, --danger;
+    transition-property: background-color, --bg, --surface, --ink, --muted, --line, --soft, --accent, --on-accent, --danger;
     transition-duration: var(--motion-height);
     transition-timing-function: var(--motion-ease);
   }

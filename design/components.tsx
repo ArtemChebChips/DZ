@@ -1,9 +1,10 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useLayoutEffect, useEffect, useRef, useState, type ReactNode } from 'react'
 import { addDays, diffDays, formatDayMonth, mondayOf, parseISO, toISO, WEEKDAYS_SHORT, MONTHS_NOM } from '../src/lib/dates'
 import { lessonsOn, nextLessonDates, parityOf } from '../src/lib/week'
 import { IconCheck, IconX, IconChevronLeft, IconChevronRight, IconTrash } from '../src/components/icons'
 import { academicWeek } from './academic-week'
 import { motionDuration } from './motion'
+import { usePressAction } from './use-button-feedback'
 import { Segmented } from './segmented'
 import { homeworkLessons, isHomeworkKind, taskLesson, isDayNote } from './homework'
 import type { LessonKind } from '../src/types'
@@ -11,6 +12,7 @@ import { ANCHOR_MONDAY, DEFAULT_LESSONS, DEFAULT_SUBJECTS, subjectName, kindName
 
 type CloseModal = (after?: () => void) => void
 export function Modal({ title, onClose, onBack, children, variant }: { variant?: 'calendar' | 'editor'; title: string; onClose: () => void; onBack?: () => void; children: ReactNode | ((close: CloseModal) => ReactNode) }) {
+  const press = usePressAction()
   const ref = useRef<HTMLDialogElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const pending = useRef<(() => void) | null>(null)
@@ -84,22 +86,36 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     }
   }, [])
   return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && closing) finishClose() }} aria-label={title}>
-    <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={dismiss}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
+    <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={press(dismiss)}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
   </dialog>
 }
 
 export function Calendar({ value, today, onChange, kinds }: { value: string; today: string; onChange: (date: string) => void; kinds?: (date: string) => LessonKind[] }) {
   const [month, setMonth] = useState(value)
+  const grid = useRef<HTMLDivElement>(null)
+  const direction = useRef(0)
+  useLayoutEffect(() => {
+    const element = grid.current, duration = motionDuration()
+    if (!element || !duration || !direction.current) return
+    // Фон и рамка остаются непрозрачными, двигаются только числа.
+    const animations = [...element.querySelectorAll('.calendar-date, .calendar-week-number')].map(cell => cell.animate([
+      { transform: `translateX(${direction.current * 10}px)` }, { transform: 'translateX(0)' },
+    ], { duration, easing: 'cubic-bezier(.2, .7, .2, 1)' }))
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const cancel = () => animations.forEach(animation => animation.cancel())
+    reduced.addEventListener('change', cancel)
+    return () => { cancel(); reduced.removeEventListener('change', cancel) }
+  }, [month])
   useEffect(() => { setMonth(value) }, [value])
   const d = parseISO(month)
   const first = toISO(new Date(d.getFullYear(), d.getMonth(), 1))
   const last = toISO(new Date(d.getFullYear(), d.getMonth() + 1, 0))
   const start = mondayOf(first)
   const count = Math.ceil((diffDays(start, last) + 1) / 7) * 7
-  const shift = (n: number) => setMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
+  const shift = (n: number) => { direction.current = n; setMonth(current => { const date = parseISO(current); return toISO(new Date(date.getFullYear(), date.getMonth() + n, 1)) }) }
   return <div className="month-calendar">
     <div className="month-title"><strong>{MONTHS_NOM[d.getMonth()]} {d.getFullYear()}</strong><button type="button" className="icon-button" onClick={() => shift(-1)} aria-label="Предыдущий месяц"><IconChevronLeft size={18} /></button><button type="button" className="icon-button" onClick={() => shift(1)} aria-label="Следующий месяц"><IconChevronRight size={18} /></button></div>
-    <div className="month-grid month-enter" key={first}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
+    <div className="month-grid" ref={grid}><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}
       {Array.from({ length: count / 7 }, (_, week) => {
         const monday = addDays(start, week * 7)
         const number = academicWeek(monday, ANCHOR_MONDAY)

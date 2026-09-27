@@ -13,7 +13,9 @@ import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
 import { FrameMeter } from './frame-meter'
 import { Segmented } from './segmented'
-import { useButtonFeedback } from './use-button-feedback'
+import { useButtonFeedback, usePressAction } from './use-button-feedback'
+import { motionDuration } from './motion'
+import { useDayTravel } from './use-day-travel'
 import { useGentleScroll } from './use-gentle-scroll'
 import { useScrollBoundary } from './use-scroll-boundary'
 import { completedTasks } from './history'
@@ -43,14 +45,16 @@ function SettingIcon({ kind }: { kind: 'book' | 'download' | 'info' | 'sun' }) {
 }
 
 function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, onExited }: { task: DemoTask; toggle: (id: string) => void; edit: (task: DemoTask) => void; leaving?: boolean; groupLeaving?: boolean; onExited?: (id: string) => void }) {
+  const press = usePressAction()
   return <Collapse active={leaving && !groupLeaving} hold={groupLeaving} onEnd={() => onExited?.(task.id)} className="task-collapse"><div className={`task-row ${task.done ? 'completed' : ''} ${leaving ? 'task-leaving' : ''}`}>
     <button disabled={leaving} className="check-button" onClick={() => toggle(task.id)} aria-label={`${task.done ? 'Вернуть' : 'Выполнить'}: ${task.title}`} aria-pressed={task.done}><span>{task.done && <IconCheck size={17} />}</span></button>
-    <button disabled={leaving} className="task-content" onClick={() => edit(task)}><span className="task-subject">{isDayNote(task) ? <><span>Заметка</span>{task.subjectId && <span className="note-subject">{subjectName(task.subjectId)}</span>}</> : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
+    <button disabled={leaving} className="task-content" onClick={press(() => edit(task))}><span className="task-subject">{isDayNote(task) ? <><span>Заметка</span>{task.subjectId && <span className="note-subject">{subjectName(task.subjectId)}</span>}</> : subjectName(task.subjectId)}</span><span className="task-title">{task.title}</span><IconChevronRight size={16} /></button>
   </div></Collapse>
 }
 
 function App() {
   useInputMethod()
+  const press = usePressAction()
   const now = useScheduleClock()
   const today = toISO(now)
   const previousToday = useRef(today)
@@ -88,7 +92,8 @@ function App() {
   const [panel, setPanel] = useState<Panel>(null)
   useScrollBoundary()
   useGentleScroll()
-  useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel, shiftDay)
+  const [travelDay, travelling] = useDayTravel(dayViewport, dayTrack, date, selectDay, tab === 'schedule' && !calendarOpen && !draft && !panel)
+  useDaySwipe(dayViewport, dayTrack, date, tab === 'schedule' && !calendarOpen && !draft && !panel && !travelling, shiftDay)
   useButtonFeedback()
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
@@ -128,19 +133,23 @@ function App() {
     const media = matchMedia('(prefers-color-scheme: dark)')
     const root = document.documentElement
     // Ранний фон index.html сменяется той же палитрой, без перезагрузки standalone.
-    root.style.backgroundColor = 'var(--bg)'
+    // Системная область WebKit отслеживает фон страницы отдельно от палитры.
+    // Передаём ему также явный background-color, без перезагрузки.
     const apply = () => {
       const resolved = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
-      if (root.dataset.theme === resolved) return
-      root.dataset.themeTransition = 'true'
+      const changed = root.dataset.theme !== resolved
+      if (changed) root.dataset.themeTransition = 'true'
       // Фиксируем прежний цвет перед началом перехода, в том числе при первом клике.
       getComputedStyle(root).getPropertyValue('--bg')
       root.dataset.theme = resolved
       const background = { light: '#fdfcfb', dark: '#17191d', black: '#000000' }[resolved]
+      root.style.backgroundColor = background
+      document.body.style.backgroundColor = background
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
     }
     apply(); media.addEventListener('change', apply)
-    return () => media.removeEventListener('change', apply)
+    window.addEventListener('pageshow', apply)
+    return () => { media.removeEventListener('change', apply); window.removeEventListener('pageshow', apply) }
   }, [theme])
   useEffect(() => { if (!notice || draft || panel) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice, draft, panel])
   useEffect(() => { if (!undo || draft || panel) return; const timer = setTimeout(() => setUndo(null), 5000); return () => clearTimeout(timer) }, [undo, draft, panel])
@@ -187,7 +196,20 @@ function App() {
   const grouped = taskGroups(visible, today)
   const done = completedTasks(tasks)
   const row = (task: DemoTask, groupLeaving = false) => <TaskRow key={task.id} task={task} toggle={toggle} edit={setDraft} leaving={tab === 'tasks' && exiting.includes(task.id)} groupLeaving={groupLeaving} onExited={finishExit} />
-  useLayoutEffect(() => { mainRef.current?.scrollTo({ top: 0 }) }, [tab])
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 })
+    const main = mainRef.current?.closest('.app-main')
+    const duration = motionDuration(true)
+    if (!main || !duration) return
+    // Нижние действия и навигация остаются неподвижными.
+    const animations = [...main.querySelectorAll<HTMLElement>(':scope > .screen-header, :scope > .app-scroll, :scope > .day-viewport')].map(element => element.animate([
+      { opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'translateY(0)' },
+    ], { duration, easing: 'cubic-bezier(.2, .7, .2, 1)' }))
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const cancel = () => animations.forEach(animation => animation.cancel())
+    reduced.addEventListener('change', cancel)
+    return () => { cancel(); reduced.removeEventListener('change', cancel) }
+  }, [tab])
   const changeTab = (next: Tab) => {
     if (next === 'schedule' && tab !== 'schedule') { setDate(currentDay()) }
     setExiting([]); setTab(next); mainRef.current?.scrollTo({ top: 0 })
@@ -206,14 +228,14 @@ function App() {
     <main className={`app-main screen-${tab}`} data-swipe-days={tab === 'schedule' ? '' : undefined}>
       {IS_DEMO && query.has('highlight') && <div className="highlight-preview"><p>Просмотр подсветки · 21 сентября, {query.get('highlight') === 'break' ? '13:35' : '14:30'}. Твои данные не меняются.</p><div><a href={highlightURL('lesson')}>Пара</a><a href={highlightURL('break')}>Перерыв</a><a href={highlightURL('exit')}>Выйти из просмотра</a></div></div>}
       {tab === 'schedule' ? <div className="day-viewport" ref={dayViewport}>
-        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={selectDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
+        <div className="day-track" ref={dayTrack}>{[-1, 0, 1].map(offset => <ScheduleDay key={offset} position={offset} date={addDays(date, offset)} today={today} minute={now.getHours() * 60 + now.getMinutes()} tasks={tasks} preview={offset !== 0} scrollRef={offset === 0 ? mainRef : undefined} openCalendar={() => setCalendarOpen(true)} selectDay={travelDay} shiftDay={shiftDay} openLesson={openLesson} row={row} banner={offset === 0 ? storageWarning : undefined}>{offset === 0 ? demoTools : undefined}</ScheduleDay>)}</div>
       </div> : <>
       <div className="screen-header">
-      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={openHistory}><IconCheck size={18} />История</button>}</header>
+      <header className="page-header"><h1>{tab === 'tasks' ? 'Задачи' : 'Настройки'}</h1>{tab === 'tasks' && <button className="outline-button history-button" onClick={press(openHistory)}><IconCheck size={18} />История</button>}</header>
       </div>
       <div ref={mainRef} className="app-scroll" data-scroll-region>
       {storageWarning}
-      {tab === 'tasks' && <div className="task-list tab-enter">
+      {tab === 'tasks' && <div className="task-list">
         {!visible.length && <div className="tasks-empty"><span className="empty-check"><IconCheck size={38} /></span><h2>{tasks.length ? 'Заданий больше нет' : 'Пока нет заданий'}</h2></div>}
         {grouped.groups.map(group => {
           const leaving = group.tasks.every(t => exiting.includes(t.id))
@@ -241,27 +263,27 @@ function App() {
 
       </div>}
 
-      {tab === 'settings' && <div className="settings-list tab-enter">
+      {tab === 'settings' && <div className="settings-list">
         <section className="appearance"><h2>Оформление</h2><Segmented label="Оформление" value={theme} columns={2} onChange={setTheme} options={[{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'black', label: 'Чёрная' }, { id: 'system', label: 'Системная' }]} /></section>
         <section className="appearance animation-settings"><h2>Анимации</h2><Segmented label="Скорость анимаций" value={animationSpeed} onChange={animationSpeed => notebook.update(current => ({ ...current, animationSpeed }))} options={[{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }]} /><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
-        <button className="setting-row" onClick={() => setPanel('subjects')}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => changeTab('schedule')}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => setPanel('backup')}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => setPanel('beta')}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры, подсветка и плавность</small></span><IconChevronRight size={18} /></button>
-        <button className="setting-row" onClick={() => setPanel('about')}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => setPanel('subjects'))}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => changeTab('schedule'))}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => setPanel('backup'))}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => setPanel('beta'))}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры, подсветка и плавность</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => setPanel('about'))}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
       {demoTools}
       </div>
       </>}
       {tab !== 'settings' && <div className="entry-actions"><div className="entry-actions-buttons">
-        <button className={`outline-button entry-add-button note-add-button ${tab === 'tasks' ? 'note-placeholder' : ''}`} aria-hidden={tab === 'tasks' || undefined} tabIndex={tab === 'tasks' ? -1 : undefined} onClick={() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date })}><IconPlus size={21} />Заметка</button>
-        <button className="primary-button entry-add-button task-add-button" onClick={() => openNew()}><IconPlus size={21} />Задание</button>
+        <button className={`outline-button entry-add-button note-add-button ${tab === 'tasks' ? 'note-placeholder' : ''}`} aria-hidden={tab === 'tasks' || undefined} tabIndex={tab === 'tasks' ? -1 : undefined} onClick={press(() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date }))}><IconPlus size={21} />Заметка</button>
+        <button className="primary-button entry-add-button task-add-button" onClick={press(() => openNew())}><IconPlus size={21} />Задание</button>
       </div></div>}
-      {undo?.type === 'complete' && tab !== 'settings' ? <div ref={toastRef} className="toast toast-notice toast-complete" role="status"><button onClick={undoLast} aria-label="Отменить выполнение"><span>{notebook.error ? 'Не сохранено' : 'Выполнено'}</span><strong>Отменить</strong></button></div> : undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={() => setUndo(null)}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
+      {undo?.type === 'complete' && tab !== 'settings' ? <div ref={toastRef} className="toast toast-notice toast-complete" role="status"><button onClick={undoLast} aria-label="Отменить выполнение"><span>{notebook.error ? 'Не сохранено' : 'Выполнено'}</span><strong>Отменить</strong></button></div> : undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={press(() => setUndo(null))}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
-    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} /><button className="outline-button today-button" onClick={() => { selectDay(today); dismiss() }}>Сегодня</button></div>}</Modal>}
+    {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} /><button className="outline-button today-button" onClick={press(() => dismiss(() => { setCalendarOpen(false); travelDay(today) }))}>Сегодня</button></div>}</Modal>}
     {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">

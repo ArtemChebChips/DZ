@@ -8,6 +8,7 @@ import { academicWeek } from './academic-week'
 import { lessonBreaks } from './breaks'
 import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { isCurrentInterval } from './current-interval'
+import { usePressAction } from './use-button-feedback'
 import { motionDuration } from './motion'
 
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
@@ -19,6 +20,7 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
   openCalendar: () => void; selectDay: (date: string) => void; shiftDay: (direction: -1 | 1) => void;
   openLesson: (lesson: Lesson) => void; row: (task: DemoTask) => ReactNode; banner?: ReactNode; children?: ReactNode;
 }) {
+  const press = usePressAction()
   const [pressed, setPressed] = useState<string | null>(null)
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const cancelTap = () => { clearTimeout(pending.current); pending.current = undefined; setPressed(null) }
@@ -51,12 +53,12 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
   return <div className="day-page" style={{ '--day-position': position } as CSSProperties} data-current={!preview || undefined} aria-hidden={preview || undefined} inert={preview}>
     <div className="screen-header">
       <header className="agenda-heading">
-        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>{weekNumber && <button className="week-number-button" onClick={() => openCalendar()} aria-label={`Учебная неделя ${weekNumber}, открыть календарь`}>Неделя {weekNumber}</button>}</div>
+        <div className="agenda-title-row"><h1 className="agenda-day">{date === today ? 'Сегодня' : weekday(date)},</h1>{weekNumber && <button className="week-number-button" onClick={press(openCalendar)} aria-label={`Учебная неделя ${weekNumber}, открыть календарь`}>Неделя {weekNumber}</button>}</div>
         <div className="agenda-date-row">
           <time className="agenda-date" dateTime={date}>{longDate(date)}</time>
           <div className="agenda-controls">
-            {date !== today && <button className="outline-button today-button" onClick={() => selectDay(today)}>Сегодня</button>}
-            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={() => openCalendar()}><IconCalendar size={26} /></button>
+            {date !== today && <button className="outline-button today-button" onClick={press(() => selectDay(today))}>Сегодня</button>}
+            <button className="outline-button calendar-toggle" aria-label="Календарь" onClick={press(openCalendar)}><IconCalendar size={26} /></button>
           </div>
         </div>
         <div className="day-stepper"><button className="icon-button" aria-label="Предыдущий день" onClick={() => shiftDay(-1)}><IconChevronLeft size={18} /></button><button className="icon-button" aria-label="Следующий день" onClick={() => shiftDay(1)}><IconChevronRight size={18} /></button></div>
