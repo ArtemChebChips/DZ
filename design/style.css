@@ -516,3 +516,12 @@ button[data-pressed]:not(.calendar-date), a[data-pressed], summary[data-pressed]
 }
 :root[data-theme='light'] .lesson.lesson-tapped { background: color-mix(in srgb, var(--bg) 88%, #000); }
 :root[data-theme='black'] .lesson.lesson-tapped { background: #101216; }
+
+/* Локальный пилот: существующие темы и кнопки, без отдельной панели навигации. */
+.smart-input { display: grid; gap: 14px; padding: 0 20px 24px; }
+.smart-input label { display: grid; gap: 6px; }
+.smart-input textarea, .smart-input select, .smart-input input[type=date] { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 12px; padding: 12px; }
+.smart-input textarea { min-height: 100px; resize: vertical; }
+.smart-input fieldset { min-width: 0; display: grid; gap: 12px; border: 1px solid currentColor; border-radius: 16px; padding: 14px; }
+.smart-input legend label { display: flex; align-items: center; }
+.smart-input small { opacity: .7; line-height: 1.4; }

@@ -24,6 +24,6 @@ export default defineConfig({
       writeFileSync(resolve(out, 'sw.js'), worker)
     },
   }],
-  server: { host: '127.0.0.1', port: 4175, strictPort: true },
+  server: { host: '127.0.0.1', port: 4175, strictPort: true, proxy: { '/agent': 'http://127.0.0.1:4176' } },
   build: { outDir: '../dist-design', emptyOutDir: true },
 })

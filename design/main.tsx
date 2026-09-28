@@ -26,6 +26,7 @@ import { useDaySwipe } from './use-day-swipe'
 import { useInputMethod } from './use-input-method'
 import { taskGroups } from './task-groups'
 import { taskSummary } from './task-summary'
+import { SmartInputPanel } from './smart-input-panel'
 import './style.css'
 import './register-sw'
 
@@ -59,6 +60,7 @@ function App() {
   const today = toISO(now)
   const previousToday = useRef(today)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [smartOpen, setSmartOpen] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'tasks' ? 'tasks' : query.get('screen') === 'settings' ? 'settings' : 'schedule')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'black' ? 'black' : query.get('theme') === 'dark' ? 'dark' : query.get('theme') === 'system' ? 'system' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
@@ -299,8 +301,15 @@ function App() {
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
     {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} showMonthShortcut /></div>}</Modal>}
     {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
+    {import.meta.env.DEV && smartOpen && <Modal title="Быстрое добавление" onClose={() => setSmartOpen(false)}>{dismiss => <SmartInputPanel save={drafts => {
+      if (notebook.blocked) throw new Error('Данные заблокированы')
+      const next = { ...notebook.data, tasks: [...tasks, ...drafts.map(d => ({ ...d, id: crypto.randomUUID(), done: false }))] }
+      if (!IS_DEMO) persistNotebook(localStorage, next)
+      notebook.update(next); dismiss(() => setNotice(`Добавлено: ${drafts.length}`))
+    }} />}</Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
+        {import.meta.env.DEV && <button className="primary-button" onClick={() => { setPanel(null); setSmartOpen(true) }}>Текстом или голосом · локальный тест</button>}
         <a className="outline-button" href={highlightURL('lesson')}>Проверить подсветку</a>
         <FrameMeter />
         <p>Добавим 24 примера на три недели: ДЗ к реальным семинарам и лабам, а также заметки. Повторное добавление заменяет прежние тестовые записи. Твои задания остаются.</p>

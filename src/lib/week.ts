@@ -1,5 +1,5 @@
 import type { Lesson, LessonKind } from '../types'
-import { addDays, diffDays, mondayOf, weekdayOf } from './dates'
+import { addDays, diffDays, mondayOf, weekdayOf } from './dates.ts'
 
 export type Parity = 'num' | 'denom'
 
