@@ -1,7 +1,7 @@
 {
   "name": "dz",
   "private": true,
-  "version": "1.23.56",
+  "version": "1.23.57",
   "type": "module",
   "scripts": {
     "dev": "vite",
