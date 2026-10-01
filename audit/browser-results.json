@@ -1,0 +1,14 @@
+{
+  "appVersion": "1.23.58",
+  "productionURL": "http://127.0.0.1:43187/",
+  "devMockURL": "http://127.0.0.1:43189/",
+  "core": { "tests": 56, "passed": 56, "failed": 0, "skipped": 0 },
+  "browser": { "tests": 28, "passed": 28, "failed": 0, "skipped": 0, "productionScenarios": 27, "devMockScenarios": 1, "durationMs": 19680 },
+  "concurrentSaving": { "rounds": 20, "expectedRecords": 40, "retainedRecords": 40 },
+  "screenshots": { "mobile": "375x812", "desktop": "1200x900", "count": 8, "syntheticDataOnly": true },
+  "environment": "Installed Google Chrome via Playwright; mobile viewport, synthetic touch and controlled clock",
+  "webKit": "Unavailable locally; no browser downloaded",
+  "realIPhoneTested": false,
+  "standalone": "navigator.standalone mocked for two frontend reload-decision tests; not actual iOS",
+  "agent": "DEV /agent/parse route fulfilled with a static fixture; zero real model or audio requests"
+}

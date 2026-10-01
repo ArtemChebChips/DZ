@@ -1,0 +1,1688 @@
+{
+  "baseline": "c2187032330c56f8c094489bf7198d2617fb06ff",
+  "baselineFileCount": 232,
+  "version": "1.23.58",
+  "meaning": "Учёт каждого файла базы и новых проверок. readComplete означает полный просмотр кода/контекста, не полную физическую или внешнюю приёмку. Новые изменения инвалидируют записанный hash.",
+  "counts": {
+    "tooling-reviewed": 14,
+    "context-read": 5,
+    "legacy-inventoried": 28,
+    "runtime-reviewed": 32,
+    "runtime-asset-validated": 6,
+    "pilot-reviewed": 2,
+    "historical-inventoried": 119,
+    "excluded-personal": 1,
+    "pilot-read-only": 8,
+    "shared-runtime-reviewed": 5,
+    "test-reviewed": 17,
+    "generated-removed": 1
+  },
+  "files": [
+    {
+      "path": ".claude/launch.json",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "79facdb4ac9b6cb04421f37274c2815d8c7611399ef241fcc2f79c6d2ba2b5d2"
+    },
+    {
+      "path": ".github/workflows/deploy.yml",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "b27d15a56ed6468903dd883f4fd79659d566157e848609d1cee6aef71062ae3e"
+    },
+    {
+      "path": ".gitignore",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "0a8fbf3530b2888f99acf10e4b645cfb6dfbbd7e8a55a71d8147348338237f23"
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "context-read",
+      "readComplete": true,
+      "evidence": "PROGRESS.md / UI.md / VOICE.md",
+      "reviewedSha256": "e5c8b2cf399861e1174a9d2991c57971b04b59e9ad3c07dc19db55b0b833fb51"
+    },
+    {
+      "path": "CLAUDE.md",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "2dd3e5056e2eb914fde6c217d3bba192095d983f6eba464a3ad76b6115287101"
+    },
+    {
+      "path": "HANDOFF.md",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "3cbdd8f024bccda1e4ed5f7d3b87dcf756623c52b5c7af5e58aadef9b7b22b4b"
+    },
+    {
+      "path": "README.md",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "443ae67776c8b5c7f35c31514d9cfd4484e24025c3118488612fa6d1674086f2"
+    },
+    {
+      "path": "design/README.md",
+      "status": "context-read",
+      "readComplete": true,
+      "evidence": "PROGRESS.md / UI.md / VOICE.md",
+      "reviewedSha256": "85e82a1f11b9b2ab79150ea8cff51ef9d51e54035ff57e31e1c32714288c216b"
+    },
+    {
+      "path": "design/academic-week.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "5b1d2472b813f7d3196f9508c92f3d2ad94f86891a6572ab03cec2828be4c4e2"
+    },
+    {
+      "path": "design/breaks.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "8ff6c8a306d66a4b01776d807bc74d6f079921be7e2e83f8968b7f55d087f2c9"
+    },
+    {
+      "path": "design/collapse.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "e0610efd6ccf14c64ebe83eb7faba847749fbf9fe486d32713143b06f0e351a6"
+    },
+    {
+      "path": "design/components.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "9cdba1afaebe2c7628d2b6bb9fe6331a46b5b37bbcd0a873788a41bd8aab7dc9"
+    },
+    {
+      "path": "design/current-interval.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "986762cfb8a8cb30bd60f8ffcc22d1abe45c368790d1749816cfb57968a8a517"
+    },
+    {
+      "path": "design/data.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "61122388fcf44d9497a04ca4d1084a742b111f29c129d29f5addeb260df850a7"
+    },
+    {
+      "path": "design/frame-meter.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "d2e7973c645dcd9db561b439bcf2ffe17260568a2f1287d57b3ed6eda6f82b4b"
+    },
+    {
+      "path": "design/history.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "c14d326209614b008e95c0f0097c5043f9eb747a8cb9c3b1b23dd3fede16c3dd"
+    },
+    {
+      "path": "design/homework.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "26e0c8f6694d824556d1d6986a80af2ad795e68aba30cb66634a79843437e64e"
+    },
+    {
+      "path": "design/index.html",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "0dab79dcc956aa08e7f8f3ebd906c8db817a564ac7df5f35947c52b8e014c6f8"
+    },
+    {
+      "path": "design/main.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "a7d6ae2c9eadf9b377fc70677d398fd78adc6a7c57d06d3eb98d1eb92817c67c"
+    },
+    {
+      "path": "design/motion.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "54a79b0375d14a0c2a0ad5228958fb5addbe35d3e4d8a177c8f00126f87c5810"
+    },
+    {
+      "path": "design/navigation.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "c4b0f39b853d12a77cc7e275fc3bbc1ed282d747250446393bba96b018031571"
+    },
+    {
+      "path": "design/public/icon-180.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "6ab659089238bbfecbbf8aa47e90c4460d9fea993a1c83bb039b01f964da972f"
+    },
+    {
+      "path": "design/public/icon-192.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "a7b914bd7a529061acd69200da7e3e3b1e72f2cce1eee312eea31352f58e3058"
+    },
+    {
+      "path": "design/public/icon-512.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "e61f3632e583705e923b579015a20d604f310c1ae150a1af8a6dfc70fe171e11"
+    },
+    {
+      "path": "design/public/icon-stack-a-180.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "30b245bd8d0e0fadb878a116758f0aaad4797630d48ba327763137a8fa5028ce"
+    },
+    {
+      "path": "design/public/icon-stack-a-192.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "79a54b995d10781a57d12e4335a38abda8dabe0024a6fe677c1d379b53ecae67"
+    },
+    {
+      "path": "design/public/icon-stack-a-512.png",
+      "status": "runtime-asset-validated",
+      "readComplete": false,
+      "evidence": "PNG заголовки/размеры 180,192,512 проверены, manifest/shell проверены браузером",
+      "inventorySha256": "9229ccbd7c1e43d605a1d4d159c465d957fd625be8f8f7101e1bbbb44b08f237"
+    },
+    {
+      "path": "design/public/manifest.webmanifest",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "fd338c269d36a40831d9f62d04c55d8a372e666891a11ac39131ff6d5488405f"
+    },
+    {
+      "path": "design/public/sw.js",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "518e3f9ec253cc170839050815e4f7d6891b3ed666c8128c18c8b40a334cafdf"
+    },
+    {
+      "path": "design/register-sw.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "726826b538797de425f4f3bac2c9055df3a946d1c84ca751c575f4a212e8334b"
+    },
+    {
+      "path": "design/schedule-day.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "a8bcc68f28dd24f93d3b2099139f524b6ff41eb16df3f3f66a993bb33a157e92"
+    },
+    {
+      "path": "design/scroll-motion.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "cceda1dc05f386c06946369dab7ba14875b6b97a4579805b87ab49447195444b"
+    },
+    {
+      "path": "design/segmented.tsx",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "b9291860e8fb2a4b49df2a8d2b37e465caa548f95dec8a6a0e1c2a27b6175fe2"
+    },
+    {
+      "path": "design/smart-input-panel.tsx",
+      "status": "pilot-reviewed",
+      "readComplete": true,
+      "evidence": "VOICE.md: чтение; math/mock проверки, без внешней модели. В панели только ожидание нового API сохранения.",
+      "reviewedSha256": "537bcc39515165855ea864bb8040d33d9fded0413fe59881669904439e0b8cae"
+    },
+    {
+      "path": "design/smart-input.ts",
+      "status": "pilot-reviewed",
+      "readComplete": true,
+      "evidence": "VOICE.md: чтение; math/mock проверки, без внешней модели. В панели только ожидание нового API сохранения.",
+      "reviewedSha256": "a6e324b423d13cd1d42af2d423922b258cacf41d68ffcd02ead7176315de640c"
+    },
+    {
+      "path": "design/storage.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "9cd5268c6ab1a5050bd6e6dd5bc876282535b6c35d00034b011cf541d59c2fbc"
+    },
+    {
+      "path": "design/style.css",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "3c3210897aafc4a6de49e6ce657996756a2e66851dba5f142f50e663cae5273e"
+    },
+    {
+      "path": "design/swipe.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "27bc5372180e73c6485da45b93bbf68294a36036fee620902e7aa6b962b85028"
+    },
+    {
+      "path": "design/task-groups.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "c65080034f4a8fb6f3a769be463bb34b677df9bac0fe8d337245c7ad4529e02e"
+    },
+    {
+      "path": "design/task-summary.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "3c5051f90fdee788dfcb6576364b9ea92c0fc8a5b1367b3aa9942675d932f5ad"
+    },
+    {
+      "path": "design/test-tasks.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "0a1ced15caf644a942ea3a13189aed6a72f98b09b3976614527714d5a4e9ccf0"
+    },
+    {
+      "path": "design/use-button-feedback.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "cb158c5c53dfdcc357e76b6beec4cca834dab279ba020bfbac8c671d690280a1"
+    },
+    {
+      "path": "design/use-day-swipe.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "c36583765d1cc0d5320c3dee1b098148ad829ea3b0e019162c1a72e0f9cd4116"
+    },
+    {
+      "path": "design/use-day-travel.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "aae4c516ea08c021888748eff07a9ccd0b58cae4b94ce7af956a0e0fcdf60ae7"
+    },
+    {
+      "path": "design/use-gentle-scroll.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "97fca2896021d2b35fdb425c6b6edc05b3371e6e1a36251fd77344154e2d763c"
+    },
+    {
+      "path": "design/use-input-method.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "f22e74e4f719a85629a4b46ed05a27b845b184437afb6d86326885ed9dd923d3"
+    },
+    {
+      "path": "design/use-scroll-boundary.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "050dfa1c5f6b2d2924bbae37fad239b01a3feb37c6ff04fa94692e2d4d8b45e9"
+    },
+    {
+      "path": "design/use-today.ts",
+      "status": "runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
+      "reviewedSha256": "9ce1a302d2b0c930a36d6ae7e137ea476251070422fce591e0765543deb9759b"
+    },
+    {
+      "path": "docs/AGENT_LOCAL_PILOT.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "24c0e13896fbf25ae0245e052f5dd0001d2763d5fce28b30b3c905dbcbefe064"
+    },
+    {
+      "path": "docs/ASTRA_WORKFLOW.md",
+      "status": "excluded-personal",
+      "readComplete": false,
+      "evidence": "AGENTS: личный материал, не меняется в аудите",
+      "inventorySha256": "1daa2c9a8ff8070fe1cae8c47a8929b491f8086d9c3bbd460c47a2ed75e1e8d7"
+    },
+    {
+      "path": "docs/CURRENT_HANDOFF.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "e8ef7907c76ba01bdd1400b93f4c5f744480ea4d0adfb28cfa66c495a59f8618"
+    },
+    {
+      "path": "docs/DESIGN_POLISH_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "2382998c94710da6044703e18bcaf2d47c9fc6c42e3c4296bdfb8816646e5441"
+    },
+    {
+      "path": "docs/DESIGN_REFINEMENT_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "8519d1c2cd01c6ab351ed5434732ef8108c9feddef4aaa5f7c3d3ca841c58af0"
+    },
+    {
+      "path": "docs/IOS_POLISH_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d33cee3437c7c1d5ea656ba148dbf1adf6bd123a775df9f856cf782c5ddb21ac"
+    },
+    {
+      "path": "docs/IPHONE_FIX_PLAN.md",
+      "status": "context-read",
+      "readComplete": true,
+      "evidence": "PROGRESS.md / UI.md / VOICE.md",
+      "reviewedSha256": "9f95eab35b7b0cd60c39b3dfd9e67830da0fdf3cd0dccfc7c2114aa10b4e99ca"
+    },
+    {
+      "path": "docs/PROJECT_OVERVIEW.md",
+      "status": "context-read",
+      "readComplete": true,
+      "evidence": "PROGRESS.md / UI.md / VOICE.md",
+      "reviewedSha256": "76a9931ced9a48675d09259b9ed0de47bc7f91d2c690a202f4bf8b4bdf0cd161"
+    },
+    {
+      "path": "docs/REBUILD_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "070bf5de58f8cc7fb15fb32fb901cff2541f81d91e52ddf613ea84998203624a"
+    },
+    {
+      "path": "docs/UI_NEXT_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "eed766a734c5ee4187be09a54593f34b579bec9fc717fa966cd26a6b4ed7276a"
+    },
+    {
+      "path": "docs/UI_POLISH_PLAN.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "12588e1b5e80b22524bddaee0d201d8e3d899a8a43a464aa2cb77b58e676c541"
+    },
+    {
+      "path": "docs/design/concepts/PROMPTS.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "39001d1736a664f218461b1043264649862133e75678c2f923d20b8a6d8c9c01"
+    },
+    {
+      "path": "docs/design/concepts/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "608ec39c03997f01de01899b877ba76dc9cc50a4f9775fd1ae1e0047c503a16b"
+    },
+    {
+      "path": "docs/design/concepts/a-line-v1.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "60907f3cbe69dc7ac72fa6da31a4a45031b8d183c49044016478b80bbf7961f4"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/01-fold.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7ac2094e8263827eeaf5c9d7624d5ac8dd192346a160dcecbf72912dedbc4a42"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/02-orbit.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5cfba2243b4d3835475ec78f408a0683fc0280d7126db714b0f9348a33995a8e"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/03-stack.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a41f6d1a62ee0bf561ebd38859ddbe2ebc2e3a63df8b923fa9df4d09aa4edcb5"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/04-path.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "988981e5b5913428d0135c8e74ad71b8ed96bd238859930ece82cfca95908ae6"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/05-sun.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "4721dcc1fd112a658ca1ed7be12d74534213569526bb24248d08872b53645519"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5340c6643507e6a36eded32f79be93e9718beac5a328d595f49a282c23ae836e"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/stack/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "b8ea33a01c96980d1a664d495ccdcd0c9658c5e8ff2019425bdf378aeb531c6b"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/stack/stack-a.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "6dba32d61b96497fb0fc14452a9a0ccff1f3eb3378f4bafae66f20ac52b995fb"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/stack/stack-b.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "16553aee8e0a897fc4b28c8ec2ca9b824f346eddd2d8ce65fbcc196c60a9326f"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/stack/stack-c.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "331d53e89950b44516afd4eb9e02d3eece25d0030fe60246674bfd6dbc0759c3"
+    },
+    {
+      "path": "docs/design/concepts/app-icons/stack/stack-d.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "53ee369ddd80121ed846de16ce1f82fefb41f6f29d618bc4c8df7ebbc0fd2f15"
+    },
+    {
+      "path": "docs/design/concepts/b-pause-v1.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "da34388429ba994da7a4ff31a342e7f878d51248169fbf61e4334f97ae5cf77f"
+    },
+    {
+      "path": "docs/design/concepts/c-rhythm-v1.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "bba8e810aa8e5f3d16172de437f6ea39b62ef2cae3e885b2e292b1f02b2b99d8"
+    },
+    {
+      "path": "docs/design/concepts/n4a/1-contour.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "bb4acb0a9514d21befac7e28be957d7c068e112faedf21daa2627e13a74f71a5"
+    },
+    {
+      "path": "docs/design/concepts/n4a/2-fill.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "0857f9204444fe8d84a314cac1cd1303c589a7ec9014958cc31dd9b76203d4d6"
+    },
+    {
+      "path": "docs/design/concepts/n4a/3-balanced.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a0e72d06188be995a63428b7e35eff09a58d1875c2948e1f5c68dc4eaac40ecf"
+    },
+    {
+      "path": "docs/design/concepts/n4a/4-time-badge.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "b9be230666bc70bd5c9cf31b115ddf31ff22e40bf34b6723dfb7bd5524125866"
+    },
+    {
+      "path": "docs/design/concepts/n4a/5-time-column.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ee20a340a77b00a5119b9281a1cd940af4072365b9be99cc546c6aa5b3addee7"
+    },
+    {
+      "path": "docs/design/concepts/n4a/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "00c2e55e98520d022fb640672297232fc381e35878a425c87bfafc21b12d1455"
+    },
+    {
+      "path": "docs/design/concepts/n4a/break-a.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "1450deb04864bfa47bb74d1b437a06f9b37ae1025116dbf1ade51f6a3b07f006"
+    },
+    {
+      "path": "docs/design/concepts/n4a/break-b.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "441d2c3a014a89246e75ef132dded358564b9ffd451d53837a144668bde5c742"
+    },
+    {
+      "path": "docs/design/concepts/n4a/break-c.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "c535bda40f5d747be6fca90dcb7c93a84a6c2a9340fb843b17a42c68e0211c38"
+    },
+    {
+      "path": "docs/design/concepts/n4a/break-d.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "dd8f75c69f114fa95d31bbd5ff498cd3d4a8c30191f0a183d77fc6440b3e135d"
+    },
+    {
+      "path": "docs/design/concepts/n4a/prompts.json",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a64fd41b0cdfc342e0c02ee9498437a96f5d9a33225c8010738a2bbf206497a9"
+    },
+    {
+      "path": "docs/design/concepts/n4a/reference.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "6455b1482f63a2818a29acd275addd2acaf6de385e686e9dde31e924599f81c0"
+    },
+    {
+      "path": "docs/design/concepts/round-2/PROMPTS.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7f28606fe374f62687a9b780cc3a30ecaa259bab0819b535a1dcac38b12c4d66"
+    },
+    {
+      "path": "docs/design/concepts/round-2/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "574b3d983cdf436e5c9db1f661ec009ec2bd7e117ac543051b78187d7971d0ca"
+    },
+    {
+      "path": "docs/design/concepts/round-2/a1.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "674e2a94f60c064f1ea62d6a7fb86619e1cdeaa95a40f7da9ddc12ea2901f08d"
+    },
+    {
+      "path": "docs/design/concepts/round-2/a2.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "caf0b4e3d6a9b5d156528befb0baabd92bb9da72c9d3e84cfecf55165468078d"
+    },
+    {
+      "path": "docs/design/concepts/round-2/a3.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "43b87ff9a81ed45f25f948dcb47bad902ab09900b65e1d0da030f01d25ccdea8"
+    },
+    {
+      "path": "docs/design/concepts/round-2/a4.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "e34b46d83736e2d3baebd39170dc042f14ff3f957237dacd04ddae904fb77c00"
+    },
+    {
+      "path": "docs/design/concepts/round-2/a5.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "c664a91650f8b05548b0153eeec352dbdf17795dcae152cb2283f4a647446b2d"
+    },
+    {
+      "path": "docs/design/concepts/round-3/CA-HYBRID.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "b5bfb66c5cac61cde4b80ebd5f36e9ee8abe8d97a0e65a28b91889d8e470c780"
+    },
+    {
+      "path": "docs/design/concepts/round-3/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d3b2817ed941df68925b2b6a6c77a125ffa4ea3f1dd4b73785cb2d0af9b31b91"
+    },
+    {
+      "path": "docs/design/concepts/round-3/a-day-first.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "8a2f24d85baf201a2e0aa563ba08656c3288ce5dedcd5a8c11a97f18d54366a1"
+    },
+    {
+      "path": "docs/design/concepts/round-3/a-day-first.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "90f4b3797273037ea370bb56608625dd876d0bc251ef761483e4121d247a7b5f"
+    },
+    {
+      "path": "docs/design/concepts/round-3/b-symmetric.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "db3326bfd42cfdb507490ad5bb55692e0eeab0c93107aa22e30f4f61ca99a427"
+    },
+    {
+      "path": "docs/design/concepts/round-3/b-symmetric.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "52298c761514afd7b865401a46722599c52c8e2da285061a7df94731de696451"
+    },
+    {
+      "path": "docs/design/concepts/round-3/c-compact.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "3a10b39d495a142d4b2aa246051f630da722df6e6756434a2f6bb34c5e632bab"
+    },
+    {
+      "path": "docs/design/concepts/round-3/c-compact.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "945bb59d1e6189f1c9bf8727718d197bae2d9dd9336fec142ff3a611eefb0c9b"
+    },
+    {
+      "path": "docs/design/concepts/round-3/ca-final.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "f67471016132a7fdbd82f8cad940e130c42e24b3cafcf7b5112f254627458865"
+    },
+    {
+      "path": "docs/design/concepts/round-3/ca-final.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "526342a2c77abf8f908da851a8905e89864c11d9eb5dabbab08541c55520e6a0"
+    },
+    {
+      "path": "docs/design/concepts/round-3/ca-hybrid.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d2e47b8cfd0c71b8c96e1a9ceb94f316acf224c4f39e6a6644beb7c6b6e440dd"
+    },
+    {
+      "path": "docs/design/concepts/round-3/ca-hybrid.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7dd0636c059aff70bc0de9934806d96ba4bd823f24fdeea8e7946a7816eca9fa"
+    },
+    {
+      "path": "docs/design/concepts/round-3/refinement.prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "fb57edc790ac3abe69143a6e0d3c50307bbf23df7e69f04670616c9b4aff2afb"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7c7b7b08d2cd24b0e39bcdffc063927002a1a83e1e686ca861e52034011f76ad"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/index.html",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "c785bc53b775afd823a028978d1d7af7ab56339777ece9c6078e238a24667369"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/options.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ca619b219017fb1b1ae415617ed820392d98af84c0fe67cf0c5c320668a8799e"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/options.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ce7b735a37be7a04c880c94c679dd1790a90be12741a5fb4432a9ffc2cd5c56a"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/01.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "afdb491e5543033a1bff97efb16be3d0832ee778e5c1f4a09977ab437367f1e4"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/02.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "774cca75e54231de61bfa78db5504fd197122e3b66f6f16c64be3057c57e95da"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/03.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "02d74503e3b3a27921de0026cf8ebd9baefe7c619f7a016602b6cef691f2cf00"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/04.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ecae34b020faa4660095e492e873c673d4bf487d265cc15f9f6268f93fc1126a"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/05.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "e84b47894af32ede8f36c5eadd504d17ec3e81d2b9bf160031d4953673c0f095"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/06.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "2a291dba329d735e4fc94668ae6dca047b4425e0292aa805f71bb6478051acec"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/07.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "39536a14380a6cc732449447297f9230e2b3a8dd1ff9f92ff70d7986b04d1168"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/08.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ddd9d4fede9a334166856778dadb36b41b08b404be2413d9dec3ecf5a208ac36"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/09.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "def525af41bc65dbd81d8c25da01ca0e1ef024ef20e7d65e469b2eba2625ed3b"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/10.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "fda266639df2365ae3755794a254948414df406574a5276d0f5d5210a26e0168"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "59554dd394714824a070e6971375ba78b204f9492dd7502a4a55cac5fca38dc5"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/options.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "fc721e30c2c15cbecebb2180db436b70fcbac5c59faa3f6365dad868429b97ea"
+    },
+    {
+      "path": "docs/design/concepts/schedule-icons/round-2/options.svg",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "cd79a304487f9f63b0517a5225ecad0029447b53d8fd5403e1d48ab7c7067c73"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5ddb259ac7331a7cacabe34e90e36be5402fd285a0e873fd842f4e6e8ea67314"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/a-prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5c72b18a06df45ba2fad1c62a9613bb86e36258fbfd2faa2ebbd1f2ac0080e40"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/a.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5899d1f8ae23718533b8473113fd932225ea82d05c76eb389d7d9070c20e71db"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/b-prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "1f824ce66ccc06ea99d1143af616641ab21a7dd7a5ed60d37b590a706f1ce036"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/b.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "b448e5a9a990e19cbcfa4af23bf325a94859ae02f780327366cc5032cda0c8ba"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/c-prompt.txt",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "cc51474d95d6ff601a796bd2b353b632dfb1b9ad70a7f60ab2d5f1baae4aa02b"
+    },
+    {
+      "path": "docs/design/concepts/ui-polish/c.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "f72e20cda4582c6acd9192eab94b243d17649ddcff2d504bdeaeca58281c1da2"
+    },
+    {
+      "path": "docs/design/implementation/D1-D6.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "f78d4aabd6db9b16294c756e616369a39e8da1dca03e3925ae1065260519bae3"
+    },
+    {
+      "path": "docs/design/implementation/N4-N6-1.23.41.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a4c303a1ca2b09237c8c36391a1e4017f1fcc480ea93d1e4ba8de7712bd64c95"
+    },
+    {
+      "path": "docs/design/implementation/N6-1.23.42.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "500db3a022ed704394fcbc6902d83b63b4e6026fc8d6e689f8b3aeec4dc4efde"
+    },
+    {
+      "path": "docs/design/implementation/P1.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "1ead54386b3d757f1033a35ffe26e5d3d31902dcfb15670ef573db03921a4558"
+    },
+    {
+      "path": "docs/design/implementation/P2.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "1c6c43a5e642f08de6a47fa1442f09edabee45c1878b66e9e55c2ed3a57b9dc5"
+    },
+    {
+      "path": "docs/design/implementation/P3-P4.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "1f0a6d6a255c0b40578d0fc7d217a476058fbe3d7d3335bf80eaa7be21135d7c"
+    },
+    {
+      "path": "docs/design/implementation/P5-P7.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d70810fe321b74da20f3bf7d292a463e7c9fb5da2967a90aa69f3f10f5b14e9d"
+    },
+    {
+      "path": "docs/design/implementation/R2-R6.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "12d5a08fbe6af389ef745dd0db5e0f940c4e8c772077f42aed8fe0f8a35886b6"
+    },
+    {
+      "path": "docs/design/implementation/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "b670c5e818166dc3bba850a5b0238454523e19046358dc4d614ea747aad6ef13"
+    },
+    {
+      "path": "docs/design/implementation/U6-1.23.28.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "ece153f5b816b4d11d83d8051d5e132ed402b89d3fd5300e664f92a1b314b74c"
+    },
+    {
+      "path": "docs/design/implementation/editor.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "f13eb796ca9bd85ca8c1a463e7ff519b65bf0b42a6c69f44d6f1c93cce5865ea"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "8dbfd768f133788feda225445fe949841736ef7ccf9d75511a9c957665e37fae"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/calendar-after.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "0c6130a00044663fe854adba1525e79fbc14a58d832bf442305aab49a66d229a"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/calendar-before.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "077267d41fc4de968326a48bf29ac18d6d38f06bc81d0f9669847fcf297acb45"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/date-circle.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a400752d3c0ab390f3e4e7c561726bc7c3bce2ed927fab35ac9eb799d2d30985"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/month-moving-1.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "db2fea37f06afe3648319e0986617f1055b4a5d6c474fd6cf1fa05b3bfcb2c5c"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/month-moving-2.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "81ee0d7de9a9a936d8cf7fd7740511832d97a7158dafe30de97c8fc7d0843b7e"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/production-calendar.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "215fd6ae6709d7247850cb6e0d1dc1b797443194109c53d246e781b4872cd48a"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/production-return.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7cb0de0f7c2fd2000b6197fa17c575fb5f98b766899f7af5a40b6b0acd8d36de"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/standalone-bar.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "2c0ccbfd352b659960c56c62fe7515ed82196b5f5b313fe1251c3022788f9f5e"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.52/viewport.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "94c6854e8b8c8dabd4f66c5e501fe9d3392307ce8de636e084f4e2d008f3b507"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.53/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a4407e7cb904cfc6a26ef3707e6f09aa5ca2879437edc33bc8cbebceb2a7efb9"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.53/calendar-webkit.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "7572b1203c1a4403e205ef070dfe0ea267409d926307f6d8812387ea88c5cf66"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.54/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "3a38d83a34399913bdada174de5abb0b32a147a902127db4f4f67fb378a61c1a"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.55/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d00e0d856435717748933325a000befffb4451099ea3f3bbdee93458bc8f2616"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.55/calendar-ios.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "fd2d664dbe3b3296eee0881e1a5481614ed0a1f5c7794de38bcacd8cfc6e67e5"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.55/calendar-webkit.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "f4f4948cc9d15649a054c976e9702e5520bab4a9f5de6f5f35ec2a9bec97a478"
+    },
+    {
+      "path": "docs/design/implementation/ios-1.23.55/month-ios.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "fc28a930e22e841843d244fe1fd39dc88f30f2b9adb48b1d2d7da805e729d331"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/README.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "faa756c7219a8cc5aae2124c3f0875cded7958170df73a70a5c8bc6f1fc82ec7"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/after.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "0099c6b017c9b8f9168e78388896e0f31dc517d9368ecc5990abcf1e7e58f076"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/before.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a97defc87cff99beb948f8557a4377d2e7095a5dbd83c4f6be62bd3c167c3d26"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/keyboard.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "33339bc433b7fef80ad65d821eee0bc9b16041cc5a6288ef1aafb299ecac24f5"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/landscape.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a57b7988f54358f8e3f473e591f7d32c17370886dd02485cd2210cc8500fc5db"
+    },
+    {
+      "path": "docs/design/implementation/ios-27-layout/measurements.json",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "6d4b36fcc3bc84e831c9e7104b659c68df47315bc8727287d2a87a281fa03c91"
+    },
+    {
+      "path": "docs/design/implementation/schedule-desktop.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "5c9dd4468e3e80431dac8c859948bcd4e5aca44a2b508e718f85f4acd88530cc"
+    },
+    {
+      "path": "docs/design/implementation/settings-dark.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "59747baa1661ee5ddf6b57509220557a8374d9475f1798556f96b5e86c35886b"
+    },
+    {
+      "path": "docs/design/implementation/tasks-light.png",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "d0588e960d2df0c8e3a89cb115fed659f989a6d2464c43cb1b285dd124e3ac5b"
+    },
+    {
+      "path": "docs/design/proposals/WEEKS_AND_TASKS.md",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "c533ca473cfac7d6d393ce9fcecbd5e1fca7c05351e1934a603141e9b194f05d"
+    },
+    {
+      "path": "docs/design/proposals/weeks-preview.html",
+      "status": "historical-inventoried",
+      "readComplete": false,
+      "evidence": "Концепция/прежний отчёт/план, не исполняемый текущий код; перечислен, полное прочтение не заявляется",
+      "inventorySha256": "a4aeb14d827a54dbc9716163067eda3ba45477d00973ae04de86c2447ca18e6f"
+    },
+    {
+      "path": "index.html",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "d98b99ac935506502949f3e35414136ab70ac2b7804e3c67e89157545d656d7e"
+    },
+    {
+      "path": "package-lock.json",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "3735c613d956e7ee9af57cee7a842634d4d2604398a6e3bf742c40e13c318ae4"
+    },
+    {
+      "path": "package.json",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "9f3062c35e253d18e780d6355056f5de9abc06834a2de7b97abb88ad2f0f7de7"
+    },
+    {
+      "path": "public/icon-180.png",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "6ab659089238bbfecbbf8aa47e90c4460d9fea993a1c83bb039b01f964da972f"
+    },
+    {
+      "path": "public/icon-192.png",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "a7b914bd7a529061acd69200da7e3e3b1e72f2cce1eee312eea31352f58e3058"
+    },
+    {
+      "path": "public/icon-512.png",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "e61f3632e583705e923b579015a20d604f310c1ae150a1af8a6dfc70fe171e11"
+    },
+    {
+      "path": "scripts/assemble-pages.mjs",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "67cd3216bbf05a76a171bca1e4b41145b39c1b6243837385461b213160098820"
+    },
+    {
+      "path": "scripts/check-audit-coverage.mjs",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "906c7bb1cbaa1c8b6fafda25a055ab44df68a0d5d36eb5d138ee563cdcd8aed6"
+    },
+    {
+      "path": "scripts/prepare-legacy.mjs",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "21d26b9f675c5437610f560b035872aada333bf782dd7ba787064071e476a4aa"
+    },
+    {
+      "path": "scripts/voice-local/.gitignore",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b"
+    },
+    {
+      "path": "scripts/voice-local/README.md",
+      "status": "context-read",
+      "readComplete": true,
+      "evidence": "PROGRESS.md / UI.md / VOICE.md",
+      "reviewedSha256": "41a59ce30a29a0acb6a23201538f9a27594fc6934ef37828aab9a7733518c2ea"
+    },
+    {
+      "path": "scripts/voice-local/agent.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "7250ce9eb9e5dc45fa4353a44cc37e69a4342a1081245ff8e3b47ef6e1c0c34f"
+    },
+    {
+      "path": "scripts/voice-local/benchmark.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "93160f3c22234d33ca41b59d7f288f47ce177897da89206b99eac263ece203dd"
+    },
+    {
+      "path": "scripts/voice-local/check-identifiers.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "0cfa4531c88ad3be539e201d13f3f98478f228c7228dec472120dc5577c963f8"
+    },
+    {
+      "path": "scripts/voice-local/claude-probe.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "24b03b94a798b69a91267226e33e681af877100c370b4d151f8bad4abaa23021"
+    },
+    {
+      "path": "scripts/voice-local/download.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "ec20b91e7a9002047dca54686dd1d710a0bd638f24b7c56ecaae5ec3a71b7b69"
+    },
+    {
+      "path": "scripts/voice-local/requirements.txt",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "c1cf06c48749841923bf390e15bdabe95fc6b4ebb59d172cd5dd780aea5c41ff"
+    },
+    {
+      "path": "scripts/voice-local/server.py",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "c3ceeabdb2c7e9af5d368a2166753611fafbdf3aa8da90c439382e658f61b57b"
+    },
+    {
+      "path": "scripts/voice-local/start.command",
+      "status": "pilot-read-only",
+      "readComplete": true,
+      "evidence": "VOICE.md: agent/server mock-tested; CLI/download/benchmark/start не исполнялись",
+      "reviewedSha256": "0f706fca51b8381823abd1dfa2e23eb34285c5d654e0d30f8e666dfcd12a80fa"
+    },
+    {
+      "path": "src/App.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "bd37c565a36a92247d468cf3c193db59e62cf5b709db5c181cbec8c0795ee17f"
+    },
+    {
+      "path": "src/components/BottomNav.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "53fc1efa0f5e9f6e7783fc17e0fded0da02c519dde1ce4f0bea149a692a1ba78"
+    },
+    {
+      "path": "src/components/DayPicker.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "58e3f282189f70bcf0bbffeb07558f2f6e1146f87faa2ab72edc051e49a6230f"
+    },
+    {
+      "path": "src/components/LessonCard.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "3e928fd3bf0b4cc3300c04a4a2f7bff6af1a43ef15e833bc8395db1bfc117486"
+    },
+    {
+      "path": "src/components/TaskEditor.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "eb13abe7080c7856cc8062fa14a290414dc0365ce2b8a65a3567bd9b117c79f6"
+    },
+    {
+      "path": "src/components/TaskPill.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "c75eda8e66ab53c5c8e835021244b6350c56caf3f65348dbc3124a09da14301a"
+    },
+    {
+      "path": "src/components/icons.tsx",
+      "status": "shared-runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / TESTS.md; общий модуль текущего приложения",
+      "reviewedSha256": "e75f70bf6ef23bc2be238df405e480b90f7d6946a1831dc367752398ca01ae99"
+    },
+    {
+      "path": "src/components/ui.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "7f47bdb4d4edf0723ccbe0540c216c757f209187507bba7de4bbf7955c20586f"
+    },
+    {
+      "path": "src/data/schedule.ts",
+      "status": "shared-runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / TESTS.md; общий модуль текущего приложения",
+      "reviewedSha256": "4c9b8101d99bb9de3829634794fd4fc8971802dfe455c147c1bf8fbc4f640712"
+    },
+    {
+      "path": "src/index.css",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "5c976d108481a69c4c8950b86d16542423b30ce2cb716f375afff97801bb35b2"
+    },
+    {
+      "path": "src/lib/collapsed.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "c2c70e9491a95620df98b75ae2eed483d8121c14269258886b50916cd6fff5f6"
+    },
+    {
+      "path": "src/lib/dates.ts",
+      "status": "shared-runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / TESTS.md; общий модуль текущего приложения",
+      "reviewedSha256": "854a711bb5668515a234309d41c8c1e02ba990cce29774bc8645e3151c7e8dc6"
+    },
+    {
+      "path": "src/lib/haptics.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "434d40cca56035cdf50d7bfb020063b1aefd09fef404d1fdb304a89cef654bbe"
+    },
+    {
+      "path": "src/lib/palette.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "8afb7c227ca4897fde70daa267eb68fc0f9fbbf958626a7d35fbe80075c29c3c"
+    },
+    {
+      "path": "src/lib/router.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "648cff399ed2135e0bf89b5608b7f0f45bf6a2dd69011e4b247b6c3e9252d023"
+    },
+    {
+      "path": "src/lib/swipe.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "1b8b7d77ab313c163218665015e34d9fd16a1ad1180b12f5aac629f1f730a871"
+    },
+    {
+      "path": "src/lib/theme.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "a41c5c8b1cba5928a8cd5a560df21b642f832f9ac9babf81ebbd00b3f07b139f"
+    },
+    {
+      "path": "src/lib/week.ts",
+      "status": "shared-runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / TESTS.md; общий модуль текущего приложения",
+      "reviewedSha256": "cc1f9b8cb66cdfa94dc6d6d9350daa7f6ce0253a2fc9ba34d75d59e148fe94cf"
+    },
+    {
+      "path": "src/main.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "9cb403803be33c29cf372688220b279eb07ffe25e650f435236549ae72f841c0"
+    },
+    {
+      "path": "src/screens/CalendarScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "27b747834c2da9afa3b53d3dd77bb782a8b79b8995edff49672aaa44cc9d2e13"
+    },
+    {
+      "path": "src/screens/DayScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "c818500c4b1e15c9a13bfdd76d601d944e96b66eb8df1535e79dbe562a222248"
+    },
+    {
+      "path": "src/screens/ScheduleScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "ed5297a1625b1027ac3b2141041db079d28cfe5ff5f5bc151f28b1f9e878e712"
+    },
+    {
+      "path": "src/screens/SettingsScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "12cfcc2fedad74f803756ed17efc2ad1520c545990d60d99c879155f79fdd41d"
+    },
+    {
+      "path": "src/screens/SubjectsScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "e49d429babe9b46be85d77c7a1789e085bd11d6a1ee4c11a025c098bd5228adf"
+    },
+    {
+      "path": "src/screens/TasksScreen.tsx",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "b735899b50446fc41e435aa908a6beadde3a729d3e6c74ab72c5730ccda52f5c"
+    },
+    {
+      "path": "src/store.ts",
+      "status": "legacy-inventoried",
+      "readComplete": false,
+      "evidence": "Исторический вход; отдельный частичный аудит codex/audit-legacy d32abd2. Не объявляется текущим runtime.",
+      "inventorySha256": "b17c182cfb448208605911a4e264c50a956007a4e0e7c0f3b1276850af2df271"
+    },
+    {
+      "path": "src/types.ts",
+      "status": "shared-runtime-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / TESTS.md; общий модуль текущего приложения",
+      "reviewedSha256": "91fb7f5c79c7dee6a8d990d39fbe09cedbb68a2dc978ccc98b52391f6dce76a8"
+    },
+    {
+      "path": "tests/breaks.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "6f54417e193e667743a305ed40834526eec65f5ea832f7f2f8f935a2cd1881cd"
+    },
+    {
+      "path": "tests/browser/audit.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "b2f9107dd1bf4d29261a7040899f93334bc4523fed09c49ce36346827d82a63b"
+    },
+    {
+      "path": "tests/browser/capture.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "8a0f24be14761f040d8b2b5d775f1e97edd12db3fc3535c14d01ade9ac66b254"
+    },
+    {
+      "path": "tests/browser/pwa.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "8ce25dd919770587e6fd861992d399307e85f6067b310d6cb772fe623e1ec0d0"
+    },
+    {
+      "path": "tests/calendar-regression.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "1b3e8e4e7af6a39b8e58a05c83efb5a1c935443b8ed3a2e260c94959fa220b61"
+    },
+    {
+      "path": "tests/current-interval.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "297024a65fbc8861e875d897587fecaace44cc1e82746357a8b9c98300dcdb1e"
+    },
+    {
+      "path": "tests/history.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "eefe9bbe45066e3716b73141390abcff80804a0dd541f43c70ea2d5007cf6e8a"
+    },
+    {
+      "path": "tests/homework.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "0a15a1809c10832226f492876a3c691c0b41e40304c62232e5d1f2d02074d8bf"
+    },
+    {
+      "path": "tests/motion.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "ce0623373689abdb8c04fe45fb04bb9d0c098b2447a6601619e985d2f8af5d40"
+    },
+    {
+      "path": "tests/notes-beta.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "d4829b35a022559e87a365a8ecd206ca8fed777e13302d0bd1d2c2a6ba7e8f13"
+    },
+    {
+      "path": "tests/scroll-motion.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "2a9ca6e4b67952f483b150c2d0b339964f4f4f1aafaa63d9e61064bf5dd6f4ac"
+    },
+    {
+      "path": "tests/smart-input.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "203f673ec492c75f8217878c50509e7d373bf8fee2e76cfcf48aae8f1680d521"
+    },
+    {
+      "path": "tests/storage.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "87ba96bd54b7c865016c1eea88cd4deb9b81495320ed78c0bd8664dd21e2f6fc"
+    },
+    {
+      "path": "tests/swipe.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "a788799aca7ebee6fd8c19a3514d2993bae910da04136d947552446e93ba9131"
+    },
+    {
+      "path": "tests/task-groups.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "81c26d02f22ac139083b35049951dfd4c7c4ee4f68e045bfd871399722264357"
+    },
+    {
+      "path": "tests/task-summary.test.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "6821e5eb923f03708f736652e34c96069d8f8b65b5592a0c529a1f4df8e51779"
+    },
+    {
+      "path": "tests/voice_local_test.py",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
+      "reviewedSha256": "4da38fd811f8565ea3e15d92c086b210525a103c84819644d631ffbc5d6d3325"
+    },
+    {
+      "path": "tsconfig.design.json",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "4f8473e56a515e8fea70bf48d78c0e33c8ff3a4141f8301fa095fcd5749a622b"
+    },
+    {
+      "path": "tsconfig.json",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "55a5c53cb98a473865ef0c3399c581e7383106bf4a0d3fa68a487a89c7a3b50d"
+    },
+    {
+      "path": "tsconfig.tsbuildinfo",
+      "status": "generated-removed",
+      "readComplete": false,
+      "evidence": "Сгенерированная build metadata исключена из Git",
+      "exists": false
+    },
+    {
+      "path": "vite.config.ts",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "ace28d98cb42c452a93552a2f9ec753af4e4d0cecd39733c2ce1d652ea20f423"
+    },
+    {
+      "path": "vite.design.config.ts",
+      "status": "tooling-reviewed",
+      "readComplete": true,
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
+      "reviewedSha256": "532206c76a5fbe9c61c110c3c1b99d3cae9c58862d9fad544a0dd476e3cc7055"
+    }
+  ]
+}

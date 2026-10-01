@@ -17,6 +17,7 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
   const heading = useRef<HTMLHeadingElement>(null)
   const pending = useRef<(() => void) | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const backdropDown = useRef(false)
   const [closing, setClosing] = useState(false)
   const finishClose = () => {
     const after = pending.current
@@ -25,6 +26,9 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     after?.()
   }
   const close: CloseModal = (after = onClose) => {
+    // Асинхронное сохранение может закончиться после закрытия этой формы.
+    // Его старый callback не должен закрыть уже открытый новый редактор.
+    if (!ref.current?.isConnected || !ref.current.open) return
     if (pending.current) return
     pending.current = after
     const duration = motionDuration(true) * 1.4
@@ -36,6 +40,10 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     timer.current = setTimeout(finishClose, duration + 100)
   }
   const dismiss = () => { if (!pending.current) { if (onBack) onBack(); else close() } }
+  const outside = ({ clientX, clientY }: { clientX: number; clientY: number }) => {
+    const bounds = ref.current!.getBoundingClientRect()
+    return clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom
+  }
   useLayoutEffect(() => {
     const dialog = ref.current!
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -85,7 +93,17 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
       }
     }
   }, [])
-  return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }} onClick={e => { if (e.target === e.currentTarget) dismiss() }} onAnimationEnd={e => { if (e.target === e.currentTarget && e.animationName === 'sheet-exit' && closing) finishClose() }} aria-label={title}>
+  return <dialog ref={ref} className={`sheet ${variant ? `${variant}-sheet` : ''} ${closing ? 'sheet-closing' : ''}`} onCancel={e => { e.preventDefault(); dismiss() }}
+    onPointerDown={e => { backdropDown.current = e.target === e.currentTarget && outside(e) }}
+    onPointerCancel={() => { backdropDown.current = false }}
+    onClick={e => {
+      // Перетаскивание из поля наружу тоже ретаргетит click на dialog.
+      // Закрываем только настоящий тап, начатый и законченный на подложке.
+      const startedOutside = backdropDown.current
+      backdropDown.current = false
+      if (startedOutside && e.target === e.currentTarget && outside(e)) dismiss()
+    }}
+    onAnimationEnd={e => { if (e.target === e.currentTarget && e.animationName === 'sheet-exit' && closing) finishClose() }} aria-label={title}>
     <div className="sheet-inner" inert={closing}><header><h2 ref={heading} tabIndex={-1}>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={press(dismiss)}><IconX /></button></header>{typeof children === 'function' ? children(close) : children}</div>
   </dialog>
 }
@@ -135,11 +153,13 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
     return () => { animation.cancel(); outgoing.cancel(); heightAnimation?.cancel(); resize.disconnect(); reduced.removeEventListener('change', reduce) }
   }, [page])
   const d = parseISO(page.month)
-  const shift = (n: number) => showMonth(toISO(new Date(d.getFullYear(), d.getMonth() + n, 1)))
+  const shift = (n: number) => { const month = parseISO(page.month); month.setDate(1); month.setMonth(month.getMonth() + n); showMonth(toISO(month)) }
   const grid = (month: string, preview = false) => {
     const date = parseISO(month)
-    const first = toISO(new Date(date.getFullYear(), date.getMonth(), 1))
-    const last = toISO(new Date(date.getFullYear(), date.getMonth() + 1, 0))
+    date.setDate(1)
+    const first = toISO(date)
+    date.setMonth(date.getMonth() + 1, 0)
+    const last = toISO(date)
     const start = mondayOf(first)
     const weeks = Math.ceil((diffDays(start, last) + 1) / 7)
     return <div className="month-grid" inert={preview} aria-hidden={preview || undefined}><div className="month-row"><span aria-hidden="true" />{WEEKDAYS_SHORT.map(w => <span className="weekday" key={w}>{w}</span>)}</div>
@@ -165,7 +185,9 @@ export function Calendar({ value, today, onChange, showMonthShortcut, kinds }: {
   </div>
 }
 
-export function Editor({ draft, today, save, remove, close }: { draft: Draft; today: string; save: (draft: Draft) => void; remove: (id: string) => void; close: () => void }) {
+export function Editor({ draft, today, save, remove, close }: { draft: Draft; today: string; save: (draft: Draft) => Promise<void>; remove: (id: string) => Promise<void>; close: () => void }) {
+  const [saving, setSaving] = useState(false)
+  const submitting = useRef(false)
   const [value, setValue] = useState(() => {
     const lesson = taskLesson(draft, lessonsOn(draft.due, DEFAULT_LESSONS, ANCHOR_MONDAY))
     return lesson ? { ...draft, kind: lesson.kind, lessonId: lesson.id } : draft
@@ -212,18 +234,27 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     if (!duration) setPicking(false)
     else selectionTimer.current = setTimeout(() => { selectionTimer.current = undefined; setPicking(false) }, duration)
   }
-  const finish = (dismiss: CloseModal) => {
-    if (!value.title.trim() || needsChoice) return
+  const finish = async (dismiss: CloseModal) => {
+    if (submitting.current || !value.title.trim() || needsChoice) return
+    submitting.current = true; setSaving(true)
     // Старое отсутствующее lessonId сохраняет несопоставленную запись, пока пользователь не выберет пару.
-    if (note) save({ ...value, entryType: 'note', title: value.title.trim(), kind: undefined, lessonId: undefined })
-    else save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
-    dismiss()
+    try {
+      if (note) await save({ ...value, entryType: 'note', title: value.title.trim(), kind: undefined, lessonId: undefined })
+      else await save({ ...value, title: value.title.trim(), kind: selected?.kind ?? value.kind, lessonId: selected?.id ?? value.lessonId })
+      dismiss()
+    } finally { submitting.current = false; setSaving(false) }
+  }
+  const deleteEntry = async (dismiss: CloseModal) => {
+    if (submitting.current || !draft.id) return
+    submitting.current = true; setSaving(true)
+    try { await remove(draft.id); dismiss() }
+    finally { submitting.current = false; setSaving(false) }
   }
   return <Modal variant="editor" title={picking ? 'Выбрать предмет' : note ? (draft.id ? 'Редактировать заметку' : 'Новая заметка') : draft.id ? 'Редактировать задание' : 'Новое задание'} onClose={close} onBack={picking ? returnFromPicker : undefined}>{dismiss => <>
     {picking && <div className="subject-picker" ref={subjectList} data-scroll-region>
       {[{ id: '', label: 'Без предмета' }, ...DEFAULT_SUBJECTS.map(s => ({ id: s.id, label: subjectName(s.id) }))].map(s => <button key={s.id} type="button" aria-pressed={value.subjectId === s.id} onClick={() => pickSubject(s.id)}><span>{s.label}</span>{value.subjectId === s.id && <IconCheck size={20} />}</button>)}
     </div>}
-    <form hidden={picking} onSubmit={e => { e.preventDefault(); finish(dismiss) }}>
+    <form hidden={picking} inert={saving} onSubmit={e => { e.preventDefault(); void finish(dismiss) }}>
       <div className="editor-fields" data-scroll-region>
         <Segmented className="entry-type" label="Тип записи" value={note ? 'note' : 'homework'} onChange={entryType => changeContext({ entryType, kind: undefined })} options={[{ id: 'homework', label: 'ДЗ' }, { id: 'note', label: 'Заметка' }]} />
         <div className="field"><span id="subject-label" className="visually-hidden">Предмет</span><button ref={subjectButton} type="button" className="subject-trigger" aria-labelledby="subject-label subject-value" aria-expanded={picking} onClick={() => setPicking(true)}><span id="subject-value">{value.subjectId ? subjectName(value.subjectId) : 'Без предмета'}</span><IconChevronRight size={18} /></button></div>
@@ -236,7 +267,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
         {!note && value.subjectId && !selected && <p className="binding-hint">{needsChoice ? 'В этот день несколько пар — выбери нужную.' : choices.length ? 'Можно выбрать пару выше или сохранить задание на эту дату без привязки.' : 'Подходящей пары в этот день нет. Задание останется на выбранной дате без привязки.'}</p>}
         {selected?.kind === 'lecture' && <p className="binding-hint">Прежняя привязка к лекции сохранена. Для смены выбери семинар или лабу.</p>}
       </div>
-      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => { remove(draft.id!); dismiss() }}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim() || needsChoice} type="submit">{draft.id ? 'Сохранить' : note ? 'Добавить заметку' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
+      <footer className="editor-footer">{draft.id && <button type="button" className="icon-button delete-button" aria-label="Удалить задание" onClick={() => { void deleteEntry(dismiss) }}><IconTrash /></button>}<button className="primary-button" disabled={!value.title.trim() || needsChoice} type="submit">{draft.id ? 'Сохранить' : note ? 'Добавить заметку' : 'Добавить задание'}<IconCheck size={18} /></button></footer>
     </form>
     </>}
   </Modal>

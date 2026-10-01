@@ -1,0 +1,91 @@
+{
+  "baselineRevision": "c218703",
+  "baselineSlowNetworkMs": [
+    3603,
+    3602,
+    3607
+  ],
+  "fixedSlowNetworkMs": [
+    69,
+    70,
+    85
+  ],
+  "navigationSamples": [
+    {
+      "phase": "baselineSlowNetworkMs",
+      "ms": 3603,
+      "workerStart": 0.699999988079071,
+      "responseStart": 3508.9000000059605,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 1
+    },
+    {
+      "phase": "baselineSlowNetworkMs",
+      "ms": 3602,
+      "workerStart": 0.7999999821186066,
+      "responseStart": 3506,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 1
+    },
+    {
+      "phase": "baselineSlowNetworkMs",
+      "ms": 3607,
+      "workerStart": 3.9000000059604645,
+      "responseStart": 3511.9000000059605,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 1
+    },
+    {
+      "phase": "fixedSlowNetworkMs",
+      "ms": 69,
+      "workerStart": 0.5999999940395355,
+      "responseStart": 1.4000000059604645,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 0
+    },
+    {
+      "phase": "fixedSlowNetworkMs",
+      "ms": 70,
+      "workerStart": 0.5999999940395355,
+      "responseStart": 2.4000000059604645,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 0
+    },
+    {
+      "phase": "fixedSlowNetworkMs",
+      "ms": 85,
+      "workerStart": 0.4000000059604645,
+      "responseStart": 4.5999999940395355,
+      "controllerPath": "/sw.js",
+      "delayedRequests": 0
+    }
+  ],
+  "checks": [
+    {
+      "name": "v1-v2-preserves-draft-old-assets-and-next-scope",
+      "passed": true
+    },
+    {
+      "name": "new-client-gets-complete-v2-shell",
+      "passed": true
+    },
+    {
+      "name": "failed-v3-preserves-active-v2-and-removes-only-failed-cache",
+      "passed": true
+    },
+    {
+      "name": "demo-does-not-create-worker-or-cache",
+      "passed": true
+    },
+    {
+      "name": "browser-restarted-slow-network-cold-load",
+      "passed": true,
+      "ms": 84
+    },
+    {
+      "name": "browser-restarted-offline-cold-load",
+      "passed": true,
+      "ms": 94
+    }
+  ]
+}

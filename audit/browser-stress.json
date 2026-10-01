@@ -1,0 +1,9 @@
+{
+  "fixture": "1000 synthetic tasks, 28 days, mobile Chromium 390x844, reduced motion",
+  "launchMs": 100,
+  "taskTabSwitchToTwoFramesMs": 83,
+  "renderedTaskRows": 1000,
+  "domElements": 9408,
+  "savedTaskCount": 1000,
+  "note": "Local reference measurement; includes browser automation and machine load. No iPhone or production network claim."
+}

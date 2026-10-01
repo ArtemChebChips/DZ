@@ -1,4 +1,5 @@
-/* Цвета меняются вместе на корневом элементе, без снимков и перезагрузки. */
+/* Цвета меняются вместе на корневом элементе. Для системной полосы standalone
+   iOS обработчик темы дополнительно использует разрешённую перезагрузку. */
 @property --bg { syntax: "<color>"; inherits: true; initial-value: #fdfcfb; }
 @property --surface { syntax: "<color>"; inherits: true; initial-value: #fff; }
 @property --ink { syntax: "<color>"; inherits: true; initial-value: #171b24; }

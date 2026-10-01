@@ -4,3 +4,6 @@ dev-dist
 *.local
 .DS_Store
 dist-design
+*.tsbuildinfo
+__pycache__/
+/audit/browser-failures/

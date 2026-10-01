@@ -23,19 +23,29 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
   const press = usePressAction()
   const [pressed, setPressed] = useState<string | null>(null)
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const cancelTap = () => { clearTimeout(pending.current); pending.current = undefined; setPressed(null) }
+  const pendingAction = useRef<(() => void) | null>(null)
+  const cancelTap = () => { clearTimeout(pending.current); pending.current = undefined; pendingAction.current = null; setPressed(null) }
   useLayoutEffect(() => { cancelTap() }, [date, preview])
   useEffect(() => {
     const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelTap() }
     const hidden = () => { if (document.hidden) cancelTap() }
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
+    const reduce = () => { if (reduced.matches) pendingAction.current?.() }
     document.addEventListener('pointerdown', cancelTap, true)
     document.addEventListener('keydown', escape, true)
     document.addEventListener('visibilitychange', hidden)
+    document.addEventListener('scroll', cancelTap, true)
+    window.addEventListener('blur', cancelTap)
+    reduced.addEventListener('change', reduce)
     return () => {
       clearTimeout(pending.current)
       document.removeEventListener('pointerdown', cancelTap, true)
       document.removeEventListener('keydown', escape, true)
       document.removeEventListener('visibilitychange', hidden)
+      document.removeEventListener('scroll', cancelTap, true)
+      window.removeEventListener('blur', cancelTap)
+      reduced.removeEventListener('change', reduce)
+      pendingAction.current = null
     }
   }, [])
   const tapLesson = (lesson: Lesson) => {
@@ -43,7 +53,9 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
     const duration = motionDuration(true) * 2
     if (!duration) { openLesson(lesson); return }
     setPressed(lesson.id)
-    pending.current = setTimeout(() => { pending.current = undefined; setPressed(null); openLesson(lesson) }, duration)
+    const finish = () => { clearTimeout(pending.current); pending.current = undefined; pendingAction.current = null; setPressed(null); openLesson(lesson) }
+    pendingAction.current = finish
+    pending.current = setTimeout(finish, duration)
   }
   const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)

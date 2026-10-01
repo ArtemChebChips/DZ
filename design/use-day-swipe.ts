@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { flushSync } from 'react-dom'
 import { motionDuration } from './motion'
-import { daySwipeTarget, swipeFollow, swipeSettleDuration, swipeSettleProgress } from './swipe'
+import { daySwipeTarget, gestureAxis, swipeFollow, swipeSettleDuration, swipeSettleProgress } from './swipe'
 
 // Один offset и для пальца, и для доведения: без переключения CSS/WAAPI-слоёв.
 export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, trackRef: RefObject<HTMLDivElement | null>, date: string, enabled: boolean, changeDay: (direction: -1 | 1) => void) {
@@ -85,7 +85,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       const touch = event.touches[0], interrupted = finishSettle !== null
       stop(); suppressClick = false
       touchId = touch.identifier; startX = touch.clientX; startY = touch.clientY
-      base = offset; axis = interrupted ? 'x' : null
+      base = targetOffset = offset; axis = interrupted ? 'x' : null
       samples = [{ x: touch.clientX, time: event.timeStamp }]
     }
     const move = (event: TouchEvent) => {
@@ -93,8 +93,8 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       const touch = event.touches[0]
       if (touch.identifier !== touchId) return
       const dx = touch.clientX - startX, dy = touch.clientY - startY
-      if (!axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 10) {
-        axis = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y'
+      if (!axis) {
+        axis = gestureAxis(dx, dy)
         if (axis === 'x') root.dataset.dayDragging = 'true'
       }
       if (axis !== 'x') return
@@ -134,7 +134,11 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
     resize.observe(viewport)
     const hidden = () => { if (document.hidden) { cancel(); finishSettle?.() } }
     const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-    const reduce = () => { if (reduced.matches) finishSettle?.() }
+    const reduce = () => {
+      if (!reduced.matches) return
+      if (finishSettle) finishSettle()
+      else if (touchId !== null && axis === 'x') { stop(); draw(targetOffset) }
+    }
     document.addEventListener('touchstart', start, { capture: true, passive: true })
     document.addEventListener('touchmove', move, { capture: true, passive: false })
     document.addEventListener('touchend', end, { capture: true, passive: false })

@@ -16,7 +16,11 @@ export function useDayTravel(viewport: RefObject<HTMLDivElement | null>, track: 
     if (!enabled) { setJourney(null); return }
     const width = container.getBoundingClientRect().width
     const last = journey.dates.length - 1
-    const duration = Math.min(1500, Math.max(650, motionDuration(true) * 3))
+    const motion = motionDuration(true)
+    // Настройка могла измениться между созданием journey и этим рендером.
+    // При скрытом viewport нет расстояния, по которому можно отменять переход.
+    if (!motion || width <= 0) { current.current.selectDay(journey.dates[last]); setJourney(null); return }
+    const duration = Math.min(1500, Math.max(650, motion * 3))
     const animation = element.animate([
       { transform: 'translate3d(0, 0, 0)' },
       { transform: `translate3d(${-journey.direction * last * width}px, 0, 0)` },

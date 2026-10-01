@@ -3,7 +3,7 @@ import { DEFAULT_LESSONS, DEFAULT_SUBJECTS, ANCHOR_MONDAY, type Draft } from './
 import { contextFor, readIntents, resolveProposal, type Proposal } from './smart-input'
 import { validDate } from './storage'
 
-export function SmartInputPanel({ save }: { save: (drafts: Draft[]) => void }) {
+export function SmartInputPanel({ save }: { save: (drafts: Draft[]) => void | Promise<void> }) {
   const [text, setText] = useState(''), [correction, setCorrection] = useState('')
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [busy, setBusy] = useState(''), [error, setError] = useState('')
@@ -83,11 +83,12 @@ export function SmartInputPanel({ save }: { save: (drafts: Draft[]) => void }) {
       <small>Срок из текста: {p.deadlineText || 'не указан'}</small>
       {p.question && <div><p>{p.question}</p><button className="outline-button" disabled={!p.subjectId || !validDate(p.due)} onClick={() => patch(i, { question: '' })}>Проверил предмет, текст и дату</button></div>}
     </fieldset>)}
-    {proposals.length > 0 && <button className="primary-button" disabled={!ready || Boolean(busy) || recording} onClick={() => {
+    {proposals.length > 0 && <button className="primary-button" disabled={!ready || Boolean(busy) || recording} onClick={async () => {
       if (saved.current || !ready) return
-      saved.current = true
-      try { save(selected.map(({ selected: _s, question: _q, deadlineText: _d, ...draft }) => draft)) }
+      saved.current = true; setBusy('Сохраняю задания…')
+      try { await save(selected.map(({ selected: _s, question: _q, deadlineText: _d, ...draft }) => draft)) }
       catch { saved.current = false; setError('Не удалось сохранить. Черновики остались здесь.') }
+      finally { if (active.current) setBusy('') }
     }}>Добавить задания ({selected.length})</button>}
   </div>
 }

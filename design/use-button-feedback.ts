@@ -89,12 +89,16 @@ export function usePressAction() {
     document.addEventListener('pointerdown', cancel, true)
     document.addEventListener('keydown', key, true)
     document.addEventListener('visibilitychange', hidden)
+    document.addEventListener('scroll', cancel, true)
+    window.addEventListener('blur', cancel)
     reduced.addEventListener('change', reduce)
     return () => {
       cancel()
       document.removeEventListener('pointerdown', cancel, true)
       document.removeEventListener('keydown', key, true)
       document.removeEventListener('visibilitychange', hidden)
+      document.removeEventListener('scroll', cancel, true)
+      window.removeEventListener('blur', cancel)
       reduced.removeEventListener('change', reduce)
     }
   }, [])

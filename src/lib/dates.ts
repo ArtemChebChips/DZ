@@ -18,15 +18,22 @@ export const MONTHS_NOM = [
 ]
 
 export function toISO(d: Date): string {
-  const y = d.getFullYear()
+  const year = d.getFullYear()
+  const y = year >= 0 && year <= 9999 ? String(year).padStart(4, '0') : `${year < 0 ? '-' : '+'}${String(Math.abs(year)).padStart(6, '0')}`
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
 
 export function parseISO(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
+  const parts = /^([+-]?\d+)-(\d{2})-(\d{2})$/.exec(iso)
+  if (!parts) return new Date(NaN)
+  const [y, m, d] = parts.slice(1).map(Number)
+  const date = new Date(0)
+  // Конструктор Date трактует годы 0–99 как 1900–1999.
+  date.setFullYear(y, m - 1, d)
+  date.setHours(0, 0, 0, 0)
+  return date
 }
 
 export function todayISO(): string {

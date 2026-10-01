@@ -1,3 +1,10 @@
+// Прокрутка и листание дня должны выбрать одну ось в одном событии.
+// Разные пороги позволяли короткой диагонали запустить оба жеста одновременно.
+export function gestureAxis(dx: number, dy: number): 'x' | 'y' | null {
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 10) return null
+  return Math.abs(dx) > Math.abs(dy) * 1.3 ? 'x' : 'y'
+}
+
 // Небольшое отставание (~17 мс), одинаковое на экранах 60 и 120 Гц.
 export function swipeFollow(current: number, target: number, elapsed: number): number {
   return current + (target - current) * (1 - Math.exp(-Math.max(0, elapsed) / 17))
