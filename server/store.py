@@ -103,8 +103,8 @@ class Store:
     def create_user(self, username, password):
         if not isinstance(username, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{3,40}', username):
             raise APIError(400, 'Логин: 3–40 латинских букв, цифр, _ или -.')
-        if not isinstance(password, str) or not 12 <= len(password) <= 256:
-            raise APIError(400, 'Пароль должен содержать 12–256 символов.')
+        if not isinstance(password, str) or not 4 <= len(password) <= 256:
+            raise APIError(400, 'Пароль должен содержать 4–256 символов.')
         salt = secrets.token_hex(16)
         user_id = str(uuid.uuid4())
         try:

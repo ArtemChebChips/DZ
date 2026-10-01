@@ -96,14 +96,14 @@ export function useCloud(notebook: ReturnType<typeof useNotebook>, demo: boolean
     return () => clearTimeout(timer)
   }, [session, demo, needsLogin, notebook.data.sync?.pending, sync])
 
-  async function login(address: string, username: string, password: string) {
+  async function login(address: string, username: string, password: string, registering = false) {
     if (demo) throw new Error('В демо аккаунты отключены.')
     if (bookRef.current.blocked || bookRef.current.error) throw new Error('Сначала сохрани или восстанови данные устройства.')
     const endpoint = endpointURL(address)
     const request = new AbortController(), timeout = setTimeout(() => request.abort(), 20000)
     let connection: Session | undefined
     try {
-      const result = await apiRequest(endpoint, 'login', JSON.stringify({ username, password }), '', 'application/json', request.signal)
+      const result = await apiRequest(endpoint, registering ? 'register' : 'login', JSON.stringify({ username, password }), '', 'application/json', request.signal)
       if (typeof result.token !== 'string' || typeof result.user?.id !== 'string' || typeof result.user?.username !== 'string') throw new Error('Некорректная сессия сервера.')
       connection = { endpoint, token: result.token, user: result.user }
       controller.current?.abort()
@@ -117,6 +117,10 @@ export function useCloud(notebook: ReturnType<typeof useNotebook>, demo: boolean
       if (connection) void apiRequest(connection.endpoint, 'logout', '{}', connection.token, 'application/json', AbortSignal.timeout(10000)).catch(() => {})
       throw e
     } finally { clearTimeout(timeout) }
+  }
+
+  async function register(address: string, username: string, password: string) {
+    return login(address, username, password, true)
   }
 
   function logout() {
@@ -137,5 +141,5 @@ export function useCloud(notebook: ReturnType<typeof useNotebook>, demo: boolean
   function chooseConflict(taskId: string, choice: 'local' | 'server') {
     bookRef.current.replace(current => resolveConflict(current, taskId, choice))
   }
-  return { session, status, error, needsLogin, login, logout, sync, agent, chooseConflict, enabled: Boolean(session && !needsLogin) }
+  return { session, status, error, needsLogin, login, register, logout, sync, agent, chooseConflict, enabled: Boolean(session && !needsLogin) }
 }

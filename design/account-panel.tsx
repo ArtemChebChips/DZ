@@ -10,24 +10,27 @@ function describe(task: DemoTask | null) {
 }
 
 export function AccountPanel({ cloud, state, demo }: { cloud: ReturnType<typeof useCloud>; state?: SyncState; demo: boolean }) {
-  const [address, setAddress] = useState(cloud.session?.endpoint ?? import.meta.env.VITE_DZ_API_URL ?? (import.meta.env.DEV ? `${location.origin}/api` : ''))
+  const [address, setAddress] = useState(cloud.session?.endpoint ?? (import.meta.env.VITE_DZ_API_URL ? new URL(import.meta.env.VITE_DZ_API_URL, location.origin).href : import.meta.env.DEV ? `${location.origin}/api` : ''))
   const [username, setUsername] = useState(cloud.session?.user.username ?? state?.username ?? '')
   const [password, setPassword] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false)
+  const [registering, setRegistering] = useState(false)
   if (demo) return <p>В демонстрации аккаунт и синхронизация отключены. Твои данные не меняются.</p>
   const showLogin = !cloud.session || cloud.needsLogin
   return <div className="account-panel">
     {showLogin ? <form onSubmit={async e => {
       e.preventDefault(); if (busy) return; setBusy(true); setError('')
-      try { await cloud.login(address.trim(), username.trim(), password); setPassword('') }
+      try { await (registering ? cloud.register : cloud.login)(address.trim(), username.trim(), password); setPassword('') }
       catch (e) { setError(e instanceof Error ? e.message : 'Не удалось войти.') }
       finally { setBusy(false) }
     }}>
-      <p>Войди, чтобы сохранять задания на сервере и открывать их на другом устройстве. Без входа приложение работает на этом устройстве.</p>
-      <label>Адрес сервера<input type="url" value={address} placeholder="https://dz.example.com" required disabled={busy} onChange={e => setAddress(e.target.value)} /></label>
-      <label>Логин<input autoComplete="username" value={username} required maxLength={40} disabled={busy} onChange={e => setUsername(e.target.value)} /></label>
-      <label>Пароль<input type="password" autoComplete="current-password" value={password} required maxLength={256} disabled={busy} onChange={e => setPassword(e.target.value)} /></label>
+      <p>{registering ? 'Создай аккаунт, чтобы сохранять задания на сервере и открывать их на другом устройстве.' : 'Войди, чтобы сохранять задания на сервере и открывать их на другом устройстве.'} Без входа приложение работает на этом устройстве.</p>
+      {!import.meta.env.VITE_DZ_API_URL && <label>Адрес сервера<input type="url" value={address} placeholder="https://dz.example.com" required disabled={busy} onChange={e => setAddress(e.target.value)} /></label>}
+      <label>Логин<input autoComplete="username" value={username} required minLength={3} maxLength={40} disabled={busy} onChange={e => setUsername(e.target.value)} /></label>
+      <label>Пароль<input type="password" autoComplete={registering ? 'new-password' : 'current-password'} value={password} required minLength={4} maxLength={256} disabled={busy} onChange={e => setPassword(e.target.value)} /></label>
+      {registering && <small>Логин — от 3 латинских букв или цифр. Пароль — от 4 символов.</small>}
       {state && <p>На устройстве — записи аккаунта {state.username}. При входе в другой аккаунт они сохранятся отдельной локальной копией.</p>}
-      <button className="primary-button" disabled={busy}>{busy ? 'Вхожу…' : 'Войти'}</button>
+      <button className="primary-button" disabled={busy}>{busy ? registering ? 'Создаю…' : 'Вхожу…' : registering ? 'Создать аккаунт' : 'Войти'}</button>
+      {import.meta.env.VITE_DZ_REGISTER === '1' && <button type="button" className="text-button" disabled={busy} onClick={() => { setRegistering(!registering); setError('') }}>{registering ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}</button>}
     </form> : <>
       <p>Аккаунт: <strong>{cloud.session!.user.username}</strong></p>
       <p role="status">{cloud.status || 'Синхронизация подключена'}</p>
