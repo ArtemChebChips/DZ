@@ -1,0 +1,410 @@
+{
+  "capturedAt": "2026-10-01T18:21:08.007Z",
+  "base": "http://127.0.0.1:43187/",
+  "environment": "Mobile Chrome emulation, 375×812, DPR 2; synthetic demo data",
+  "themes": [
+    {
+      "theme": "light",
+      "bundleURLs": [
+        "http://127.0.0.1:43187/assets/index-CE8KJOtG.js"
+      ],
+      "settingsAppearance": {
+        "pressed": true,
+        "radius": "18px",
+        "overlayRadius": "18px",
+        "opacity": 1,
+        "width": 335,
+        "height": 98,
+        "clientWidth": 335,
+        "clientHeight": 98,
+        "tint": "rgba(0, 0, 0, 0.09)"
+      },
+      "taskAppearance": {
+        "pressed": true,
+        "radius": "16px",
+        "overlayRadius": "16px",
+        "opacity": 1,
+        "width": 307,
+        "height": 95.9688,
+        "clientWidth": 307,
+        "clientHeight": 96,
+        "tint": "rgba(0, 0, 0, 0.09)"
+      },
+      "lessonAppearance": {
+        "pressed": true,
+        "radius": "22px",
+        "overlayRadius": "22px",
+        "opacity": 1,
+        "width": 333,
+        "height": 135.516,
+        "clientWidth": 333,
+        "clientHeight": 136,
+        "tint": "rgba(0, 0, 0, 0.09)"
+      },
+      "touchMoveCancelled": true,
+      "errors": []
+    },
+    {
+      "theme": "dark",
+      "bundleURLs": [
+        "http://127.0.0.1:43187/assets/index-CE8KJOtG.js"
+      ],
+      "settingsAppearance": {
+        "pressed": true,
+        "radius": "18px",
+        "overlayRadius": "18px",
+        "opacity": 1,
+        "width": 335,
+        "height": 98,
+        "clientWidth": 335,
+        "clientHeight": 98,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "taskAppearance": {
+        "pressed": true,
+        "radius": "16px",
+        "overlayRadius": "16px",
+        "opacity": 1,
+        "width": 307,
+        "height": 95.9688,
+        "clientWidth": 307,
+        "clientHeight": 96,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "lessonAppearance": {
+        "pressed": true,
+        "radius": "22px",
+        "overlayRadius": "22px",
+        "opacity": 1,
+        "width": 333,
+        "height": 135.516,
+        "clientWidth": 333,
+        "clientHeight": 136,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "touchMoveCancelled": true,
+      "errors": []
+    },
+    {
+      "theme": "black",
+      "bundleURLs": [
+        "http://127.0.0.1:43187/assets/index-CE8KJOtG.js"
+      ],
+      "settingsAppearance": {
+        "pressed": true,
+        "radius": "18px",
+        "overlayRadius": "18px",
+        "opacity": 1,
+        "width": 335,
+        "height": 98,
+        "clientWidth": 335,
+        "clientHeight": 98,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "taskAppearance": {
+        "pressed": true,
+        "radius": "16px",
+        "overlayRadius": "16px",
+        "opacity": 1,
+        "width": 307,
+        "height": 95.9688,
+        "clientWidth": 307,
+        "clientHeight": 96,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "lessonAppearance": {
+        "pressed": true,
+        "radius": "22px",
+        "overlayRadius": "22px",
+        "opacity": 1,
+        "width": 333,
+        "height": 135.516,
+        "clientWidth": 333,
+        "clientHeight": 136,
+        "tint": "rgba(255, 255, 255, 0.1)"
+      },
+      "touchMoveCancelled": true,
+      "errors": []
+    }
+  ],
+  "modal": [
+    {
+      "theme": "light",
+      "subjectsOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 3,
+        "beganMs": 47.099999994039536,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 47.099999994039536,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 48.19999998807907,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 3,
+            "elapsedMs": 61.099999994039536,
+            "opacity": 0.301896,
+            "animationTime": 16.733999973069903,
+            "pending": false
+          }
+        ]
+      },
+      "subjectsClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 12.800000011920929,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 12.700000017881393,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      },
+      "calendarOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 2,
+        "beganMs": 13.900000005960464,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 13.900000005960464,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 30.5,
+            "opacity": 0.30056,
+            "animationTime": 16.658999985735832,
+            "pending": false
+          }
+        ]
+      },
+      "calendarClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 15.599999994039536,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 15.599999994039536,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      }
+    },
+    {
+      "theme": "dark",
+      "subjectsOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 4,
+        "beganMs": 40.30000001192093,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 40.30000001192093,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 41.400000005960464,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 3,
+            "elapsedMs": 47.400000005960464,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 4,
+            "elapsedMs": 64.40000000596046,
+            "opacity": 0.301201,
+            "animationTime": 16.695000009238736,
+            "pending": false
+          }
+        ]
+      },
+      "subjectsClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 14.299999982118607,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 14.299999982118607,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      },
+      "calendarOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 3,
+        "beganMs": 15.400000005960464,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 15.400000005960464,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 28.100000023841858,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 3,
+            "elapsedMs": 45.10000002384186,
+            "opacity": 0.301005,
+            "animationTime": 16.684000006364606,
+            "pending": false
+          }
+        ]
+      },
+      "calendarClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 14,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 14,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      }
+    },
+    {
+      "theme": "black",
+      "subjectsOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 3,
+        "beganMs": 50.89999997615814,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 50.89999997615814,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 52.29999998211861,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 3,
+            "elapsedMs": 62.39999997615814,
+            "opacity": 0.300542,
+            "animationTime": 16.6579999919515,
+            "pending": false
+          }
+        ]
+      },
+      "subjectsClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 15.100000023841858,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 15.100000023841858,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      },
+      "calendarOpen": {
+        "openedFrames": 1,
+        "visibleFrames": 2,
+        "beganMs": 12.400000005960464,
+        "duration": "0.2s",
+        "animationName": "sheet-enter",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 12.400000005960464,
+            "opacity": 0,
+            "animationTime": 0,
+            "pending": true
+          },
+          {
+            "frame": 2,
+            "elapsedMs": 29.599999994039536,
+            "opacity": 0.300684,
+            "animationTime": 16.666000002296677,
+            "pending": false
+          }
+        ]
+      },
+      "calendarClose": {
+        "openedFrames": 1,
+        "visibleFrames": 1,
+        "beganMs": 15.900000005960464,
+        "duration": "0.2s",
+        "animationName": "sheet-exit",
+        "samples": [
+          {
+            "frame": 1,
+            "elapsedMs": 15.800000011920929,
+            "opacity": 1,
+            "animationTime": 0,
+            "pending": true
+          }
+        ]
+      }
+    }
+  ]
+}

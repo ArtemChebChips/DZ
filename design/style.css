@@ -15,8 +15,8 @@
   background: var(--bg);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
-  --motion-duration: 220ms;
-  --motion-height: 320ms;
+  --motion-duration: 200ms;
+  --motion-height: 260ms;
   --motion-press: 100ms;
   --motion-ease: cubic-bezier(.2, .7, .2, 1);
   --bg: #fdfcfb;
@@ -54,7 +54,7 @@
 html, body, #root { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { margin: 0; min-width: 320px; background: var(--bg); }
 button, select, textarea { font: inherit; }
-button { color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
+button { position: relative; border-radius: 16px; color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
 button:disabled { opacity: .45; cursor: default; }
 button, a, input, select, textarea, summary { touch-action: manipulation; }
 button:focus-visible, summary:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
@@ -84,7 +84,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .day-weekday svg { opacity: .55; }
 .rotated { transform: rotate(-90deg); }
 .overdue .relative-date { color: var(--danger); }
-.task-row { display: flex; align-items: stretch; min-width: 0; border-bottom: 1px solid var(--line); }
+.task-row { position: relative; border-radius: 16px; display: flex; align-items: stretch; min-width: 0; border-bottom: 1px solid var(--line); }
 .day-section .task-collapse:last-child .task-row { border-bottom: 0; }
 .check-button { width: 46px; min-height: 64px; flex: 0 0 46px; padding: 12px 12px 12px 0; display: flex; align-items: center; justify-content: flex-start; }
 .check-button > span { width: 25px; height: 25px; border: 1.4px solid var(--muted); border-radius: 50%; display: grid; place-items: center; }
@@ -154,7 +154,7 @@ h1 { font-size: 32px; letter-spacing: -1.1px; line-height: 1.2; }
 .theme-options { display: flex; border: 1px solid var(--line); border-radius: 9px; background: var(--soft); }
 .theme-options button { flex: 1; min-width: 0; min-height: 44px; padding: 10px 4px; font-size: 13px; border-radius: 8px; }
 .theme-options button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
-.setting-row { width: 100%; min-height: 99px; display: flex; align-items: center; gap: 19px; padding: 22px 0; text-align: left; border-bottom: 1px solid var(--line); }
+.setting-row { border-radius: 18px; width: 100%; min-height: 99px; display: flex; align-items: center; gap: 19px; padding: 22px 0; text-align: left; border-bottom: 1px solid var(--line); }
 .setting-row > span { flex: 1; min-width: 0; }
 .setting-row strong { font-size: 18px; font-weight: 500; display: block; }
 .setting-row small { font-size: 13px; color: var(--muted); display: block; margin-top: 5px; line-height: 1.45; }
@@ -428,7 +428,7 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* Одна скорость для CSS-переходов и Web Animations. */
 :root[data-motion='fast'] { --motion-duration: 140ms; --motion-height: 220ms; --motion-press: 64ms; }
-:root[data-motion='smooth'] { --motion-duration: 380ms; --motion-height: 550ms; --motion-press: 173ms; }
+:root[data-motion='smooth'] { --motion-duration: 280ms; --motion-height: 380ms; --motion-press: 120ms; }
 .animation-settings { padding-top: 24px; }
 .segmented { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); padding: 3px; border-radius: 24px; }
 .segmented button { position: relative; z-index: 1; border-radius: 20px; }
@@ -443,12 +443,12 @@ button:disabled { opacity: .45; cursor: default; }
 .day-summary.visible { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
 .day-summary > span { min-height: 0; overflow: hidden; font-size: 12px; line-height: 1.7; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) {
-  .sheet[open] { animation: sheet-enter calc(var(--motion-height) * 1.4) var(--motion-ease) both; }
-  .sheet[open]::backdrop { animation: backdrop-enter calc(var(--motion-height) * 1.4) both; }
-  .sheet.sheet-closing { animation: sheet-exit calc(var(--motion-height) * 1.4) var(--motion-ease) both; }
-  .sheet.sheet-closing::backdrop { animation: backdrop-exit calc(var(--motion-height) * 1.4) both; }
-  @keyframes sheet-enter { from { opacity: 0; translate: 0 64px; } to { opacity: 1; translate: 0 0; } }
-  @keyframes sheet-exit { from { opacity: var(--sheet-exit-opacity, 1); translate: var(--sheet-exit-translate, 0 0); } to { opacity: 0; translate: 0 64px; } }
+  .sheet[open] { animation: sheet-enter var(--motion-duration) var(--motion-ease) both; }
+  .sheet[open]::backdrop { animation: backdrop-enter var(--motion-duration) both; }
+  .sheet.sheet-closing { animation: sheet-exit var(--motion-duration) var(--motion-ease) both; }
+  .sheet.sheet-closing::backdrop { animation: backdrop-exit var(--motion-duration) both; }
+  @keyframes sheet-enter { from { opacity: 0; translate: 0 32px; } to { opacity: 1; translate: 0 0; } }
+  @keyframes sheet-exit { from { opacity: var(--sheet-exit-opacity, 1); translate: var(--sheet-exit-translate, 0 0); } to { opacity: 0; translate: 0 32px; } }
   @keyframes backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
   @keyframes backdrop-exit { from { opacity: 1; } to { opacity: 0; } }
 }
@@ -469,14 +469,13 @@ button:disabled { opacity: .45; cursor: default; }
 .screen-schedule .app-scroll { outline: none; overflow-x: hidden; }
 .screen-schedule[data-day-dragging] button { outline: none; }
 
-/* Подтверждённый тап: короткое затемнение перед редактором, без :active. */
+/* Текущая пара сохраняет подсветку независимо от нажатия. */
 .lesson-current { background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
 .lesson-title { display: flex; align-items: flex-start; gap: 8px; }
 .lesson-title h3 { flex: 1; min-width: 0; }
 .current-label { flex-shrink: 0; visibility: hidden; margin-top: 2px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); font-size: 11px; line-height: 16px; white-space: nowrap; }
 .lesson-current .current-label { visibility: visible; }
 .lesson { transition: background-color var(--motion-press), color var(--motion-press), border-color var(--motion-press); }
-.lesson.lesson-tapped { background: color-mix(in srgb, var(--bg) 60%, #000); }
 @media (prefers-reduced-motion: reduce) { .lesson { transition: none; } }
 
 :root[data-input='pointer'] .screen-schedule button:focus-visible { outline: none; }
@@ -491,9 +490,6 @@ button:disabled { opacity: .45; cursor: default; }
 
 /* Цвет темы у верхнего края; системную полосу iOS проверяем отдельно на устройстве. */
 #system-top { position: fixed; inset: 0 0 auto; height: max(1px, env(safe-area-inset-top, 0px)); background: var(--bg); z-index: 20; pointer-events: none; }
-@media (prefers-reduced-motion: no-preference) {
-  .sheet[open] { will-change: translate, opacity; }
-}
 .month-viewport { overflow: hidden; }
 /* На короткое время блокируем повторный переход, не меняя вид управления. */
 .month-calendar button:disabled { opacity: 1; }
@@ -503,20 +499,26 @@ button:disabled { opacity: .45; cursor: default; }
 .month-previous { position: absolute; top: 0; left: 0; }
 .calendar-today { width: 100%; margin-top: 16px; min-height: 44px; }
 
-/* Только подложка, без обводки, масштабирования и изменения геометрии. */
-button:not(.calendar-date), a, summary, .calendar-date::before { box-shadow: inset 0 0 0 100px transparent; }
-button[data-pressed]:not(.calendar-date), a[data-pressed], summary[data-pressed], .calendar-date[data-pressed]::before { box-shadow: inset 0 0 0 100px rgb(0 0 0 / 16%); }
-:root:is([data-theme='dark'], [data-theme='black']) :is(button:not(.calendar-date), a, summary)[data-pressed],
-:root:is([data-theme='dark'], [data-theme='black']) .calendar-date[data-pressed]::before { box-shadow: inset 0 0 0 100px rgb(0 0 0 / 28%); }
-@media (prefers-reduced-motion: no-preference) {
-  button:not(.app-nav button), a, summary, .calendar-date::before {
-    transition-property: color, background-color, box-shadow;
-    transition-duration: var(--motion-duration), var(--motion-duration), calc(var(--motion-press) * 1.4);
-    transition-timing-function: ease;
-  }
+/* Подложка совпадает с краями карточки. Анимируем только opacity:
+   тень/фон всех кнопок не перерисовываются на каждом кадре. */
+:root { --press-tint: rgb(0 0 0 / 9%); }
+:root:is([data-theme='dark'], [data-theme='black']) { --press-tint: rgb(255 255 255 / 10%); }
+:where(a, summary) { position: relative; border-radius: 16px; }
+:is(button, a, summary):not(.calendar-date, .app-nav button, .segmented button, .lesson-open, .task-content)::after,
+.task-row::after, .lesson::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--press-tint); opacity: 0; pointer-events: none; z-index: 3;
 }
-:root[data-theme='light'] .lesson.lesson-tapped { background: color-mix(in srgb, var(--bg) 88%, #000); }
-:root[data-theme='black'] .lesson.lesson-tapped { background: #101216; }
+:is(button, a, summary):not(.calendar-date, .app-nav button, .segmented button, .lesson-open, .task-content)[data-pressed]::after,
+.task-row[data-pressed]::after, .lesson[data-pressed]::after { opacity: 1; }
+/* У календаря собственная круглая подложка и кольцо сегодняшнего дня. */
+.calendar-date[data-pressed]::before { box-shadow: inset 0 0 0 100px var(--press-tint); }
+@media (prefers-reduced-motion: no-preference) {
+  :is(button, a, summary)::after, .task-row::after, .lesson::after { transition: opacity 100ms ease-out; }
+  :is(button, a, summary)[data-pressed]::after, .task-row[data-pressed]::after, .lesson[data-pressed]::after { transition-duration: 0ms; }
+  .day-track { transform: translate3d(0, 0, 0); }
+  .screen-schedule[data-day-dragging] .day-track { will-change: transform; }
+}
 
 /* Локальный пилот: существующие темы и кнопки, без отдельной панели навигации. */
 .smart-input { display: grid; gap: 14px; padding: 0 20px 24px; }

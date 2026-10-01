@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react'
-import { motionDuration } from './motion'
+import { useEffect } from 'react'
 
-// Состояние под пальцем; движение отменяет подсветку и не имитирует клик.
+// Подсветка начинается с касания, действие — с подтверждённого click.
+// Перемещение отменяет подсветку: прокрутка и свайп не открывают карточку.
 export function useButtonFeedback() {
   useEffect(() => {
     let active: HTMLElement | null = null
@@ -9,46 +9,47 @@ export function useButtonFeedback() {
     let timer: ReturnType<typeof setTimeout> | undefined
     const buttonAt = (target: EventTarget | null) => {
       const button = target instanceof Element ? target.closest<HTMLElement>('button, a, summary') : null
-      return button && !button.matches('.lesson-open, .app-nav button, .segmented button') ? button : null
+      if (!button || button.matches(':disabled, .app-nav button, .segmented button')) return null
+      // Карточка отвечает целиком, включая скруглённые края и отступы.
+      if (button.matches('.task-content')) return button.closest<HTMLElement>('.task-row')
+      if (button.matches('.lesson-open')) return button.closest<HTMLElement>('.lesson')
+      return button
     }
     const clear = () => {
       clearTimeout(timer)
       active?.removeAttribute('data-pressed')
       active = null; origin = null
     }
-    const show = (button: HTMLElement) => {
+    const show = (element: HTMLElement) => {
       clearTimeout(timer)
-      if (active !== button) active?.removeAttribute('data-pressed')
-      active = button; button.dataset.pressed = 'true'
+      if (active !== element) active?.removeAttribute('data-pressed')
+      active = element; element.dataset.pressed = 'true'
     }
-    const release = () => { clearTimeout(timer); timer = setTimeout(clear, Math.max(180, motionDuration())) }
+    const release = () => { clearTimeout(timer); timer = setTimeout(clear, 100) }
     const down = (event: PointerEvent) => {
       clear()
-      const button = buttonAt(event.target)
-      if (!button || button.matches(':disabled') || !event.isPrimary) return
-      active = button; origin = { x: event.clientX, y: event.clientY, id: event.pointerId }
-      // Маленькая пауза не даёт кнопке мигать при начале прокрутки.
-      if (event.pointerType === 'touch') timer = setTimeout(() => show(button), 60)
-      else show(button)
+      const element = buttonAt(event.target)
+      if (!element || !event.isPrimary) return
+      origin = { x: event.clientX, y: event.clientY, id: event.pointerId }
+      show(element)
     }
     const move = (event: PointerEvent) => {
       if (origin?.id === event.pointerId && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 8) clear()
     }
     const up = (event: PointerEvent) => {
       if (origin?.id !== event.pointerId) return
-      if (active) show(active)
       origin = null; release()
     }
     const click = (event: MouseEvent) => {
       if (event.defaultPrevented) return
-      const button = buttonAt(event.target)
-      if (button) { show(button); release() }
+      const element = buttonAt(event.target)
+      if (element) { show(element); release() }
     }
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') clear()
       if (event.key === 'Enter' || event.key === ' ') {
-        const button = buttonAt(event.target)
-        if (button && !button.matches(':disabled')) show(button)
+        const element = buttonAt(event.target)
+        if (element) show(element)
       }
     }
     const hidden = () => { if (document.hidden) clear() }
@@ -59,6 +60,7 @@ export function useButtonFeedback() {
     document.addEventListener('click', click)
     document.addEventListener('keydown', key, true)
     document.addEventListener('keyup', release, true)
+    document.addEventListener('scroll', clear, true)
     document.addEventListener('visibilitychange', hidden)
     window.addEventListener('blur', clear)
     return () => {
@@ -70,42 +72,15 @@ export function useButtonFeedback() {
       document.removeEventListener('click', click)
       document.removeEventListener('keydown', key, true)
       document.removeEventListener('keyup', release, true)
+      document.removeEventListener('scroll', clear, true)
       document.removeEventListener('visibilitychange', hidden)
       window.removeEventListener('blur', clear)
     }
   }, [])
 }
 
-// Даём нажатию завершиться перед открытием/закрытием. Сохранение и
-// скачивание не задерживаем: им нужна активация пользователя.
+// Подсветка уже видна под пальцем. Открытие формы не ждёт её завершения
+// и остаётся в событии пользователя, в том числе для скачивания/фокуса.
 export function usePressAction() {
-  const pending = useRef<{ timer: ReturnType<typeof setTimeout>; action: () => void } | null>(null)
-  useEffect(() => {
-    const cancel = () => { if (pending.current) clearTimeout(pending.current.timer); pending.current = null }
-    const key = (event: KeyboardEvent) => { if (event.key === 'Escape') cancel() }
-    const hidden = () => { if (document.hidden) cancel() }
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-    const reduce = () => { if (reduced.matches) { const action = pending.current?.action; cancel(); action?.() } }
-    document.addEventListener('pointerdown', cancel, true)
-    document.addEventListener('keydown', key, true)
-    document.addEventListener('visibilitychange', hidden)
-    document.addEventListener('scroll', cancel, true)
-    window.addEventListener('blur', cancel)
-    reduced.addEventListener('change', reduce)
-    return () => {
-      cancel()
-      document.removeEventListener('pointerdown', cancel, true)
-      document.removeEventListener('keydown', key, true)
-      document.removeEventListener('visibilitychange', hidden)
-      document.removeEventListener('scroll', cancel, true)
-      window.removeEventListener('blur', cancel)
-      reduced.removeEventListener('change', reduce)
-    }
-  }, [])
-  return (action: () => void) => () => {
-    if (pending.current) clearTimeout(pending.current.timer)
-    const duration = motionDuration()
-    if (!duration) { pending.current = null; action(); return }
-    pending.current = { action, timer: setTimeout(() => { pending.current = null; action() }, duration) }
-  }
+  return (action: () => void) => action
 }

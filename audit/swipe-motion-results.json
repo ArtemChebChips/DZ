@@ -1,0 +1,485 @@
+{
+  "capturedAt": "2026-10-01T18:26:13.480Z",
+  "baseURL": "http://127.0.0.1:43187/",
+  "device": "Chrome, iPhone 13 emulation",
+  "realIPhone": false,
+  "scenarios": [
+    {
+      "name": "Настоящий CDP: ровное следование пальцу и короткий быстрый взмах 44 px",
+      "input": "Trusted CDP touch + controlled CDP sample timestamps; real browser RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": {
+        "samples": [
+          {
+            "x": 226,
+            "offset": -24
+          },
+          {
+            "x": 216,
+            "offset": -34
+          },
+          {
+            "x": 206,
+            "offset": -44
+          }
+        ],
+        "touchEvents": [
+          {
+            "type": "touchstart",
+            "time": 194,
+            "x": 250,
+            "trusted": true
+          },
+          {
+            "type": "touchmove",
+            "time": 214.10000002384186,
+            "x": 226,
+            "trusted": true
+          },
+          {
+            "type": "touchmove",
+            "time": 229,
+            "x": 216,
+            "trusted": true
+          },
+          {
+            "type": "touchmove",
+            "time": 244.10000002384186,
+            "x": 206,
+            "trusted": true
+          },
+          {
+            "type": "touchend",
+            "time": 249,
+            "x": 206,
+            "trusted": true
+          }
+        ],
+        "controlledCDPTimestampsMs": [
+          0,
+          20,
+          35,
+          50,
+          55
+        ]
+      },
+      "final": {
+        "date": "2026-09-22",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Пауза и слишком маленький взмах отменяют перелистывание",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": [
+        {
+          "distance": 20,
+          "releaseTime": 1025,
+          "result": {
+            "date": "2026-09-21",
+            "offset": 0,
+            "width": 390,
+            "transform": "translate3d(0px, 0px, 0px)",
+            "dragging": false,
+            "scroll": 0,
+            "dialogs": 0
+          }
+        },
+        {
+          "distance": 44,
+          "releaseTime": 1240,
+          "result": {
+            "date": "2026-09-21",
+            "offset": 0,
+            "width": 390,
+            "transform": "translate3d(0px, 0px, 0px)",
+            "dragging": false,
+            "scroll": 0,
+            "dialogs": 0
+          }
+        }
+      ],
+      "final": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Touchcancel и второй палец не фиксируют выбранный день",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": [
+        {
+          "mode": "cancel",
+          "result": {
+            "date": "2026-09-21",
+            "offset": 0,
+            "width": 390,
+            "transform": "translate3d(0px, 0px, 0px)",
+            "dragging": false,
+            "scroll": 0,
+            "dialogs": 0
+          }
+        },
+        {
+          "mode": "multitouch",
+          "result": {
+            "date": "2026-09-21",
+            "offset": 0,
+            "width": 390,
+            "transform": "translate3d(0px, 0px, 0px)",
+            "dragging": false,
+            "scroll": 0,
+            "dialogs": 0
+          }
+        }
+      ],
+      "final": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Повторные короткие взмахи и возврат работают по одному дню",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": {
+        "dates": [
+          "2026-09-22",
+          "2026-09-23",
+          "2026-09-22",
+          "2026-09-21"
+        ]
+      },
+      "final": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Прерывание доведения сохраняет позицию, не включает вертикальную прокрутку",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": {
+        "before": {
+          "date": "2026-09-21",
+          "offset": -143.108,
+          "width": 390,
+          "transform": "translate3d(-143.108px, 0px, 0px)",
+          "dragging": true,
+          "scroll": 70,
+          "dialogs": 0
+        },
+        "vertical": {
+          "date": "2026-09-21",
+          "offset": -143.108,
+          "width": 390,
+          "transform": "translate3d(-143.108px, 0px, 0px)",
+          "dragging": true,
+          "scroll": 70,
+          "dialogs": 0
+        },
+        "final": {
+          "date": "2026-09-21",
+          "offset": 0,
+          "width": 390,
+          "transform": "translate3d(0px, 0px, 0px)",
+          "dragging": false,
+          "scroll": 70,
+          "dialogs": 0
+        }
+      },
+      "final": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 70,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Reduced motion: следование пальцу сохраняется, отпускание и смена настройки без анимации",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": {
+        "instant": {
+          "date": "2026-09-22",
+          "offset": 0,
+          "width": 390,
+          "transform": "translate3d(0px, 0px, 0px)",
+          "dragging": false,
+          "scroll": 0,
+          "dialogs": 0
+        },
+        "mid": {
+          "date": "2026-09-22",
+          "offset": -101,
+          "width": 390,
+          "transform": "translate3d(-101px, 0px, 0px)",
+          "dragging": true,
+          "scroll": 0,
+          "dialogs": 0
+        },
+        "changed": {
+          "date": "2026-09-23",
+          "offset": 0,
+          "width": 390,
+          "transform": "translate3d(0px, 0px, 0px)",
+          "dragging": false,
+          "scroll": 0,
+          "dialogs": 0
+        }
+      },
+      "final": {
+        "date": "2026-09-23",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    },
+    {
+      "name": "Последний кадр и React commit: геометрия входящего дня не прыгает",
+      "input": "DOM TouchEvent + controlled sample timestamps/RAF",
+      "passed": true,
+      "initial": {
+        "date": "2026-09-21",
+        "offset": 0,
+        "width": 390,
+        "transform": "",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      },
+      "evidence": {
+        "commit": [
+          {
+            "kind": "before",
+            "date": "2026-09-22",
+            "geometry": {
+              ".agenda-heading": {
+                "x": 20,
+                "y": 25.216039657592773,
+                "width": 350,
+                "height": 111.99999237060547,
+                "text": "вторник,Неделя 422 сентябряСегодня"
+              },
+              ".agenda-date": {
+                "x": 20,
+                "y": 78.3097915649414,
+                "width": 136.078125,
+                "height": 33.796875,
+                "text": "22 сентября"
+              },
+              ".app-scroll": {
+                "x": 0,
+                "y": 137.21603393554688,
+                "width": 390,
+                "height": 461.0000305175781,
+                "text": "09:50–11:20ФизраСейчасСеминаркаф. ФВ11:50–13:20Инновации в технике и управленииС"
+              },
+              ".lesson": {
+                "x": 20,
+                "y": 149.21603393554688,
+                "width": 350,
+                "height": 95,
+                "text": "09:50–11:20ФизраСейчасСеминаркаф. ФВ"
+              },
+              ".preview-tools": {
+                "x": 20,
+                "y": 982.059814453125,
+                "width": 350,
+                "height": 44,
+                "text": "Демонстрационный макетИзменения хранятся до перезагрузки. Сегодня в примерах — 2"
+              }
+            }
+          },
+          {
+            "kind": "after",
+            "date": "2026-09-22",
+            "geometry": {
+              ".agenda-heading": {
+                "x": 20,
+                "y": 25.216039657592773,
+                "width": 350,
+                "height": 111.99999237060547,
+                "text": "вторник,Неделя 422 сентябряСегодня"
+              },
+              ".agenda-date": {
+                "x": 20,
+                "y": 78.3097915649414,
+                "width": 136.078125,
+                "height": 33.796875,
+                "text": "22 сентября"
+              },
+              ".app-scroll": {
+                "x": 0,
+                "y": 137.21603393554688,
+                "width": 390,
+                "height": 461.0000305175781,
+                "text": "09:50–11:20ФизраСейчасСеминаркаф. ФВ11:50–13:20Инновации в технике и управленииС"
+              },
+              ".lesson": {
+                "x": 20,
+                "y": 149.21603393554688,
+                "width": 350,
+                "height": 95,
+                "text": "09:50–11:20ФизраСейчасСеминаркаф. ФВ"
+              },
+              ".preview-tools": {
+                "x": 20,
+                "y": 982.059814453125,
+                "width": 350,
+                "height": 44,
+                "text": "Демонстрационный макетИзменения хранятся до перезагрузки. Сегодня в примерах — 2"
+              }
+            }
+          }
+        ],
+        "frames": [
+          {
+            "x": -44,
+            "time": 300000
+          },
+          {
+            "x": -66.88546752929688,
+            "time": 300016
+          },
+          {
+            "x": -100.99977111816406,
+            "time": 300032
+          },
+          {
+            "x": -143.10812377929688,
+            "time": 300048
+          },
+          {
+            "x": -189.9757080078125,
+            "time": 300064
+          },
+          {
+            "x": -238.3677520751953,
+            "time": 300080
+          },
+          {
+            "x": -285.0494384765625,
+            "time": 300096
+          },
+          {
+            "x": -326.7859802246094,
+            "time": 300112
+          },
+          {
+            "x": -360.3425598144531,
+            "time": 300128
+          },
+          {
+            "x": -382.48443603515625,
+            "time": 300144
+          },
+          {
+            "x": -390,
+            "time": 300160
+          },
+          {
+            "x": 0,
+            "time": 300160
+          }
+        ],
+        "lastStep": 7.51556396484375,
+        "settleFrames": 10,
+        "settleElapsedMs": 160
+      },
+      "final": {
+        "date": "2026-09-22",
+        "offset": 0,
+        "width": 390,
+        "transform": "translate3d(0px, 0px, 0px)",
+        "dragging": false,
+        "scroll": 0,
+        "dialogs": 0
+      }
+    }
+  ],
+  "scriptURL": "./assets/index-CE8KJOtG.js",
+  "appVersion": "1.23.59"
+}

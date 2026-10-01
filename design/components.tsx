@@ -31,7 +31,7 @@ export function Modal({ title, onClose, onBack, children, variant }: { variant?:
     if (!ref.current?.isConnected || !ref.current.open) return
     if (pending.current) return
     pending.current = after
-    const duration = motionDuration(true) * 1.4
+    const duration = motionDuration()
     if (!duration) { finishClose(); return }
     const style = getComputedStyle(ref.current!)
     ref.current!.style.setProperty('--sheet-exit-opacity', style.opacity)
@@ -193,14 +193,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
     return lesson ? { ...draft, kind: lesson.kind, lessonId: lesson.id } : draft
   })
   const [picking, setPicking] = useState(false)
-  const selectionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const returnFromPicker = () => { clearTimeout(selectionTimer.current); selectionTimer.current = undefined; setPicking(false) }
-  useEffect(() => {
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-    const reduce = () => { if (reduced.matches && selectionTimer.current) returnFromPicker() }
-    reduced.addEventListener('change', reduce)
-    return () => { clearTimeout(selectionTimer.current); reduced.removeEventListener('change', reduce) }
-  }, [])
+  const returnFromPicker = () => setPicking(false)
   const subjectButton = useRef<HTMLButtonElement>(null)
   const subjectList = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -229,10 +222,7 @@ export function Editor({ draft, today, save, remove, close }: { draft: Draft; to
       const kinds = [...new Set(homeworkLessons(subjectId, DEFAULT_LESSONS).map(l => l.kind))]
       changeContext({ subjectId, kind: kinds.length === 1 ? kinds[0] : undefined })
     }
-    clearTimeout(selectionTimer.current)
-    const duration = motionDuration()
-    if (!duration) setPicking(false)
-    else selectionTimer.current = setTimeout(() => { selectionTimer.current = undefined; setPicking(false) }, duration)
+    setPicking(false)
   }
   const finish = async (dismiss: CloseModal) => {
     if (submitting.current || !value.title.trim() || needsChoice) return

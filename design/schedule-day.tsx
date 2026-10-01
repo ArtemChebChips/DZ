@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { Fragment, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import type { Lesson } from '../src/types'
 import { parseISO } from '../src/lib/dates'
 import { lessonsOn } from '../src/lib/week'
@@ -9,7 +9,6 @@ import { lessonBreaks } from './breaks'
 import { taskLesson, isHomeworkKind, isDayNote } from './homework'
 import { isCurrentInterval } from './current-interval'
 import { usePressAction } from './use-button-feedback'
-import { motionDuration } from './motion'
 
 const longDate = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 const weekday = (date: string) => parseISO(date).toLocaleDateString('ru-RU', { weekday: 'long' })
@@ -21,42 +20,7 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
   openLesson: (lesson: Lesson) => void; row: (task: DemoTask) => ReactNode; banner?: ReactNode; children?: ReactNode;
 }) {
   const press = usePressAction()
-  const [pressed, setPressed] = useState<string | null>(null)
-  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const pendingAction = useRef<(() => void) | null>(null)
-  const cancelTap = () => { clearTimeout(pending.current); pending.current = undefined; pendingAction.current = null; setPressed(null) }
-  useLayoutEffect(() => { cancelTap() }, [date, preview])
-  useEffect(() => {
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') cancelTap() }
-    const hidden = () => { if (document.hidden) cancelTap() }
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-    const reduce = () => { if (reduced.matches) pendingAction.current?.() }
-    document.addEventListener('pointerdown', cancelTap, true)
-    document.addEventListener('keydown', escape, true)
-    document.addEventListener('visibilitychange', hidden)
-    document.addEventListener('scroll', cancelTap, true)
-    window.addEventListener('blur', cancelTap)
-    reduced.addEventListener('change', reduce)
-    return () => {
-      clearTimeout(pending.current)
-      document.removeEventListener('pointerdown', cancelTap, true)
-      document.removeEventListener('keydown', escape, true)
-      document.removeEventListener('visibilitychange', hidden)
-      document.removeEventListener('scroll', cancelTap, true)
-      window.removeEventListener('blur', cancelTap)
-      reduced.removeEventListener('change', reduce)
-      pendingAction.current = null
-    }
-  }, [])
-  const tapLesson = (lesson: Lesson) => {
-    if (preview || pending.current) return
-    const duration = motionDuration(true) * 2
-    if (!duration) { openLesson(lesson); return }
-    setPressed(lesson.id)
-    const finish = () => { clearTimeout(pending.current); pending.current = undefined; pendingAction.current = null; setPressed(null); openLesson(lesson) }
-    pendingAction.current = finish
-    pending.current = setTimeout(finish, duration)
-  }
+  const tapLesson = (lesson: Lesson) => { if (!preview) openLesson(lesson) }
   const weekNumber = academicWeek(date, ANCHOR_MONDAY)
   const lessons = lessonsOn(date, DEFAULT_LESSONS, ANCHOR_MONDAY)
   const breaks = lessonBreaks(lessons)
@@ -86,7 +50,7 @@ export function ScheduleDay({ date, today, minute, tasks, preview, position, scr
           const pause = breaks.get(lesson.id)
           const current = isCurrentInterval(date, today, minute, lesson)
           const currentBreak = pause && isCurrentInterval(date, today, minute, pause)
-          return <Fragment key={lesson.id}>{pause && <p className={`lesson-break ${currentBreak ? 'break-current' : ''}`} aria-current={currentBreak ? 'time' : undefined}><time>{pause.start}–{pause.end}</time><span className="break-label"><strong>Перерыв</strong>{currentBreak && <span className="break-now">Сейчас</span>}</span><span className="break-duration">{minutes.format(pause.minutes)}</span></p>}<article aria-current={current ? 'time' : undefined} className={`lesson ${current ? 'lesson-current' : ''} ${pressed === lesson.id ? 'lesson-tapped' : ''}`}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => tapLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3><span className="current-label" aria-hidden={!current}>Сейчас</span></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
+          return <Fragment key={lesson.id}>{pause && <p className={`lesson-break ${currentBreak ? 'break-current' : ''}`} aria-current={currentBreak ? 'time' : undefined}><time>{pause.start}–{pause.end}</time><span className="break-label"><strong>Перерыв</strong>{currentBreak && <span className="break-now">Сейчас</span>}</span><span className="break-duration">{minutes.format(pause.minutes)}</span></p>}<article aria-current={current ? 'time' : undefined} className={`lesson ${current ? 'lesson-current' : ''}`}><button className="lesson-open" aria-label={`Добавить ${isHomeworkKind(lesson.kind) ? 'задание' : 'заметку'}: ${subjectName(lesson.subjectId)}, ${kindName[lesson.kind]}, ${lesson.start}`} onClick={() => tapLesson(lesson)} /><div className="lesson-time"><time>{lesson.start}</time><span>–</span><time>{lesson.end}</time></div><div className="lesson-body"><div className="lesson-title"><h3>{subjectName(lesson.subjectId)}</h3><span className="current-label" aria-hidden={!current}>Сейчас</span></div><p className="lesson-meta"><span>{kindName[lesson.kind]}</span>{lesson.room && <span>{/^каф\./i.test(lesson.room) ? lesson.room : 'Ауд. ' + lesson.room}</span>}</p>{lesson.teacher && <p className="lesson-detail">{lesson.teacher}</p>}{attached.map(t => row(t))}</div></article></Fragment>
         })}
         {ownTasks.some(t => !isDayNote(t) && !assigned.has(t.id)) && <section className="day-extra"><h3>Без привязки к паре</h3><p className="binding-hint">Открой задание, чтобы выбрать занятие.</p>{ownTasks.filter(t => !isDayNote(t) && !assigned.has(t.id)).map(t => row(t))}</section>}
         {ownTasks.some(isDayNote) && <section className="day-extra"><h3>Заметки на день</h3>{ownTasks.filter(isDayNote).map(t => row(t))}</section>}

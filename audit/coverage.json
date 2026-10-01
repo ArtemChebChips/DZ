@@ -1,7 +1,7 @@
 {
   "baseline": "c2187032330c56f8c094489bf7198d2617fb06ff",
   "baselineFileCount": 232,
-  "version": "1.23.58",
+  "version": "1.23.59",
   "meaning": "Учёт каждого файла базы и новых проверок. readComplete означает полный просмотр кода/контекста, не полную физическую или внешнюю приёмку. Новые изменения инвалидируют записанный hash.",
   "counts": {
     "tooling-reviewed": 14,
@@ -14,7 +14,7 @@
     "excluded-personal": 1,
     "pilot-read-only": 8,
     "shared-runtime-reviewed": 5,
-    "test-reviewed": 17,
+    "test-reviewed": 19,
     "generated-removed": 1
   },
   "files": [
@@ -99,8 +99,8 @@
       "path": "design/components.tsx",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "9cdba1afaebe2c7628d2b6bb9fe6331a46b5b37bbcd0a873788a41bd8aab7dc9"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "64eff0ab9e6e528729b758cda8c46a46b499be9c163ea41ec54ec5482a2c4a21"
     },
     {
       "path": "design/current-interval.ts",
@@ -148,8 +148,8 @@
       "path": "design/main.tsx",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "a7d6ae2c9eadf9b377fc70677d398fd78adc6a7c57d06d3eb98d1eb92817c67c"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "36cb75dacf71956e9ffd12b5ea7076cca18dd4adb65eb06aecc9c710c140b0b6"
     },
     {
       "path": "design/motion.ts",
@@ -232,8 +232,8 @@
       "path": "design/schedule-day.tsx",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "a8bcc68f28dd24f93d3b2099139f524b6ff41eb16df3f3f66a993bb33a157e92"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "4ea2784bdb80f03b08157ba3251f5a33d29a8198148cd168da92c4c7d5dc5b43"
     },
     {
       "path": "design/scroll-motion.ts",
@@ -274,15 +274,15 @@
       "path": "design/style.css",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "3c3210897aafc4a6de49e6ce657996756a2e66851dba5f142f50e663cae5273e"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "7598844bb310bcefe697a98cc7ecd214f6c5e700e92aa42462f742240d60e01c"
     },
     {
       "path": "design/swipe.ts",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "27bc5372180e73c6485da45b93bbf68294a36036fee620902e7aa6b962b85028"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "de6458f04df2408d595a8f274172cfcddd1bcf307bd3e472ecacc2813f3962a2"
     },
     {
       "path": "design/task-groups.ts",
@@ -309,29 +309,29 @@
       "path": "design/use-button-feedback.ts",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "cb158c5c53dfdcc357e76b6beec4cca834dab279ba020bfbac8c671d690280a1"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "1fd94be82534eb750992df18f29443c77f5827955c92e96646cdd31e12a9dca9"
     },
     {
       "path": "design/use-day-swipe.ts",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "c36583765d1cc0d5320c3dee1b098148ad829ea3b0e019162c1a72e0f9cd4116"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "b85151c18218a8cadebc537e2d971daf7674138a91319505f48b40a0f50d9bda"
     },
     {
       "path": "design/use-day-travel.ts",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "aae4c516ea08c021888748eff07a9ccd0b58cae4b94ce7af956a0e0fcdf60ae7"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "cc96e3fe0fa0c5c729f541ec56a75ec73d09a91d86f5681b0289eb5c49fce0b8"
     },
     {
       "path": "design/use-gentle-scroll.ts",
       "status": "runtime-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно",
-      "reviewedSha256": "97fca2896021d2b35fdb425c6b6edc05b3371e6e1a36251fd77344154e2d763c"
+      "evidence": "DATA.md / UI.md / PWA.md / TESTS.md: чтение и связанные проверки; физический iPhone отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "13da3f886b307f84ee75b9c8868dbbc9fdbb20d0dbc3450acd132aa9d6e84fab"
     },
     {
       "path": "design/use-input-method.ts",
@@ -1219,15 +1219,15 @@
       "path": "package-lock.json",
       "status": "tooling-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
-      "reviewedSha256": "3735c613d956e7ee9af57cee7a842634d4d2604398a6e3bf742c40e13c318ae4"
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "cd117a6d4ef2ae649f6d87f2ef2d09e70ce0bf41c3124eafc95c9ccc812cbb5e"
     },
     {
       "path": "package.json",
       "status": "tooling-reviewed",
       "readComplete": true,
-      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
-      "reviewedSha256": "9f3062c35e253d18e780d6355056f5de9abc06834a2de7b97abb88ad2f0f7de7"
+      "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "53375c3800a597c228136db13a7398cdfa1c79f94b2cd2b985e8e02b0f60ac2e"
     },
     {
       "path": "public/icon-180.png",
@@ -1541,8 +1541,8 @@
       "path": "tests/browser/audit.mjs",
       "status": "test-reviewed",
       "readComplete": true,
-      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
-      "reviewedSha256": "b2f9107dd1bf4d29261a7040899f93334bc4523fed09c49ce36346827d82a63b"
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "f1f1ecf3bf203f2abb53a8a8741f94d10d28a3d2bf7f3b6284163bf56651d882"
     },
     {
       "path": "tests/browser/capture.mjs",
@@ -1604,8 +1604,8 @@
       "path": "tests/scroll-motion.test.mjs",
       "status": "test-reviewed",
       "readComplete": true,
-      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
-      "reviewedSha256": "2a9ca6e4b67952f483b150c2d0b339964f4f4f1aafaa63d9e61064bf5dd6f4ac"
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "6d56c39e3ec01af44ca2a4993cf1853e9f24c7ef6395d387d05bb4e9b43d723f"
     },
     {
       "path": "tests/smart-input.test.mjs",
@@ -1625,8 +1625,8 @@
       "path": "tests/swipe.test.mjs",
       "status": "test-reviewed",
       "readComplete": true,
-      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно",
-      "reviewedSha256": "a788799aca7ebee6fd8c19a3514d2993bae910da04136d947552446e93ba9131"
+      "evidence": "TESTS.md / PWA.md / VOICE.md; выполненные сценарии и ограничения указаны отдельно; 1.23.59: заново просмотрены изменения и регрессии по MOTION.md",
+      "reviewedSha256": "2f7858009c7ce35e39d9add714d77896d6d227a39eb4a7da26b78c2cdf42e8d8"
     },
     {
       "path": "tests/task-groups.test.mjs",
@@ -1683,6 +1683,20 @@
       "readComplete": true,
       "evidence": "DATA.md / PWA.md: конфигурация и сборка; исторический launcher и legacy config не основной вход",
       "reviewedSha256": "532206c76a5fbe9c61c110c3c1b99d3cae9c58862d9fad544a0dd476e3cc7055"
+    },
+    {
+      "path": "tests/browser/motion.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "MOTION.md: прочитан harness и выполнен на финальной сборке 1.23.59, синтетические данные; ограничения устройства указаны",
+      "reviewedSha256": "8d201dcf79431f46436bb6ce0dec380eccf6ad74430bedd89a07a28593637c2a"
+    },
+    {
+      "path": "tests/browser/swipe-motion.mjs",
+      "status": "test-reviewed",
+      "readComplete": true,
+      "evidence": "MOTION.md: прочитан harness и выполнен на финальной сборке 1.23.59, синтетические данные; ограничения устройства указаны",
+      "reviewedSha256": "3c856eb35441b6bbaf184bfbc4298fb028c2bbd7f659dc0656dd624e178e660c"
     }
   ]
 }

@@ -339,24 +339,56 @@ scenario('Два окна одного origin добавляют записи б
   await current(second).getByText('Запись из первого окна', { exact: true }).waitFor()
 })
 
-scenario('Смена reduced-motion в покое сохраняет позицию дня; прокрутка отменяет отложенный тап', async ({ page }) => {
+scenario('Нажатие календаря и пары открывает форму без ожидания анимации', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await date(page, '2026-10-05')
+  await page.clock.pauseAt(new Date('2026-10-01T12:05:00+03:00'))
+  await current(page).getByRole('button', { name: 'Календарь', exact: true }).click()
+  assert.equal(await page.getByRole('dialog', { name: 'Выбрать день', exact: true }).count(), 1)
+  await dialog(page).getByRole('button', { name: 'Закрыть', exact: true }).click()
+  await page.clock.runFor(1000)
+  await dialog(page).waitFor({ state: 'hidden' })
   const lesson = current(page).getByRole('button', { name: 'Добавить задание: Физика, Семинар, 15:55', exact: true })
   await lesson.click()
-  await current(page).locator('.app-scroll').evaluate(element => element.dispatchEvent(new Event('scroll')))
+  assert.equal(await dialog(page).count(), 1, 'Открытие не зависит от продвижения часов анимации')
+  await dialog(page).getByRole('textbox', { name: 'Что нужно сделать' }).fill('Тап без задержки')
+  await dialog(page).getByRole('button', { name: 'Закрыть', exact: true }).click()
   await page.clock.runFor(1000)
-  assert.equal(await dialog(page).count(), 0)
+  await dialog(page).waitFor({ state: 'hidden' })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   assert.equal(await page.locator('.day-track').evaluate(element => new DOMMatrix(getComputedStyle(element).transform).m41), 0)
+})
+
+scenario('Вертикальная инерция не измеряет размеры на каждом кадре и не превращает скролл в тап', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 400 })
+  await date(page, '2026-10-05')
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await lesson.click()
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await dialog(page).waitFor()
-  assert.equal(await dialog(page).count(), 1)
-  await close(page)
-  await page.clock.runFor(1000)
-  assert.equal(await dialog(page).count(), 0)
+  const scroll = current(page).locator('.app-scroll')
+  await scroll.evaluate(element => {
+    window.auditSizeReads = 0
+    for (const property of ['scrollHeight', 'clientHeight']) {
+      const getter = Object.getOwnPropertyDescriptor(Element.prototype, property).get
+      Object.defineProperty(element, property, { configurable: true, get() { window.auditSizeReads++; return getter.call(this) } })
+    }
+    element.scrollTop = 100
+  })
+  await touch(scroll, 'touchstart', [{ x: 250, y: 300 }])
+  await page.clock.runFor(16)
+  await touch(scroll, 'touchmove', [{ x: 250, y: 240 }])
+  await page.clock.runFor(16)
+  await touch(scroll, 'touchend', [], [{ x: 250, y: 240 }])
+  const reads = await page.evaluate(() => window.auditSizeReads)
+  const before = await scroll.evaluate(element => element.scrollTop)
+  await page.clock.runFor(120)
+  assert(await scroll.evaluate(element => element.scrollTop) > before, 'После отпускания работает инерция')
+  assert.equal(await page.evaluate(() => window.auditSizeReads), reads, 'Кадры используют измеренную границу')
+  const lesson = current(page).getByRole('button', { name: 'Добавить задание: Физика, Семинар, 15:55', exact: true })
+  await lesson.evaluate(element => element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 })))
+  assert.equal(await dialog(page).count(), 0, 'Ghost click после скролла подавлен')
+  await touch(scroll, 'touchstart', [{ x: 250, y: 250 }])
+  await touch(scroll, 'touchend', [], [{ x: 250, y: 250 }])
+  await lesson.evaluate(element => element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 })))
+  assert.equal(await dialog(page).count(), 1, 'Следующий отдельный тап срабатывает сразу')
 })
 
 scenario('Один диагональный жест не двигает одновременно список и страницу дня', async ({ page }) => {

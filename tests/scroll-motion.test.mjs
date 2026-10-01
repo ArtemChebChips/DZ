@@ -1,7 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { scrollStep, scrollReleaseVelocity } from '../design/scroll-motion.ts'
-import { swipeFollow } from '../design/swipe.ts'
 
 test('Инерция списка одинакова на 60, 90 и 120 Гц и постепенно затухает', () => {
   const run = hz => {
@@ -22,17 +21,6 @@ test('Инерция списка одинакова на 60, 90 и 120 Гц и 
   assert.equal(scrollStep(0, 16).distance, 0)
   assert.ok(scrollStep(-1, 16).distance < 0)
 })
-
-test('Сглаживание свайпа одинаково за 100 мс на 60, 90 и 120 Гц', () => {
-  const run = hz => {
-    let offset = 0
-    for (let i = 0; i < hz / 10; i++) offset = swipeFollow(offset, 200, 1000 / hz)
-    return offset
-  }
-  assert.ok(Math.abs(run(60) - run(90)) < 1e-8)
-  assert.ok(Math.abs(run(60) - run(120)) < 1e-8)
-})
-
 
 test('Редкие события сохраняют инерцию; удержание пальца останавливает её', () => {
   const samples = [{ y: 500, time: 0 }, { y: 380, time: 120 }]

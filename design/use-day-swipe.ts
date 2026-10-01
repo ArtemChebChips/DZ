@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { flushSync } from 'react-dom'
 import { motionDuration } from './motion'
-import { daySwipeTarget, gestureAxis, swipeFollow, swipeSettleDuration, swipeSettleProgress } from './swipe'
+import { daySwipeTarget, gestureAxis, swipeReleaseVelocity, swipeSettleDuration, swipeSettleProgress } from './swipe'
 
 // Один offset и для пальца, и для доведения: без переключения CSS/WAAPI-слоёв.
 export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, trackRef: RefObject<HTMLDivElement | null>, date: string, enabled: boolean, changeDay: (direction: -1 | 1) => void) {
@@ -24,7 +24,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
     let targetOffset = 0
     const draw = (x: number) => {
       offset = Math.max(-width, Math.min(width, x))
-      track.style.transform = `translateX(${offset}px)`
+      track.style.transform = `translate3d(${offset}px, 0, 0)`
     }
     const stop = () => {
       if (frame !== null) cancelAnimationFrame(frame)
@@ -32,21 +32,14 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
     }
     const follow = (target: number) => {
       targetOffset = Math.max(-width, Math.min(width, target))
-      if (reduced.matches) { draw(targetOffset); return }
-      if (frame !== null) return
-      let previous = performance.now()
-      const tick = (now: number) => {
-        frame = null
-        draw(swipeFollow(offset, targetOffset, now - previous))
-        previous = now
-        if (Math.abs(targetOffset - offset) > .1) frame = requestAnimationFrame(tick)
-        else draw(targetOffset)
-      }
-      frame = requestAnimationFrame(tick)
+      // touchmove уже приходит синхронно с движением пальца. Дополнительный
+      // догоняющий RAF создавал вязкость и отставание в момент отпускания.
+      draw(targetOffset)
     }
     const clear = () => {
       stop(); touchId = null; axis = null; offset = 0
-      track.style.transform = ''; delete root.dataset.dayDragging
+      targetOffset = 0
+      track.style.transform = 'translate3d(0, 0, 0)'; delete root.dataset.dayDragging
       for (const el of track.querySelectorAll<HTMLElement>('[aria-hidden="true"] .app-scroll')) el.scrollTop = 0
     }
     reset.current = clear
@@ -63,7 +56,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       if (!duration || Math.abs(to - from) < .5) { finish(); return }
       finishSettle = finish
       const started = performance.now()
-      const slope = Math.max(0, Math.min(1.2, velocity * duration / (to - from)))
+      const slope = Math.max(0, Math.min(3, velocity * duration / (to - from)))
       const tick = (now: number) => {
         const progress = Math.min(1, (now - started) / duration)
         draw(from + (to - from) * swipeSettleProgress(progress, slope))
@@ -100,7 +93,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
       if (axis !== 'x') return
       if (event.cancelable) event.preventDefault()
       samples.push({ x: touch.clientX, time: event.timeStamp })
-      samples = samples.filter(item => event.timeStamp - item.time <= 100)
+      while (samples.length > 2 && samples[1].time < event.timeStamp - 80) samples.shift()
       follow(base + dx)
     }
     const end = (event: TouchEvent) => {
@@ -112,8 +105,7 @@ export function useDaySwipe(viewportRef: RefObject<HTMLDivElement | null>, track
         // Решение — по пальцу, доведение — из реально показанной позиции.
         // Не догоняем палец скачком в момент отпускания.
         const releasedOffset = Math.max(-width, Math.min(width, base + touch.clientX - startX))
-        const recent = samples[0], elapsed = recent ? event.timeStamp - recent.time : 0
-        const velocity = elapsed > 0 && elapsed <= 100 ? (touch.clientX - recent.x) / elapsed : 0
+        const velocity = swipeReleaseVelocity(samples, touch.clientX, event.timeStamp)
         settle(daySwipeTarget(releasedOffset, width, velocity), velocity)
       }
       axis = null
