@@ -11,6 +11,7 @@ const version = JSON.parse(readFileSync(resolve(project, 'package.json'), 'utf8'
 export default defineConfig({
   root: 'design',
   base: process.env.BASE_PATH ?? './',
+  cacheDir: '../.vite-agent.local',
   plugins: [react(), {
     name: 'offline-shell', apply: 'build',
     closeBundle() {
@@ -24,6 +25,6 @@ export default defineConfig({
       writeFileSync(resolve(out, 'sw.js'), worker)
     },
   }],
-  server: { host: '127.0.0.1', port: 4175, strictPort: true, proxy: { '/agent': 'http://127.0.0.1:4176' } },
+  server: { host: '127.0.0.1', port: Number(process.env.DZ_DEV_PORT ?? 4175), strictPort: true, proxy: { '/agent': process.env.DZ_LOCAL_AGENT_URL ?? 'http://127.0.0.1:4176', '/api': process.env.DZ_API_PROXY ?? 'http://127.0.0.1:4286' } },
   build: { outDir: '../dist-design', emptyOutDir: true },
 })

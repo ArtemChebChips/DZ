@@ -7,7 +7,7 @@ import { IconCalendar, IconPlus, IconCheck, IconChevronRight, IconChevronDown, I
 import { Calendar, Editor, Modal } from './components'
 import { ANCHOR_MONDAY, IS_DEMO, DEFAULT_LESSONS, DEFAULT_SUBJECTS, INITIAL_TASKS, EXTRA_TASKS, subjectName, type DemoTask, type Draft } from './data'
 import { version } from '../package.json'
-import { useNotebook, downloadBackup, persistNotebook, STORAGE_KEY } from './storage'
+import { useNotebook, downloadBackup, persistNotebook, importTasks, STORAGE_KEY } from './storage'
 import { isHomeworkKind, isDayNote } from './homework'
 import { useScheduleClock, currentDay } from './use-today'
 import { generateTestTasks, isTestTask, withoutTestTasks } from './test-tasks'
@@ -27,12 +27,14 @@ import { useInputMethod } from './use-input-method'
 import { taskGroups } from './task-groups'
 import { taskSummary } from './task-summary'
 import { SmartInputPanel } from './smart-input-panel'
+import { useCloud } from './use-cloud'
+import { AccountPanel } from './account-panel'
 import './style.css'
 import './register-sw'
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'black' | 'system'
-type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | null
+type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | 'account' | null
 const assessmentOrder = { exam: 0, dist: 1, credit: 2, other: 3 }
 const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.assessment] - assessmentOrder[b.assessment])
 const query = new URLSearchParams(location.search)
@@ -64,6 +66,7 @@ function App() {
   const mainRef = useRef<HTMLDivElement>(null)
   const [tab, setTab] = useState<Tab>(query.get('screen') === 'tasks' ? 'tasks' : query.get('screen') === 'settings' ? 'settings' : 'schedule')
   const notebook = useNotebook(IS_DEMO ? { version: 1, theme: query.get('theme') === 'black' ? 'black' : query.get('theme') === 'dark' ? 'dark' : query.get('theme') === 'system' ? 'system' : 'light', tasks: query.get('fixture') === 'empty' ? [] : query.get('fixture') === 'stress' ? [...INITIAL_TASKS, ...EXTRA_TASKS] : INITIAL_TASKS, collapsed: [] } : null)
+  const cloud = useCloud(notebook, IS_DEMO)
   const { tasks, theme, collapsed } = notebook.data
   const animationSpeed = notebook.data.animationSpeed ?? 'normal'
   useLayoutEffect(() => { document.documentElement.dataset.motion = animationSpeed }, [animationSpeed])
@@ -112,6 +115,7 @@ function App() {
   useButtonFeedback()
   const [betaDeleted, setBetaDeleted] = useState<number | null>(null)
   const [undo, setUndo] = useState<{ type: 'delete' | 'complete'; task: DemoTask } | null>(null)
+  const [addedBatch, setAddedBatch] = useState<string[]>([])
   const [notice, setNotice] = useState('')
   const toastRef = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -167,13 +171,13 @@ function App() {
     window.addEventListener('pageshow', apply)
     return () => { media.removeEventListener('change', apply); window.removeEventListener('pageshow', apply) }
   }, [theme])
-  useEffect(() => { if (!notice || draft || panel) return; const timer = setTimeout(() => setNotice(''), 2500); return () => clearTimeout(timer) }, [notice, draft, panel])
+  useEffect(() => { if (!notice || draft || panel) return; const timer = setTimeout(() => { setNotice(''); setAddedBatch([]) }, addedBatch.length ? 15000 : 2500); return () => clearTimeout(timer) }, [notice, draft, panel, addedBatch.length])
   useEffect(() => { if (!undo || draft || panel) return; const timer = setTimeout(() => setUndo(null), 5000); return () => clearTimeout(timer) }, [undo, draft, panel])
   const toggle = (id: string) => {
     const task = tasks.find(t => t.id === id)
     if (!task || exiting.includes(id)) return
     setTasks(items => items.map(t => t.id === id ? { ...t, done: !t.done } : t))
-    setNotice('')
+    setAddedBatch([]); setNotice('')
     setUndo(task.done ? null : { type: 'complete', task })
     if (!task.done && tab === 'tasks' && panel !== 'history' && !matchMedia('(prefers-reduced-motion: reduce)').matches) setExiting(ids => [...ids, id])
   }
@@ -190,7 +194,7 @@ function App() {
   const save = (value: Draft) => {
     const { locked: _locked, ...record } = value
     setTasks(items => record.id ? items.map(t => t.id === record.id ? { ...t, ...record } : t) : [...items, { ...record, id: crypto.randomUUID(), done: false }])
-    setUndo(null); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
+    setUndo(null); setAddedBatch([]); setNotice(value.id ? 'Изменения сохранены' : isDayNote(value) ? 'Заметка добавлена' : 'Задание добавлено')
   }
   const remove = (id: string) => { const task = tasks.find(t => t.id === id); setUndo(task ? { type: 'delete', task } : null); setNotice(''); setTasks(items => items.filter(t => t.id !== id)) }
   const testCount = tasks.filter(isTestTask).length
@@ -201,12 +205,12 @@ function App() {
     })
     const generated = generateTestTasks(days, crypto.randomUUID())
     setTasks(items => [...withoutTestTasks(items), ...generated])
-    setUndo(null); setBetaDeleted(null)
+    setUndo(null); setAddedBatch([]); setBetaDeleted(null)
   }
   const deleteExamples = () => {
     setBetaDeleted(testCount)
     setTasks(withoutTestTasks)
-    setUndo(null)
+    setUndo(null); setAddedBatch([])
   }
   const visible = tasks.filter(t => !t.done || exiting.includes(t.id))
   const grouped = taskGroups(visible, today)
@@ -280,6 +284,7 @@ function App() {
       </div>}
 
       {tab === 'settings' && <div className="settings-list">
+        <button className="setting-row" onClick={press(() => setPanel('account'))}><SettingIcon kind="info" /><span><strong>Аккаунт и синхронизация</strong><small>{IS_DEMO ? 'В демо отключены' : cloud.session ? cloud.error || (notebook.data.sync?.conflicts.length ? 'Нужно выбрать версию заданий' : cloud.status || cloud.session.user.username) : 'Сохранение на сервере и другое устройство'}</small></span><IconChevronRight size={18} /></button>
         <section className="appearance"><h2>Оформление</h2><Segmented label="Оформление" value={theme} columns={2} onChange={setTheme} options={[{ id: 'light', label: 'Светлая' }, { id: 'dark', label: 'Тёмная' }, { id: 'black', label: 'Чёрная' }, { id: 'system', label: 'Системная' }]} /></section>
         <section className="appearance animation-settings"><h2>Анимации</h2><Segmented label="Скорость анимаций" value={animationSpeed} onChange={animationSpeed => notebook.update(current => ({ ...current, animationSpeed }))} options={[{ id: 'fast', label: 'Быстро' }, { id: 'normal', label: 'Обычно' }, { id: 'smooth', label: 'Плавно' }]} /><p className="binding-hint">Если в системе включено уменьшение движения, анимации отключены.</p></section>
         <button className="setting-row" onClick={press(() => setPanel('subjects'))}><SettingIcon kind="book" /><span><strong>Предметы</strong><small>Список предметов и аттестации</small></span><IconChevronRight size={18} /></button>
@@ -294,19 +299,26 @@ function App() {
       {tab !== 'settings' && <div className="entry-actions"><div className="entry-actions-buttons">
         <button className={`outline-button entry-add-button note-add-button ${tab === 'tasks' ? 'note-placeholder' : ''}`} aria-hidden={tab === 'tasks' || undefined} tabIndex={tab === 'tasks' ? -1 : undefined} onClick={press(() => setDraft({ entryType: 'note', subjectId: '', title: '', due: date }))}><IconPlus size={21} />Заметка</button>
         <button className="primary-button entry-add-button task-add-button" onClick={press(() => openNew())}><IconPlus size={21} />Задание</button>
+        {(cloud.enabled || import.meta.env.DEV) && <button className="outline-button entry-microphone" aria-label="Надиктовать задания" onClick={press(() => setSmartOpen(true))}><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" /></svg></button>}
       </div></div>}
-      {undo?.type === 'complete' && tab !== 'settings' ? <div ref={toastRef} className="toast toast-notice toast-complete" role="status"><button onClick={undoLast} aria-label="Отменить выполнение"><span>{notebook.error ? 'Не сохранено' : 'Выполнено'}</span><strong>Отменить</strong></button></div> : undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={press(() => setUndo(null))}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className="toast toast-notice" role="status"><span className="toast-message">{notice}</span></div>}
+      {undo?.type === 'complete' && tab !== 'settings' ? <div ref={toastRef} className="toast toast-notice toast-complete" role="status"><button onClick={undoLast} aria-label="Отменить выполнение"><span>{notebook.error ? 'Не сохранено' : 'Выполнено'}</span><strong>Отменить</strong></button></div> : undo ? <div ref={toastRef} className="toast" role="status"><span className="toast-message">{notebook.error ? 'Не сохранено' : undo.type === 'delete' ? 'Задание удалено' : 'Выполнено'}</span><button onClick={undoLast}>Отменить</button><button className="toast-close" aria-label="Закрыть сообщение" onClick={press(() => setUndo(null))}><IconX size={17} /></button></div> : notice && !notebook.error && <div ref={toastRef} className={`toast toast-notice ${addedBatch.length ? 'toast-batch' : ''}`} role="status"><span className="toast-message">{notice}</span>{addedBatch.length > 0 && <button onClick={() => {
+        try { notebook.commit(current => ({ ...current, tasks: current.tasks.filter(t => !addedBatch.includes(t.id)) })); setAddedBatch([]); setNotice('Добавление отменено') }
+        catch { /* Ошибка сохранения остаётся в предупреждении, кнопку не убираем. */ }
+      }}>Отменить добавление</button>}</div>}
     </main>
 
     {draft && <Editor today={today} draft={draft} save={save} remove={remove} close={closeEditor} />}
     {calendarOpen && <Modal variant="calendar" title="Выбрать день" onClose={() => setCalendarOpen(false)}>{dismiss => <div className="calendar-picker"><Calendar today={today} value={date} onChange={selected => { selectDay(selected); dismiss() }} showMonthShortcut /></div>}</Modal>}
     {panel === 'history' && <Modal title="Выполненные задания" onClose={() => setPanel(null)}>{dismiss => <div className="history-list">{!done.length ? <p className="history-empty">Здесь появятся выполненные задания.</p> : <><p className="history-caption"><span>По дате задания</span><span>Всего: {done.length}</span></p>{done.slice(0, historyLimit).map(task => <div key={task.id}><p className="history-date">{parseISO(task.due).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</p><TaskRow task={task} toggle={toggle} edit={task => dismiss(() => editHistory(task))} /></div>)}{done.length > historyLimit && <button className="outline-button history-more" onClick={() => setHistoryLimit(n => n + 20)}>Показать ещё</button>}</>}</div>}</Modal>}
-    {import.meta.env.DEV && smartOpen && <Modal title="Быстрое добавление" onClose={() => setSmartOpen(false)}>{dismiss => <SmartInputPanel save={drafts => {
+    {(cloud.enabled || import.meta.env.DEV) && smartOpen && <Modal title="Быстрое добавление" onClose={() => setSmartOpen(false)}>{dismiss => <>
+      <label className="auto-add-option"><input type="checkbox" checked={notebook.data.autoAdd ?? false} onChange={e => notebook.update(current => ({ ...current, autoAdd: e.target.checked }))} /> Добавлять однозначные задания автоматически</label>
+      <SmartInputPanel agent={cloud.enabled ? cloud.agent : undefined} autoAdd={notebook.data.autoAdd} save={drafts => {
       if (notebook.blocked) throw new Error('Данные заблокированы')
-      const next = { ...notebook.data, tasks: [...tasks, ...drafts.map(d => ({ ...d, id: crypto.randomUUID(), done: false }))] }
-      if (!IS_DEMO) persistNotebook(localStorage, next)
-      notebook.update(next); dismiss(() => setNotice(`Добавлено: ${drafts.length}`))
-    }} />}</Modal>}
+      const added = drafts.map(d => ({ ...d, id: crypto.randomUUID(), done: false }))
+      notebook.commit(current => ({ ...current, tasks: [...current.tasks, ...added] }))
+      setUndo(null); setAddedBatch(added.map(t => t.id)); dismiss(() => { setSmartOpen(false); setNotice(`Добавлено: ${drafts.length}`) })
+    }} /></>}</Modal>}
+    {panel === 'account' && <Modal title="Аккаунт и синхронизация" onClose={() => setPanel(null)}><div className="info-panel"><AccountPanel cloud={cloud} state={notebook.data.sync} demo={IS_DEMO} /></div></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         {import.meta.env.DEV && <button className="primary-button" onClick={() => { setPanel(null); setSmartOpen(true) }}>Текстом или голосом · локальный тест</button>}
@@ -321,7 +333,24 @@ function App() {
         {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
       </div>
     </Modal>}
-    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}<br />{IS_DEMO ? 'Демонстрация' : 'Для iPhone и компьютера'}</p></>}</div></Modal>}
+    {panel && panel !== 'beta' && panel !== 'history' && panel !== 'account' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">
+      {panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <>
+        <p>Скачай копию, чтобы восстановить задания при очистке данных устройства. При входе в аккаунт задания дополнительно сохраняются на сервере.</p>
+        <button className="primary-button" onClick={backup}>Скачать копию данных</button>
+        <label className="backup-import">Восстановить задания из JSON<input type="file" accept="application/json,.json" disabled={notebook.blocked} onChange={async e => {
+          const file = e.target.files?.[0]; e.target.value = ''; if (!file) return
+          try {
+            if (file.size > 5_000_000) throw new Error('Файл слишком большой: до 5 МБ.')
+            const raw = await file.text()
+            if (!IS_DEMO) localStorage.setItem('dz-next:before-import:v1', JSON.stringify(notebook.data))
+            notebook.commit(current => importTasks(current, raw))
+            setAddedBatch([]); setNotice('Задания из файла добавлены')
+          } catch (e) { setNotice(e instanceof Error ? e.message : 'Не удалось восстановить задания.') }
+        }} /></label>
+        <p>Восстановление добавляет записи к существующим. Одинаковые записи не дублируются; отличающиеся версии сохраняются отдельно. Привязка аккаунта из файла не переносится.</p>
+        {notice && <p role="status">{notice}</p>}
+      </> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}<br />{IS_DEMO ? 'Демонстрация' : 'Для iPhone и компьютера'}</p></>}
+    </div></Modal>}
   </div>
 }
 

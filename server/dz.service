@@ -1,0 +1,24 @@
+[Unit]
+Description=DZ sync and voice service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dz
+Group=dz
+WorkingDirectory=/opt/dz
+EnvironmentFile=/etc/dz.env
+ExecStart=/opt/dz/.venv/bin/python -B server/app.py serve
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/dz
+Environment=HOME=/var/lib/dz
+
+[Install]
+WantedBy=multi-user.target

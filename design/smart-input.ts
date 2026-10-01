@@ -22,8 +22,10 @@ export function resolveProposal(intent: Intent, subjects: Subject[], lessons: Le
     if (!deadline.kind && new Set(own.map(l => l.kind)).size > 1) question ||= 'Уточни вид занятия или выбери дату.'
     else for (let offset = 0; offset < 60; offset++) {
       const day = addDays(today, offset)
-      const next = lessonsOn(day, own, anchor).find(l => offset > 0 || l.start > time)
-      if (next) { due = day; lesson = next; break }
+      const candidates = lessonsOn(day, own, anchor).filter(l => offset > 0 || l.start > time)
+      const next = candidates[0]
+      if (candidates.length > 1) question ||= 'В этот день несколько подходящих занятий. Проверь, к какому относится задание.'
+      if (next) { due = day; lesson = candidates.length === 1 ? next : undefined; break }
     }
   }
   if (!subjectId) question ||= 'Выбери предмет.'

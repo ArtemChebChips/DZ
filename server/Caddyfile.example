@@ -1,0 +1,13 @@
+dz.example.com {
+    request_body {
+        max_size 12MB
+    }
+    handle /api/* {
+        reverse_proxy 127.0.0.1:4286 {
+            header_up X-Real-IP {remote_host}
+        }
+    }
+    handle {
+        respond "ДЗ: сервер работает" 200
+    }
+}

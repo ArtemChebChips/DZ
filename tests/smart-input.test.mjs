@@ -12,6 +12,10 @@ test('Следующая лабораторная учитывает знаме�
   const p = resolve(intent({ type: 'nextLesson', value: '', kind: 'lab' }, 'phys'), '2026-09-28T16:00:00')
   assert.equal(p.due, '2026-09-28'); assert.equal(p.lessonId, 'pn-5')
 })
+test('Две следующие лабораторные одного дня требуют выбора конкретной пары', () => {
+  const p = resolve(intent({ type: 'nextLesson', value: '', kind: 'lab' }, 'phys'), '2026-09-28T08:00:00')
+  assert.equal(p.due, '2026-09-28'); assert.equal(p.lessonId, undefined); assert.ok(p.question)
+})
 test('Неуказанный вид, день недели и пропущенный срок не получают выдуманную дату', () => {
   for (const d of [{type:'nextLesson',value:'',kind:''},{type:'weekday',value:'4',kind:''},{type:'missing',value:'',kind:''}]) {
     const p = resolve(intent(d)); assert.equal(p.due, ''); assert.ok(p.question)

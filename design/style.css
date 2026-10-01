@@ -407,6 +407,8 @@ button:disabled { opacity: .45; cursor: default; }
 .toast.toast-notice { left: var(--notice-left, max(var(--page-gutter), var(--safe-left))); width: var(--notice-width, 132px); height: 48px; min-height: 48px; padding: 6px 12px; justify-content: center; text-align: center; font-size: 13px; line-height: 17px; box-shadow: none; }
 .note-placeholder { visibility: hidden; }
 .toast.toast-complete { padding: 0; }
+.toast.toast-batch { width: max-content; max-width: calc(100% - 48px); height: auto; min-height: 64px; flex-direction: column; gap: 2px; }
+.toast-batch button { padding: 4px 8px; }
 .toast-complete button { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 48px; padding: 0 8px; line-height: 17px; }
 .toast-complete button > span { font-size: 11px; }
 .toast-complete button > strong { font-size: 13px; font-weight: 600; }
@@ -525,3 +527,15 @@ button[data-pressed]:not(.calendar-date), a[data-pressed], summary[data-pressed]
 .smart-input fieldset { min-width: 0; display: grid; gap: 12px; border: 1px solid currentColor; border-radius: 16px; padding: 14px; }
 .smart-input legend label { display: flex; align-items: center; }
 .smart-input small { opacity: .7; line-height: 1.4; }
+.smart-input .voice-button { min-height: 76px; width: 150px; justify-self: center; border-radius: 999px; }
+.voice-button.recording { color: #b63232; }
+.entry-microphone { flex: 0 0 48px; width: 48px; padding: 0; }
+.auto-add-option { display: flex; align-items: flex-start; gap: 10px; padding: 0 20px 18px; font-size: 14px; line-height: 1.5; }
+.auto-add-option input { flex-shrink: 0; margin-top: 4px; }
+.account-panel, .account-panel form { display: grid; gap: 14px; }
+.account-panel label, .backup-import { display: grid; gap: 6px; }
+.account-panel input { box-sizing: border-box; min-width: 0; width: 100%; padding: 12px; font: inherit; font-size: 16px; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 12px; }
+.account-panel fieldset { min-width: 0; display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 12px; overflow-wrap: anywhere; }
+.account-panel fieldset p { white-space: pre-wrap; }
+.backup-import { margin-top: 18px; }
+.backup-import input { max-width: 100%; font: inherit; font-size: 14px; }
