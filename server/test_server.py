@@ -1,5 +1,4 @@
 import hashlib
-from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -104,7 +103,7 @@ class StoreTests(unittest.TestCase):
         copied = Store(target)
         self.assertEqual(copied.sync(self.owner, {'version': 1, 'cursor': 0, 'operations': []})['records'][0]['task'], TASK)
         self.assertEqual(Store(self.db).sync(self.owner, {'version': 1, 'cursor': 0, 'operations': []})['cursor'], 1)
-        with closing(sqlite3.connect(target)) as db, db:
+        with sqlite3.connect(target) as db:
             db.execute('PRAGMA user_version=999')
         with self.assertRaises(RuntimeError):
             Store(target)
@@ -167,25 +166,6 @@ class HTTPTests(unittest.TestCase):
         for _ in range(8):
             self.assertEqual(self.request('/api/login', {'username': 'owner', 'password': 'wrong'})[0], 401)
         self.assertEqual(self.request('/api/login', {'username': 'owner', 'password': 'wrong'})[0], 429)
-
-    def test_sync_only_keeps_tasks_available_and_disables_agent(self):
-        self.server.agents_enabled = False
-        token = self.request('/api/login', {'username': 'owner', 'password': 'test-password-123'})[1]['token']
-        status, _, _ = self.request('/api/sync', {'version': 1, 'cursor': 0, 'operations': []}, token)
-        self.assertEqual(status, 200)
-        self.assertEqual(self.request('/api/agent/parse', {'text': 'Проба'}, token)[0], 503)
-        self.assertEqual(self.request('/api/agent/transcribe', {}, token)[0], 503)
-
-    def test_registration_four_character_password_and_duplicate(self):
-        payload = {'username': 'new-owner', 'password': '1234'}
-        self.assertEqual(self.request('/api/register', payload)[0], 403)
-        self.server.registration_enabled = True
-        self.assertEqual(self.request('/api/register', {**payload, 'password': '123'})[0], 400)
-        status, auth, _ = self.request('/api/register', payload)
-        self.assertEqual(status, 200)
-        self.assertEqual(self.request('/api/sync', {'version': 1, 'cursor': 0, 'operations': []}, auth['token'])[0], 200)
-        self.assertEqual(self.request('/api/register', payload)[0], 409)
-        self.assertEqual(self.request('/api/login', payload)[0], 200)
 
 
 if __name__ == '__main__':

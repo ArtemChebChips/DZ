@@ -26,8 +26,6 @@ class Server(ThreadingHTTPServer):
         self.store, self.origins, self.parse = store, set(origins), parse
         self.transcribe = transcribe or Parakeet().transcribe
         self.agent_lock = threading.Lock()
-        self.agents_enabled = os.environ.get('DZ_SYNC_ONLY') != '1'
-        self.registration_enabled = os.environ.get('DZ_ALLOW_REGISTRATION') == '1'
         self.rate_lock = threading.Lock()
         self.attempts = defaultdict(deque)
 
@@ -121,15 +119,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if self.headers.get('Origin') not in self.server.origins:
                 raise APIError(403, 'Этот адрес приложения не разрешён.')
-            if self.path in ('/api/login', '/api/register'):
+            if self.path == '/api/login':
                 # IP берём только от доверенного proxy, по умолчанию — от соединения.
                 ip = self.headers.get('X-Real-IP') if os.environ.get('DZ_TRUST_PROXY') == '1' else self.client_address[0]
                 self.server.limit(('login', ip), 8, 300)
                 payload = self.read_json(4096)
-                if self.path == '/api/register':
-                    if not self.server.registration_enabled:
-                        raise APIError(403, 'Регистрация на этом сервере отключена.')
-                    self.server.store.create_user(payload.get('username'), payload.get('password'))
                 return self.reply(200, self.server.store.login(payload.get('username'), payload.get('password')))
             authorization = self.headers.get('Authorization', '')
             if not authorization.startswith('Bearer '):
@@ -144,8 +138,6 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, self.server.store.sync(user['id'], self.read_json()))
             if self.path not in ('/api/agent/parse', '/api/agent/transcribe'):
                 raise APIError(404, 'Неизвестный запрос.')
-            if not self.server.agents_enabled:
-                raise APIError(503, 'На этом сервере работает только синхронизация заданий.')
             self.server.limit(('agent', user['id']), 12)
             body = self.read_json(200_000) if self.path.endswith('/parse') else self.read_body(12_000_000)
             if not self.server.agent_lock.acquire(blocking=False):
@@ -177,7 +169,7 @@ def main():
     args = parser.parse_args()
     store = Store(args.db)
     if args.command == 'create-user':
-        password = getpass.getpass('Пароль (от 4 символов): ')
+        password = getpass.getpass('Пароль (от 12 символов): ')
         if password != getpass.getpass('Повтори пароль: '):
             parser.error('Пароли не совпадают.')
         store.create_user(args.username, password)
