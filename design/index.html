@@ -7,17 +7,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <script>
+      // Только числа в памяти; до первого кадра диагностика ничего не сохраняет.
+      window.__dzBoot = { marks: { pageScript: performance.now() }, hiddenAtStart: document.hidden, onlineAtStart: navigator.onLine }
       // Тема до первого кадра, в том числе при обновлении iOS standalone.
       try {
         const query = new URLSearchParams(location.search)
-        const saved = query.get('demo') === '1' ? {} : JSON.parse(localStorage.getItem('dz-next:v1') || '{}')
+        window.__dzBoot.marks.themeReadStart = performance.now()
+        const raw = query.get('demo') === '1' ? null : localStorage.getItem('dz-next:v1')
+        window.__dzBoot.marks.themeReadEnd = performance.now()
+        const saved = JSON.parse(raw || '{}')
+        window.__dzBoot.marks.themeParseEnd = performance.now()
         const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : saved.theme || 'system'
         document.documentElement.dataset.motion = ['fast', 'normal', 'smooth'].includes(saved.animationSpeed) ? saved.animationSpeed : 'normal'
         const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.dataset.theme = theme === 'black' ? 'black' : dark ? 'dark' : 'light'
         document.documentElement.style.backgroundColor = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
         document.querySelector('meta[name="theme-color"]').content = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
-      } catch {}
+      } catch { window.__dzBoot.themeReadFailed = true }
+      window.__dzBoot.marks.themeEnd = performance.now()
     </script>
     <link rel="apple-touch-icon" href="./icon-stack-a-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-stack-a-192.png" />

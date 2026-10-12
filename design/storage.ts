@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from 'react'
 import type { DemoTask } from './data'
+import { startupMark, startupReadFailed } from './startup.ts'
 
 export const STORAGE_KEY = 'dz-next:v1'
 export type Notebook = { version: 1; tasks: DemoTask[]; theme: 'light' | 'dark' | 'black' | 'system'; collapsed: string[]; animationSpeed?: 'fast' | 'normal' | 'smooth' }
@@ -29,10 +30,13 @@ export function persistNotebook(storage: Pick<Storage, 'setItem'>, data: Noteboo
 export function useNotebook(demo: Notebook | null) {
   const [initial] = useState(() => {
     if (demo) return { data: demo, raw: null, blocked: false }
+    startupMark('notebookReadStart')
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
+      startupMark('notebookReadEnd')
       return { data: readNotebook({ getItem: () => raw }), raw, blocked: false }
-    } catch { return { data: freshNotebook(), raw: null, blocked: true } }
+    } catch { startupReadFailed(); return { data: freshNotebook(), raw: null, blocked: true } }
+    finally { startupMark('notebookReady') }
   })
   const [data, setData] = useState(initial.data)
   const [blocked, setBlocked] = useState(initial.blocked)

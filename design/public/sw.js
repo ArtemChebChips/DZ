@@ -27,6 +27,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()))
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting()
+  if (event.data?.type === 'DZ_STARTUP_INFO') event.ports?.[0]?.postMessage({ type: 'DZ_STARTUP_INFO', version: VERSION, build: BUILD })
 })
 if (urls.length) self.addEventListener('fetch', event => {
   const request = event.request, url = new URL(request.url)
@@ -38,8 +39,14 @@ if (urls.length) self.addEventListener('fetch', event => {
     event.respondWith((async () => {
       // Оболочка и её assets принадлежат одной полностью установленной сборке.
       // Проверка нового sw.js идёт отдельно, не задерживая холодный запуск.
+      const start = performance.now()
       const cached = await (await caches.open(CACHE)).match(shell)
-      return cached || fetch(request)
+      const lookup = performance.now() - start
+      const response = cached || await fetch(request)
+      // Числа и версия именно того worker, который отдал HTML. Тело не читаем.
+      const headers = new Headers(response.headers)
+      headers.append('Server-Timing', `dz-source;desc="${cached ? 'cache' : 'network'}", dz-lookup;dur=${lookup.toFixed(1)}, dz-version;desc="${VERSION}", dz-build;desc="${BUILD}"`)
+      return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
     })())
   } else if (urls.includes(page)) {
     event.respondWith((async () => (await (await caches.open(CACHE)).match(page)) || fetch(request))())

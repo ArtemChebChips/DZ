@@ -528,3 +528,11 @@ button:disabled { opacity: .45; cursor: default; }
 .smart-input fieldset { min-width: 0; display: grid; gap: 12px; border: 1px solid currentColor; border-radius: 16px; padding: 14px; }
 .smart-input legend label { display: flex; align-items: center; }
 .smart-input small { opacity: .7; line-height: 1.4; }
+
+/* Диагностика видна только в отдельном окне настроек. */
+.startup-metrics { margin: 0; font-size: 14px; }
+.startup-metrics > div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.startup-metrics dt { min-width: 0; }
+.startup-metrics dd { margin: 0; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.startup-panel summary { padding: 14px 0; cursor: pointer; }
+.startup-report { width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); color: var(--ink); font-size: 16px; resize: vertical; }

@@ -29,10 +29,14 @@ import { taskSummary } from './task-summary'
 import { SmartInputPanel } from './smart-input-panel'
 import './style.css'
 import './register-sw'
+import { startStartupDiagnostics, startupInterfaceReady } from './startup'
+import { StartupPanel } from './startup-panel'
+
+startStartupDiagnostics(version)
 
 type Tab = 'tasks' | 'schedule' | 'settings'
 type Theme = 'light' | 'dark' | 'black' | 'system'
-type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | null
+type Panel = 'subjects' | 'backup' | 'about' | 'beta' | 'history' | 'startup' | null
 const assessmentOrder = { exam: 0, dist: 1, credit: 2, other: 3 }
 const settingsSubjects = [...DEFAULT_SUBJECTS].sort((a, b) => assessmentOrder[a.assessment] - assessmentOrder[b.assessment])
 const query = new URLSearchParams(location.search)
@@ -54,6 +58,7 @@ function TaskRow({ task, toggle, edit, leaving = false, groupLeaving = false, on
 }
 
 function App() {
+  useLayoutEffect(startupInterfaceReady, [])
   useInputMethod()
   const press = usePressAction()
   const now = useScheduleClock()
@@ -285,6 +290,7 @@ function App() {
         <button className="setting-row" onClick={press(() => changeTab('schedule'))}><IconCalendar size={27} /><span><strong>Расписание</strong><small>Учебные недели и время занятий</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={press(() => setPanel('backup'))}><SettingIcon kind="download" /><span><strong>Резервная копия</strong><small>Скачать данные в файл</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={press(() => setPanel('beta'))}><SettingIcon kind="book" /><span><strong>Для бета-тестеров</strong><small>Примеры, подсветка и плавность</small></span><IconChevronRight size={18} /></button>
+        <button className="setting-row" onClick={press(() => setPanel('startup'))}><SettingIcon kind="info" /><span><strong>Диагностика запуска</strong><small>Время открытия и отчёт для проверки</small></span><IconChevronRight size={18} /></button>
         <button className="setting-row" onClick={press(() => setPanel('about'))}><SettingIcon kind="info" /><span><strong>О приложении</strong><small>Версия {version}</small></span><IconChevronRight size={18} /></button>
       </div>}
       {demoTools}
@@ -306,6 +312,7 @@ function App() {
       if (!await notebook.update(current => ({ ...current, tasks: [...current.tasks, ...additions] }), false)) throw new Error('Не удалось сохранить')
       dismiss(() => { setSmartOpen(false); setNotice(`Добавлено: ${drafts.length}`) })
     }} />}</Modal>}
+    {panel === 'startup' && <Modal title="Диагностика запуска" onClose={() => setPanel(null)}><StartupPanel /></Modal>}
     {panel === 'beta' && <Modal title="Для бета-тестеров" onClose={() => setPanel(null)}>
       <div className="info-panel beta-panel">
         {import.meta.env.DEV && <button className="primary-button" onClick={() => { setPanel(null); setSmartOpen(true) }}>Текстом или голосом · локальный тест</button>}
@@ -320,7 +327,7 @@ function App() {
         {notebook.error && <button className="text-button" onClick={notebook.blocked ? recoverRaw : backup}>Скачать резервную копию</button>}
       </div>
     </Modal>}
-    {panel && panel !== 'beta' && panel !== 'history' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}<br />{IS_DEMO ? 'Демонстрация' : 'Для iPhone и компьютера'}</p></>}</div></Modal>}
+    {panel && panel !== 'beta' && panel !== 'history' && panel !== 'startup' && <Modal title={panel === 'subjects' ? 'Предметы' : panel === 'backup' ? 'Резервная копия' : 'О приложении'} onClose={() => setPanel(null)}><div className="info-panel">{panel === 'subjects' ? <>{settingsSubjects.map(s => <div className="subject-row" key={s.id}><span className={`subject-dot tone-${s.assessment}`} /><div><strong>{subjectName(s.id)}</strong><small>{{ exam: 'Экзамен', dist: 'Распределённый экзамен', credit: 'Зачёт', other: 'Без аттестации' }[s.assessment]}</small></div></div>)}</> : panel === 'backup' ? <><p>Задания и оформление сохраняются в этом браузере на этом устройстве. Скачай копию, чтобы не потерять их при очистке данных Safari.</p><button className="primary-button" onClick={backup}>Скачать копию данных</button><p>Кнопка создаёт файл с текущими заданиями и настройками. Облачного сохранения и восстановления из файла в приложении пока нет.</p></> : <><h3>ДЗ</h3><p>Задания, сроки и расписание для своей учёбы.</p><p>Версия {version}<br />{IS_DEMO ? 'Демонстрация' : 'Для iPhone и компьютера'}</p></>}</div></Modal>}
   </div>
 }
 
