@@ -1,4 +1,5 @@
 // Сборка подставляет версию и полный список файлов. Данные заданий здесь не хранятся.
+const SCRIPT_STARTED_AT = performance.timeOrigin + performance.now()
 const VERSION = 'dev' /*__VERSION__*/
 const BUILD = 'dev' /*__BUILD__*/
 const FILES = [] /*__PRECACHE__*/
@@ -30,6 +31,7 @@ self.addEventListener('message', event => {
   if (event.data?.type === 'DZ_STARTUP_INFO') event.ports?.[0]?.postMessage({ type: 'DZ_STARTUP_INFO', version: VERSION, build: BUILD })
 })
 if (urls.length) self.addEventListener('fetch', event => {
+  const fetchEventAt = performance.timeOrigin + performance.now()
   const request = event.request, url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== self.location.origin) return
   const page = url.origin + url.pathname
@@ -40,12 +42,16 @@ if (urls.length) self.addEventListener('fetch', event => {
       // Оболочка и её assets принадлежат одной полностью установленной сборке.
       // Проверка нового sw.js идёт отдельно, не задерживая холодный запуск.
       const start = performance.now()
-      const cached = await (await caches.open(CACHE)).match(shell)
-      const lookup = performance.now() - start
+      const cache = await caches.open(CACHE)
+      const opened = performance.now()
+      const cached = await cache.match(shell)
+      const matched = performance.now()
+      const lookup = matched - start
       const response = cached || await fetch(request)
       // Числа и версия именно того worker, который отдал HTML. Тело не читаем.
       const headers = new Headers(response.headers)
       headers.append('Server-Timing', `dz-source;desc="${cached ? 'cache' : 'network'}", dz-lookup;dur=${lookup.toFixed(1)}, dz-version;desc="${VERSION}", dz-build;desc="${BUILD}"`)
+      headers.append('Server-Timing', `dz-worker-script;desc="${SCRIPT_STARTED_AT.toFixed(1)}", dz-fetch-event;desc="${fetchEventAt.toFixed(1)}", dz-cache-open;dur=${(opened - start).toFixed(1)}, dz-cache-match;dur=${(matched - opened).toFixed(1)}, dz-response-ready;desc="${(performance.timeOrigin + performance.now()).toFixed(1)}"`)
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
     })())
   } else if (urls.includes(page)) {

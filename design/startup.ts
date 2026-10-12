@@ -1,6 +1,6 @@
 // Измерения не содержат заданий и не отправляются по сети.
 export const STARTUP_KEY = 'dz-next:startup:v1'
-const markNames = ['pageScript', 'themeReadStart', 'themeReadEnd', 'themeParseEnd', 'themeEnd', 'mainModule', 'notebookReadStart', 'notebookReadEnd', 'notebookReady', 'interfaceCommit', 'frameEstimate'] as const
+const markNames = ['pageScript', 'themeReadStart', 'themeReadEnd', 'themeParseEnd', 'themeEnd', 'mainModule', 'shellFrameEstimate', 'appRenderStart', 'notebookReadStart', 'notebookReadEnd', 'notebookReady', 'themeApplied', 'interfaceCommit', 'frameEstimate'] as const
 type Mark = typeof markNames[number]
 type Boot = {
   marks: Partial<Record<Mark, number>>
@@ -29,7 +29,7 @@ export type StartupReport = {
   marks: Partial<Record<Mark, number>>
   navigation: Timings | null
   navigationType: string
-  shell: { source: string; version: string; build: string; lookupMs: number } | null
+  shell: { source: string; version: string; build: string; lookupMs: number; workerScriptStart?: number | null; fetchEventStart?: number | null; cacheOpenMs?: number | null; cacheMatchMs?: number | null; responseReady?: number | null } | null
   paint: Timings
   assets: { file: string; duration: number; responseEnd: number; workerStart: number; transferSize: number }[]
   workerAtModule: string | null
@@ -57,6 +57,36 @@ export function startupMark(name: Mark) {
   if (state && state.marks[name] === undefined) state.marks[name] = performance.now()
 }
 export function startupReadFailed() { const state = boot(); if (state) state.notebookReadFailed = true }
+// Между двумя rAF браузер получает возможность показать статическую оболочку.
+// При доступном Paint Timing ждём и подтверждение FCP: compositor может
+// показать кадр позже rAF. Если браузер не прислал запись, не зависаем навсегда.
+// В скрытой вкладке сначала ждём возобновления кадров.
+export function afterStartupShellFrame(start: () => void) {
+  let framesReady = false, painted = false, started = false
+  let observer: PerformanceObserver | undefined
+  let fallback: ReturnType<typeof setTimeout> | undefined
+  const run = (allowEstimate = false) => {
+    if (started || !framesReady || (!painted && !allowEstimate)) return
+    started = true
+    observer?.disconnect()
+    clearTimeout(fallback)
+    setTimeout(() => { startupMark('appRenderStart'); start() }, 0)
+  }
+  try {
+    if (typeof PerformanceObserver !== 'undefined' && PerformanceObserver.supportedEntryTypes.includes('paint')) {
+      observer = new PerformanceObserver(entries => {
+        if (entries.getEntries().some(entry => entry.name === 'first-contentful-paint')) { painted = true; run() }
+      })
+      observer.observe({ type: 'paint', buffered: true })
+    }
+  } catch { observer?.disconnect(); observer = undefined }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    startupMark('shellFrameEstimate')
+    framesReady = true
+    if (!observer || painted) run(true)
+    else fallback = setTimeout(() => run(true), 100)
+  }))
+}
 function controllerPath() {
   const url = navigator.serviceWorker?.controller?.scriptURL
   return url ? new URL(url).pathname : null
@@ -128,6 +158,12 @@ export function getStartupReport(): StartupReport {
   const navigation = nav ? Object.fromEntries(names.map(name => [name, rounded(nav[name])])) : null
   const timing = (name: string) => nav?.serverTiming?.find(entry => entry.name === name)
   const source = timing('dz-source')
+  // У worker собственный timeOrigin. Переданные абсолютные отметки приводим
+  // к шкале страницы; запуск уже жившего worker может оказаться отрицательным.
+  const workerMoment = (name: string) => {
+    const value = timing(name)?.description
+    return value && Number.isFinite(Number(value)) ? rounded(Number(value) - performance.timeOrigin) : null
+  }
   const marks = Object.fromEntries(markNames.flatMap(name => state?.marks[name] === undefined ? [] : [[name, rounded(state.marks[name]!)] ]))
   return {
     schema: 1, id: String(performance.timeOrigin), version: appVersion,
@@ -137,7 +173,11 @@ export function getStartupReport(): StartupReport {
     hiddenBeforeFrame, restoredFromBackForwardCache,
     themeReadFailed: Boolean(state?.themeReadFailed), notebookReadFailed: Boolean(state?.notebookReadFailed),
     userAgent: navigator.userAgent, marks, navigation, navigationType: nav?.type ?? 'Недоступно',
-    shell: source ? { source: source.description, version: timing('dz-version')?.description ?? '', build: timing('dz-build')?.description ?? '', lookupMs: timing('dz-lookup')?.duration ?? 0 } : null,
+    shell: source ? {
+      source: source.description, version: timing('dz-version')?.description ?? '', build: timing('dz-build')?.description ?? '', lookupMs: timing('dz-lookup')?.duration ?? 0,
+      workerScriptStart: workerMoment('dz-worker-script'), fetchEventStart: workerMoment('dz-fetch-event'), responseReady: workerMoment('dz-response-ready'),
+      cacheOpenMs: timing('dz-cache-open')?.duration ?? null, cacheMatchMs: timing('dz-cache-match')?.duration ?? null,
+    } : null,
     paint: Object.fromEntries(performance.getEntriesByType('paint').map(entry => [entry.name, rounded(entry.startTime)])),
     assets: (performance.getEntriesByType('resource') as PerformanceResourceTiming[]).filter(entry => {
       const url = new URL(entry.name)
@@ -167,5 +207,5 @@ export function markDuration(report: StartupReport, start: Mark, end: Mark) {
   return a === undefined || b === undefined ? null : rounded(b - a)
 }
 export function formatStartupReport(current: StartupReport, history: StartupReport[]) {
-  return 'ДЗ — диагностика запуска\nВремена в мс от начала навигации браузера, не от касания ярлыка. frameEstimate — приблизительный кадр, не измеренный FCP. Нули Navigation Timing могут означать недоступное измерение.\n' + JSON.stringify([current, ...history.filter(item => item.id !== current.id)].slice(0, 5), null, 2)
+  return 'ДЗ — диагностика запуска\nВремена в мс от начала навигации браузера, не от касания ярлыка. shellFrameEstimate и frameEstimate — приблизительные кадры, не измеренный FCP. С 1.23.61 FCP может относиться к стартовой оболочке; interfaceCommit и frameEstimate относятся к приложению с данными. Отметки worker приведены к шкале страницы; отрицательный workerScriptStart означает, что worker уже работал до навигации. Нули Navigation Timing могут означать недоступное измерение.\n' + JSON.stringify([current, ...history.filter(item => item.id !== current.id)].slice(0, 5), null, 2)
 }

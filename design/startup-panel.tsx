@@ -28,17 +28,26 @@ export function StartupPanel() {
     <dl className="startup-metrics">
       <div><dt>Первый байт страницы</dt><dd>{ms(report.navigation?.responseStart || null)}</dd></div>
       <div><dt>Начало кода страницы</dt><dd>{ms(report.marks.pageScript)}</dd></div>
-      <div><dt>Чтение темы</dt><dd>{ms(markDuration(report, 'themeReadStart', 'themeReadEnd'))}</dd></div>
-      <div><dt>Разбор данных для темы</dt><dd>{ms(markDuration(report, 'themeReadEnd', 'themeParseEnd'))}</dd></div>
+      {report.marks.themeReadStart !== undefined && <><div><dt>Чтение темы</dt><dd>{ms(markDuration(report, 'themeReadStart', 'themeReadEnd'))}</dd></div>
+      <div><dt>Разбор данных для темы</dt><dd>{ms(markDuration(report, 'themeReadEnd', 'themeParseEnd'))}</dd></div></>}
       <div><dt>Основной код готов</dt><dd>{ms(report.marks.mainModule)}</dd></div>
-      <div><dt>Чтение заданий</dt><dd>{ms(markDuration(report, 'notebookReadStart', 'notebookReadEnd'))}</dd></div>
+      <div><dt>Кадр стартовой оболочки, оценка</dt><dd>{ms(report.marks.shellFrameEstimate)}</dd></div>
+      <div><dt>Чтение заданий и настроек</dt><dd>{ms(markDuration(report, 'notebookReadStart', 'notebookReadEnd'))}</dd></div>
       <div><dt>Проверка данных</dt><dd>{ms(markDuration(report, 'notebookReadEnd', 'notebookReady'))}</dd></div>
       <div><dt>Интерфейс построен</dt><dd>{ms(report.marks.interfaceCommit)}</dd></div>
-      <div><dt>Первое содержимое</dt><dd>{ms(report.paint['first-contentful-paint'])}</dd></div>
+      <div><dt>Первое содержимое, включая оболочку</dt><dd>{ms(report.paint['first-contentful-paint'])}</dd></div>
       <div><dt>Кадр после отрисовки, оценка</dt><dd>{ms(report.marks.frameEstimate)}</dd></div>
     </dl>
-    <p className="binding-hint">«Чтение» и «проверка» — длительности этапов. Остальные числа — время от начала навигации. Оценка кадра не доказывает момент появления изображения на экране.</p>
+    <p className="binding-hint">«Чтение» и «проверка» — длительности этапов. Остальные числа — время от начала навигации. Стартовая оболочка появляется до чтения данных; её первый кадр ещё не означает готовность приложения. Оценки кадров не доказывают момент появления изображения на экране.</p>
     <p>Страница: {report.shell ? report.shell.source === 'cache' ? 'из офлайн-копии' : 'через сетевой запрос' : 'источник не определён браузером'}. Обработчик: {report.shell?.version || report.worker?.version || report.workerStatus}.</p>
+    <dl className="startup-metrics">
+      <div><dt>Начало кода обработчика</dt><dd>{ms(report.shell?.workerScriptStart)}</dd></div>
+      <div><dt>Запрос страницы получен обработчиком</dt><dd>{ms(report.shell?.fetchEventStart)}</dd></div>
+      <div><dt>Открытие офлайн-кэша, длительность</dt><dd>{ms(report.shell?.cacheOpenMs)}</dd></div>
+      <div><dt>Поиск страницы в кэше, длительность</dt><dd>{ms(report.shell?.cacheMatchMs)}</dd></div>
+      <div><dt>Ответ обработчика подготовлен</dt><dd>{ms(report.shell?.responseReady)}</dd></div>
+    </dl>
+    <p className="binding-hint">Отметки обработчика приведены к шкале страницы. Отрицательное начало означает, что обработчик уже работал до этого запуска. Передача и чтение тела страницы происходят после подготовки ответа.</p>
     <p>Копируется этот запуск и до четырёх предыдущих. Тексты заданий в отчёт не входят. Автоматической отправки нет.</p>
     {startupHistoryUnavailable() && <p role="status">Не удалось сохранить историю замеров. Текущий отчёт можно скопировать.</p>}
     <details><summary>Полный отчёт</summary><textarea ref={text} className="startup-report" aria-label="Отчёт о запуске" readOnly value={output} /></details>

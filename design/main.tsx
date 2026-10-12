@@ -29,7 +29,7 @@ import { taskSummary } from './task-summary'
 import { SmartInputPanel } from './smart-input-panel'
 import './style.css'
 import './register-sw'
-import { startStartupDiagnostics, startupInterfaceReady } from './startup'
+import { afterStartupShellFrame, startStartupDiagnostics, startupInterfaceReady, startupMark } from './startup'
 import { StartupPanel } from './startup-panel'
 
 startStartupDiagnostics(version)
@@ -151,13 +151,13 @@ function App() {
   useLayoutEffect(() => {
     const media = matchMedia('(prefers-color-scheme: dark)')
     const root = document.documentElement
-    // Ранний фон index.html сменяется той же палитрой, без перезагрузки standalone.
+    // Системная палитра оболочки сменяется сохранённой после чтения notebook.
     // Системная область WebKit отслеживает фон страницы отдельно от палитры.
     // Передаём ему также явный background-color, без перезагрузки.
     const apply = () => {
       const resolved = theme === 'system' ? media.matches ? 'dark' : 'light' : theme
       const changed = root.dataset.theme !== resolved
-      if (changed) root.dataset.themeTransition = 'true'
+      if (changed && root.dataset.appThemeReady) root.dataset.themeTransition = 'true'
       // Фиксируем прежний цвет перед началом перехода, в том числе при первом клике.
       getComputedStyle(root).getPropertyValue('--bg')
       root.dataset.theme = resolved
@@ -166,6 +166,8 @@ function App() {
       document.body.style.backgroundColor = background
       document.getElementById('system-top')?.style.setProperty('background-color', background)
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background)
+      root.dataset.appThemeReady = 'true'
+      startupMark('themeApplied')
     }
     apply(); media.addEventListener('change', apply)
     window.addEventListener('pageshow', apply)
@@ -331,4 +333,4 @@ function App() {
   </div>
 }
 
-createRoot(document.getElementById('root')!).render(<App />)
+afterStartupShellFrame(() => createRoot(document.getElementById('root')!).render(<App />))

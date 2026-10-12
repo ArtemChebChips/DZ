@@ -6,30 +6,32 @@
     <meta name="theme-color" content="#fdfcfb" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <style>
+      html, body { margin: 0; background: #fdfcfb; color: #171b24; }
+      html[data-theme='dark'], html[data-theme='dark'] body { background: #17191d; color: #eff0f3; }
+      html[data-theme='black'], html[data-theme='black'] body { background: #000; color: #eff0f3; }
+      #startup-shell { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      #startup-shell strong { font-size: 36px; font-weight: 600; letter-spacing: -1px; }
+      #startup-shell span { font-size: 15px; opacity: .65; }
+    </style>
     <script>
       // Только числа в памяти; до первого кадра диагностика ничего не сохраняет.
       window.__dzBoot = { marks: { pageScript: performance.now() }, hiddenAtStart: document.hidden, onlineAtStart: navigator.onLine }
-      // Тема до первого кадра, в том числе при обновлении iOS standalone.
+      // До первого кадра не обращаемся к хранилищу, даже за темой.
+      // Сохранённая палитра придёт вместе с notebook после стартовой оболочки.
       try {
         const query = new URLSearchParams(location.search)
-        window.__dzBoot.marks.themeReadStart = performance.now()
-        const raw = query.get('demo') === '1' ? null : localStorage.getItem('dz-next:v1')
-        window.__dzBoot.marks.themeReadEnd = performance.now()
-        const saved = JSON.parse(raw || '{}')
-        window.__dzBoot.marks.themeParseEnd = performance.now()
-        const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : saved.theme || 'system'
-        document.documentElement.dataset.motion = ['fast', 'normal', 'smooth'].includes(saved.animationSpeed) ? saved.animationSpeed : 'normal'
+        const theme = query.get('demo') === '1' ? query.get('theme') || 'light' : 'system'
         const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.dataset.theme = theme === 'black' ? 'black' : dark ? 'dark' : 'light'
         document.documentElement.style.backgroundColor = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
         document.querySelector('meta[name="theme-color"]').content = theme === 'black' ? '#000000' : dark ? '#17191d' : '#fdfcfb'
-      } catch { window.__dzBoot.themeReadFailed = true }
-      window.__dzBoot.marks.themeEnd = performance.now()
+      } catch { /* Оболочка остаётся доступна в светлой палитре. */ }
     </script>
     <link rel="apple-touch-icon" href="./icon-stack-a-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-stack-a-192.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>ДЗ</title>
   </head>
-  <body><div id="system-top" aria-hidden="true"></div><div id="root"></div><script type="module" src="/main.tsx"></script></body>
+  <body><div id="system-top" aria-hidden="true"></div><div id="root"><div id="startup-shell" role="status"><strong>ДЗ</strong><span>Открываем…</span></div></div><script type="module" src="/main.tsx"></script></body>
 </html>
