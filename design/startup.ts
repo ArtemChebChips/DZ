@@ -57,34 +57,13 @@ export function startupMark(name: Mark) {
   if (state && state.marks[name] === undefined) state.marks[name] = performance.now()
 }
 export function startupReadFailed() { const state = boot(); if (state) state.notebookReadFailed = true }
-// Между двумя rAF браузер получает возможность показать статическую оболочку.
-// При доступном Paint Timing ждём и подтверждение FCP: compositor может
-// показать кадр позже rAF. Если браузер не прислал запись, не зависаем навсегда.
-// В скрытой вкладке сначала ждём возобновления кадров.
+// Даём браузеру возможность показать фон до синхронного чтения.
+// У пустого фона нет FCP: ждать его означало бы задерживать само приложение.
+// Два rAF — оценка кадра, не доказательство появления пикселей на экране.
 export function afterStartupShellFrame(start: () => void) {
-  let framesReady = false, painted = false, started = false
-  let observer: PerformanceObserver | undefined
-  let fallback: ReturnType<typeof setTimeout> | undefined
-  const run = (allowEstimate = false) => {
-    if (started || !framesReady || (!painted && !allowEstimate)) return
-    started = true
-    observer?.disconnect()
-    clearTimeout(fallback)
-    setTimeout(() => { startupMark('appRenderStart'); start() }, 0)
-  }
-  try {
-    if (typeof PerformanceObserver !== 'undefined' && PerformanceObserver.supportedEntryTypes.includes('paint')) {
-      observer = new PerformanceObserver(entries => {
-        if (entries.getEntries().some(entry => entry.name === 'first-contentful-paint')) { painted = true; run() }
-      })
-      observer.observe({ type: 'paint', buffered: true })
-    }
-  } catch { observer?.disconnect(); observer = undefined }
   requestAnimationFrame(() => requestAnimationFrame(() => {
     startupMark('shellFrameEstimate')
-    framesReady = true
-    if (!observer || painted) run(true)
-    else fallback = setTimeout(() => run(true), 100)
+    setTimeout(() => { startupMark('appRenderStart'); start() }, 0)
   }))
 }
 function controllerPath() {
@@ -207,5 +186,5 @@ export function markDuration(report: StartupReport, start: Mark, end: Mark) {
   return a === undefined || b === undefined ? null : rounded(b - a)
 }
 export function formatStartupReport(current: StartupReport, history: StartupReport[]) {
-  return 'ДЗ — диагностика запуска\nВремена в мс от начала навигации браузера, не от касания ярлыка. shellFrameEstimate и frameEstimate — приблизительные кадры, не измеренный FCP. С 1.23.61 FCP может относиться к стартовой оболочке; interfaceCommit и frameEstimate относятся к приложению с данными. Отметки worker приведены к шкале страницы; отрицательный workerScriptStart означает, что worker уже работал до навигации. Нули Navigation Timing могут означать недоступное измерение.\n' + JSON.stringify([current, ...history.filter(item => item.id !== current.id)].slice(0, 5), null, 2)
+  return 'ДЗ — диагностика запуска\nВремена в мс от начала навигации браузера, не от касания ярлыка. shellFrameEstimate и frameEstimate — приблизительные кадры, не измеренный FCP. В 1.23.61 FCP мог относиться к надписи запуска; с 1.23.62 стартовый фон не содержит текста и не даёт FCP. interfaceCommit и frameEstimate относятся к приложению с данными. Отметки worker приведены к шкале страницы; отрицательный workerScriptStart означает, что worker уже работал до навигации. Нули Navigation Timing могут означать недоступное измерение.\n' + JSON.stringify([current, ...history.filter(item => item.id !== current.id)].slice(0, 5), null, 2)
 }

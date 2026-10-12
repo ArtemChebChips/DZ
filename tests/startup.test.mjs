@@ -34,7 +34,7 @@ test('Нулевой момент допустим, отсутствие изм�
 test('Стартовый HTML не обращается к хранилищу и выбирает только доступную без него палитру', () => {
   const html = readFileSync(new URL('../design/index.html', import.meta.url), 'utf8')
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
-  assert.match(html, /id="startup-shell" role="status"/)
+  assert.match(html, /id="startup-shell" aria-hidden="true"/)
   for (const [search, systemDark, expected] of [['', false, 'light'], ['', true, 'dark'], ['?demo=1', true, 'light'], ['?demo=1&theme=black', false, 'black']]) {
     let reads = 0
     const root = { dataset: {}, style: {} }
@@ -53,7 +53,7 @@ test('Чтение приложения ждёт два кадра оболоч�
   try {
     Object.defineProperty(globalThis, 'window', { configurable: true, value: { __dzBoot: { marks: {} } } })
     globalThis.requestAnimationFrame = fn => { frames.push(fn) }
-    globalThis.setTimeout = fn => { tasks.push(fn) }
+    globalThis.setTimeout = (fn, delay) => { assert.equal(delay, 0); tasks.push(fn) }
     afterStartupShellFrame(() => { started = true })
     assert.equal(started, false)
     assert.equal(tasks.length, 0)
@@ -66,46 +66,6 @@ test('Чтение приложения ждёт два кадра оболоч�
     tasks.shift()()
     assert.equal(started, true)
     assert(window.__dzBoot.marks.appRenderStart >= window.__dzBoot.marks.shellFrameEstimate)
-  } finally {
-    for (const [key, descriptor] of Object.entries(originals)) {
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else delete globalThis[key]
-    }
-  }
-})
-test('При доступном Paint Timing ждём FCP; отсутствие записи не оставляет приложение на оболочке', () => {
-  const keys = ['requestAnimationFrame', 'setTimeout', 'clearTimeout', 'PerformanceObserver', 'window']
-  const originals = Object.fromEntries(keys.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]))
-  try {
-    for (const sendPaint of [true, false]) {
-      const frames = [], timers = new Map()
-      let callback, started = 0, disconnected = false, nextTimer = 0
-      const replacements = {
-        window: { __dzBoot: { marks: {} } }, requestAnimationFrame: fn => frames.push(fn),
-        setTimeout: (fn, delay) => { const id = ++nextTimer; timers.set(id, { fn, delay }); return id }, clearTimeout: id => timers.delete(id),
-        PerformanceObserver: class {
-          static supportedEntryTypes = ['paint']
-          constructor(fn) { callback = fn }
-          observe() {}
-          disconnect() { disconnected = true }
-        },
-      }
-      for (const [key, value] of Object.entries(replacements)) Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-      afterStartupShellFrame(() => { started++ })
-      frames.shift()(); frames.shift()()
-      assert.equal(started, 0)
-      assert.equal([...timers.values()][0].delay, 100)
-      if (sendPaint) callback({ getEntries: () => [{ name: 'first-contentful-paint' }] })
-      else [...timers.values()][0].fn()
-      assert(disconnected)
-      assert.equal(timers.size, 1)
-      assert.equal([...timers.values()][0].delay, 0)
-      const task = [...timers.values()][0]
-      timers.clear(); task.fn()
-      callback({ getEntries: () => [{ name: 'first-contentful-paint' }] })
-      assert.equal(started, 1)
-      assert.equal(timers.size, 0)
-    }
   } finally {
     for (const [key, descriptor] of Object.entries(originals)) {
       if (descriptor) Object.defineProperty(globalThis, key, descriptor)

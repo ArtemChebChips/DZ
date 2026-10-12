@@ -10,9 +10,7 @@
       html, body { margin: 0; background: #fdfcfb; color: #171b24; }
       html[data-theme='dark'], html[data-theme='dark'] body { background: #17191d; color: #eff0f3; }
       html[data-theme='black'], html[data-theme='black'] body { background: #000; color: #eff0f3; }
-      #startup-shell { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; gap: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      #startup-shell strong { font-size: 36px; font-weight: 600; letter-spacing: -1px; }
-      #startup-shell span { font-size: 15px; opacity: .65; }
+      #startup-shell { position: fixed; inset: 0; }
     </style>
     <script>
       // Только числа в памяти; до первого кадра диагностика ничего не сохраняет.
@@ -33,5 +31,5 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>ДЗ</title>
   </head>
-  <body><div id="system-top" aria-hidden="true"></div><div id="root"><div id="startup-shell" role="status"><strong>ДЗ</strong><span>Открываем…</span></div></div><script type="module" src="/main.tsx"></script></body>
+  <body><div id="system-top" aria-hidden="true"></div><div id="root"><div id="startup-shell" aria-hidden="true"></div></div><script type="module" src="/main.tsx"></script></body>
 </html>

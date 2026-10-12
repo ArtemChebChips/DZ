@@ -37,7 +37,7 @@ try {
       Object.defineProperty(window, 'localStorage', { get() {
         if (mode === 'denied') throw new DOMException('Тест отказа доступа', 'SecurityError')
         if (!window.startupTest.reads.length) {
-          window.startupTest.reads.push({ start: performance.now(), shell: !!document.getElementById('startup-shell'), fcp: performance.getEntriesByName('first-contentful-paint')[0]?.startTime })
+          window.startupTest.reads.push({ start: performance.now(), shell: !!document.getElementById('startup-shell'), shellText: document.getElementById('startup-shell')?.textContent, fcp: performance.getEntriesByName('first-contentful-paint')[0]?.startTime })
           if (mode === 'slow') { const end = performance.now() + 900; while (performance.now() < end) { /* Медленный первый доступ */ } }
         }
         return storage
@@ -51,14 +51,15 @@ try {
       await page.waitForFunction(() => performance.getEntriesByName('first-contentful-paint').length > 0)
       const metrics = await page.evaluate(() => ({ ...window.startupTest, fcp: performance.getEntriesByName('first-contentful-paint')[0].startTime, marks: window.__dzBoot.marks, rawNow: localStorage.getItem('dz-next:v1'), theme: document.documentElement.dataset.theme, motion: document.documentElement.dataset.motion }))
       assert(metrics.reads[0].shell)
-      assert(metrics.fcp > 0 && metrics.fcp < metrics.reads[0].start, JSON.stringify(metrics))
+      assert.equal(metrics.reads[0].shellText, '')
+      assert.equal(metrics.reads[0].fcp, undefined)
       assert(metrics.marks.notebookReadEnd - metrics.marks.notebookReadStart >= 890)
       assert(metrics.marks.shellFrameEstimate < metrics.marks.notebookReadStart)
       assert.equal(metrics.rawNow, metrics.raw)
       assert.equal(metrics.theme, 'black')
       assert.equal(metrics.motion, 'fast')
       assert(!metrics.writes.includes('dz-next:v1'))
-      console.log(JSON.stringify({ scenario: 'Первое содержимое до медленного чтения', fcp: metrics.fcp, readStart: metrics.reads[0].start, readEnd: metrics.marks.notebookReadEnd }))
+      console.log(JSON.stringify({ scenario: 'Пустой фон до чтения; FCP относится к приложению', fcp: metrics.fcp, readStart: metrics.reads[0].start, readEnd: metrics.marks.notebookReadEnd }))
       await page.getByRole('button', { name: 'Диагностика запуска', exact: false }).click()
       await page.locator('textarea.startup-report').waitFor({ state: 'attached' })
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -86,6 +87,8 @@ try {
     try {
       await page.goto(base, { waitUntil: 'commit' })
       await page.locator('#startup-shell').waitFor()
+      assert.equal(await page.locator('#startup-shell').textContent(), '')
+      assert.equal(await page.locator('#startup-shell').getAttribute('aria-hidden'), 'true')
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
       if (process.env.DZ_STARTUP_SCREENSHOTS) {
         await mkdir(process.env.DZ_STARTUP_SCREENSHOTS, { recursive: true })

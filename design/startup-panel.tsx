@@ -35,10 +35,10 @@ export function StartupPanel() {
       <div><dt>Чтение заданий и настроек</dt><dd>{ms(markDuration(report, 'notebookReadStart', 'notebookReadEnd'))}</dd></div>
       <div><dt>Проверка данных</dt><dd>{ms(markDuration(report, 'notebookReadEnd', 'notebookReady'))}</dd></div>
       <div><dt>Интерфейс построен</dt><dd>{ms(report.marks.interfaceCommit)}</dd></div>
-      <div><dt>Первое содержимое, включая оболочку</dt><dd>{ms(report.paint['first-contentful-paint'])}</dd></div>
+      <div><dt>Первое содержимое приложения</dt><dd>{ms(report.paint['first-contentful-paint'])}</dd></div>
       <div><dt>Кадр после отрисовки, оценка</dt><dd>{ms(report.marks.frameEstimate)}</dd></div>
     </dl>
-    <p className="binding-hint">«Чтение» и «проверка» — длительности этапов. Остальные числа — время от начала навигации. Стартовая оболочка появляется до чтения данных; её первый кадр ещё не означает готовность приложения. Оценки кадров не доказывают момент появления изображения на экране.</p>
+    <p className="binding-hint">«Чтение» и «проверка» — длительности этапов. Остальные числа — время от начала навигации. Перед чтением данных браузеру даётся возможность показать фон. Сам фон не считается первым содержимым. Оценки кадров не доказывают момент появления изображения на экране.</p>
     <p>Страница: {report.shell ? report.shell.source === 'cache' ? 'из офлайн-копии' : 'через сетевой запрос' : 'источник не определён браузером'}. Обработчик: {report.shell?.version || report.worker?.version || report.workerStatus}.</p>
     <dl className="startup-metrics">
       <div><dt>Начало кода обработчика</dt><dd>{ms(report.shell?.workerScriptStart)}</dd></div>
