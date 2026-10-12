@@ -83,12 +83,16 @@ function worker(cached) {
   return { handlers, calls }
 }
 test('Замеры worker сохраняют мгновенный кеш, тело и заголовки ответа', async () => {
-  const { handlers, calls } = worker(new Response('<html>offline</html>', { headers: { 'Content-Type': 'text/html' } }))
+  const { handlers, calls } = worker(new Response('<html>offline</html>', { headers: { 'Content-Type': 'text/html', 'Content-Encoding': 'gzip', 'Content-Length': '123' } }))
   let promise
   handlers.fetch({ request: { method: 'GET', mode: 'navigate', url: 'https://test.example/DZ/?screen=settings' }, respondWith: result => { promise = result } })
   const response = await promise
   assert.equal(await response.text(), '<html>offline</html>')
   assert.equal(response.headers.get('Content-Type'), 'text/html')
+  assert.equal(response.headers.get('Content-Encoding'), null)
+  assert.equal(response.headers.get('Content-Length'), null)
+  assert.match(response.headers.get('Server-Timing'), /dz-body-mode;desc="buffer"/)
+  assert.match(response.headers.get('Server-Timing'), /dz-body-bytes;desc="20"/)
   assert.match(response.headers.get('Server-Timing'), /dz-source;desc="cache"/)
   assert.match(response.headers.get('Server-Timing'), /dz-version;desc="1.23.60"/)
   assert.match(response.headers.get('Server-Timing'), /dz-worker-script;desc="100010.0"/)
@@ -116,6 +120,7 @@ test('Открытие отчёта без rAF получает worker и ист
   const win = new EventTarget(), doc = new EventTarget(), sw = new EventTarget()
   win.__dzBoot = { marks: { pageScript: 8 }, hiddenAtStart: false, onlineAtStart: false, tasks: 'НЕ КОПИРОВАТЬ' }
   doc.hidden = false
+  doc.querySelector = () => null
   sw.controller = { scriptURL: 'https://test.example/DZ/sw.js', postMessage(data, ports) { ports[0].postMessage({ type: data.type, version: '1.23.60', build: 'worker-test' }) } }
   const nav = { type: 'navigate', serverTiming: [
     { name: 'dz-source', description: 'cache' }, { name: 'dz-worker-script', description: '100010' },
@@ -142,6 +147,10 @@ test('Открытие отчёта без rAF получает worker и ист
     nav.serverTiming = [{ name: 'dz-source', description: 'cache' }]
     assert.equal(getStartupReport().shell.workerScriptStart, null)
     assert.equal(getStartupReport().shell.cacheOpenMs, null)
+    win.__dzBoot.timeOrigin = 100049
+    assert.equal(getStartupReport().id, '100049')
+    replacements.performance.timeOrigin = 100051
+    assert.equal(getStartupReport().id, '100049')
     assert(!store.data.get(STARTUP_KEY).includes('НЕ КОПИРОВАТЬ'))
   } finally {
     for (const [key, descriptor] of Object.entries(originals)) {

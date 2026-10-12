@@ -77,24 +77,22 @@ try {
     assert.deepEqual(errors, [])
     await context.close()
   }
-  // Оболочка видна даже без загруженного JS приложения, на обеих палитрах.
+  // Даже при запрете отдельных JS/CSS приложение открывается из одного HTML.
   for (const colorScheme of ['light', 'dark']) {
-    const context = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme })
+    const context = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme, serviceWorkers: 'block' })
     const page = await context.newPage()
-    let release
-    const blocked = new Promise(resolve => { release = resolve })
-    await page.route('**/assets/*.js', async route => { await blocked; await route.continue() })
+    const requests = []
+    await page.route('**/assets/*', async route => { requests.push(route.request().url()); await route.abort() })
     try {
-      await page.goto(base, { waitUntil: 'commit' })
-      await page.locator('#startup-shell').waitFor()
-      assert.equal(await page.locator('#startup-shell').textContent(), '')
-      assert.equal(await page.locator('#startup-shell').getAttribute('aria-hidden'), 'true')
+      await page.goto(base + '/?screen=settings')
+      await page.getByRole('button', { name: 'Диагностика запуска', exact: false }).waitFor()
+      assert.deepEqual(requests, [])
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
       if (process.env.DZ_STARTUP_SCREENSHOTS) {
         await mkdir(process.env.DZ_STARTUP_SCREENSHOTS, { recursive: true })
         await page.screenshot({ path: `${process.env.DZ_STARTUP_SCREENSHOTS}/shell-${colorScheme}.png` })
       }
-    } finally { release(); await context.close() }
+    } finally { await context.close() }
   }
   // Настоящие SW/CacheStorage, оба опубликованных пути, затем полное отключение сети.
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
@@ -111,6 +109,11 @@ try {
     const report = JSON.parse(output.slice(output.indexOf('\n[') + 1))[0]
     assert.equal(report.shell.source, 'cache')
     assert.equal(report.onlineAtStart, false)
+    assert.equal(report.bundle, 'inline')
+    assert.deepEqual(report.assets, [])
+    assert.equal(report.shell.bodyMode, 'buffer')
+    assert(report.shell.bodyReadMs >= 0)
+    assert(report.shell.bodyBytes > 250000)
     assert.equal(typeof report.shell.workerScriptStart, 'number')
     assert(report.shell.fetchEventStart >= 0)
     assert(report.shell.cacheOpenMs >= 0)

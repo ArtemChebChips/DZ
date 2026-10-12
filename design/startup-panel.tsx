@@ -45,9 +45,11 @@ export function StartupPanel() {
       <div><dt>Запрос страницы получен обработчиком</dt><dd>{ms(report.shell?.fetchEventStart)}</dd></div>
       <div><dt>Открытие офлайн-кэша, длительность</dt><dd>{ms(report.shell?.cacheOpenMs)}</dd></div>
       <div><dt>Поиск страницы в кэше, длительность</dt><dd>{ms(report.shell?.cacheMatchMs)}</dd></div>
+      <div><dt>Чтение тела страницы, длительность</dt><dd>{ms(report.shell?.bodyReadMs)}</dd></div>
       <div><dt>Ответ обработчика подготовлен</dt><dd>{ms(report.shell?.responseReady)}</dd></div>
     </dl>
-    <p className="binding-hint">Отметки обработчика приведены к шкале страницы. Отрицательное начало означает, что обработчик уже работал до этого запуска. Передача и чтение тела страницы происходят после подготовки ответа.</p>
+    <p className="binding-hint">Отметки обработчика приведены к шкале страницы. Отрицательное начало означает, что обработчик уже работал до этого запуска. {report.shell?.bodyMode === 'buffer' ? 'Тело страницы прочитано до подготовки ответа; затем браузер получает готовые байты.' : 'Передача и чтение тела страницы происходят после подготовки ответа.'}</p>
+    {report.bundle === 'inline' && <p>Код и стили встроены в страницу. Отдельные запросы JS/CSS для запуска не нужны.</p>}
     <p>Копируется этот запуск и до четырёх предыдущих. Тексты заданий в отчёт не входят. Автоматической отправки нет.</p>
     {startupHistoryUnavailable() && <p role="status">Не удалось сохранить историю замеров. Текущий отчёт можно скопировать.</p>}
     <details><summary>Полный отчёт</summary><textarea ref={text} className="startup-report" aria-label="Отчёт о запуске" readOnly value={output} /></details>

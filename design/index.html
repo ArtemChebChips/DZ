@@ -14,7 +14,7 @@
     </style>
     <script>
       // Только числа в памяти; до первого кадра диагностика ничего не сохраняет.
-      window.__dzBoot = { marks: { pageScript: performance.now() }, hiddenAtStart: document.hidden, onlineAtStart: navigator.onLine }
+      window.__dzBoot = { timeOrigin: performance.timeOrigin, marks: { pageScript: performance.now() }, hiddenAtStart: document.hidden, onlineAtStart: navigator.onLine }
       // До первого кадра не обращаемся к хранилищу, даже за темой.
       // Сохранённая палитра придёт вместе с notebook после стартовой оболочки.
       try {

@@ -48,11 +48,19 @@ if (urls.length) self.addEventListener('fetch', event => {
       const matched = performance.now()
       const lookup = matched - start
       const response = cached || await fetch(request)
-      // Числа и версия именно того worker, который отдал HTML. Тело не читаем.
+      // Маленькую стартовую страницу передаём готовыми байтами: не создаём
+      // дополнительный ReadableStream вокруг тела ответа из CacheStorage.
+      const bodyStart = performance.now()
+      const body = await response.arrayBuffer()
+      const bodyReadMs = performance.now() - bodyStart
       const headers = new Headers(response.headers)
+      // Fetch уже декодировал HTTP-сжатие; эти заголовки описывали прежнее тело.
+      headers.delete('Content-Encoding')
+      headers.delete('Content-Length')
       headers.append('Server-Timing', `dz-source;desc="${cached ? 'cache' : 'network'}", dz-lookup;dur=${lookup.toFixed(1)}, dz-version;desc="${VERSION}", dz-build;desc="${BUILD}"`)
       headers.append('Server-Timing', `dz-worker-script;desc="${SCRIPT_STARTED_AT.toFixed(1)}", dz-fetch-event;desc="${fetchEventAt.toFixed(1)}", dz-cache-open;dur=${(opened - start).toFixed(1)}, dz-cache-match;dur=${(matched - opened).toFixed(1)}, dz-response-ready;desc="${(performance.timeOrigin + performance.now()).toFixed(1)}"`)
-      return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
+      headers.append('Server-Timing', `dz-body-read;dur=${bodyReadMs.toFixed(1)}, dz-body-bytes;desc="${body.byteLength}", dz-body-mode;desc="buffer"`)
+      return new Response(body, { status: response.status, statusText: response.statusText, headers })
     })())
   } else if (urls.includes(page)) {
     event.respondWith((async () => (await (await caches.open(CACHE)).match(page)) || fetch(request))())

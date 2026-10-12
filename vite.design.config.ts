@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
+import { inlineStartup } from './scripts/inline-startup.ts'
 
 const project = fileURLToPath(new URL('.', import.meta.url))
 const version = JSON.parse(readFileSync(resolve(project, 'package.json'), 'utf8')).version
@@ -21,6 +22,8 @@ export default defineConfig({
         .filter(entry => entry.isFile() && entry.name !== 'sw.js')
         .map(entry => resolve(entry.parentPath, entry.name).slice(out.length + 1))
         .sort()
+      const entry = resolve(out, 'index.html')
+      writeFileSync(entry, inlineStartup(readFileSync(entry, 'utf8'), files, file => readFileSync(resolve(out, file), 'utf8')))
       const template = readFileSync(resolve(project, 'design/public/sw.js'), 'utf8')
       // Разные сборки одной версии не смешивают HTML и хешированные assets.
       const hash = createHash('sha256').update(template).update(version)

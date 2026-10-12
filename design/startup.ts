@@ -3,6 +3,7 @@ export const STARTUP_KEY = 'dz-next:startup:v1'
 const markNames = ['pageScript', 'themeReadStart', 'themeReadEnd', 'themeParseEnd', 'themeEnd', 'mainModule', 'shellFrameEstimate', 'appRenderStart', 'notebookReadStart', 'notebookReadEnd', 'notebookReady', 'themeApplied', 'interfaceCommit', 'frameEstimate'] as const
 type Mark = typeof markNames[number]
 type Boot = {
+  timeOrigin?: number
   marks: Partial<Record<Mark, number>>
   hiddenAtStart: boolean
   onlineAtStart: boolean
@@ -16,6 +17,7 @@ export type StartupReport = {
   schema: 1
   id: string
   version: string
+  bundle?: 'inline' | 'external'
   startedAt: string
   standalone: boolean
   demo: boolean
@@ -29,7 +31,7 @@ export type StartupReport = {
   marks: Partial<Record<Mark, number>>
   navigation: Timings | null
   navigationType: string
-  shell: { source: string; version: string; build: string; lookupMs: number; workerScriptStart?: number | null; fetchEventStart?: number | null; cacheOpenMs?: number | null; cacheMatchMs?: number | null; responseReady?: number | null } | null
+  shell: { source: string; version: string; build: string; lookupMs: number; workerScriptStart?: number | null; fetchEventStart?: number | null; cacheOpenMs?: number | null; cacheMatchMs?: number | null; responseReady?: number | null; bodyReadMs?: number | null; bodyBytes?: number | null; bodyMode?: string } | null
   paint: Timings
   assets: { file: string; duration: number; responseEnd: number; workerStart: number; transferSize: number }[]
   workerAtModule: string | null
@@ -137,16 +139,18 @@ export function getStartupReport(): StartupReport {
   const navigation = nav ? Object.fromEntries(names.map(name => [name, rounded(nav[name])])) : null
   const timing = (name: string) => nav?.serverTiming?.find(entry => entry.name === name)
   const source = timing('dz-source')
+  const timeOrigin = state?.timeOrigin ?? performance.timeOrigin
   // У worker собственный timeOrigin. Переданные абсолютные отметки приводим
   // к шкале страницы; запуск уже жившего worker может оказаться отрицательным.
   const workerMoment = (name: string) => {
     const value = timing(name)?.description
-    return value && Number.isFinite(Number(value)) ? rounded(Number(value) - performance.timeOrigin) : null
+    return value && Number.isFinite(Number(value)) ? rounded(Number(value) - timeOrigin) : null
   }
   const marks = Object.fromEntries(markNames.flatMap(name => state?.marks[name] === undefined ? [] : [[name, rounded(state.marks[name]!)] ]))
   return {
-    schema: 1, id: String(performance.timeOrigin), version: appVersion,
-    startedAt: new Date(performance.timeOrigin).toISOString(),
+    schema: 1, id: String(timeOrigin), version: appVersion,
+    startedAt: new Date(timeOrigin).toISOString(),
+    bundle: document.querySelector('script[data-startup-source]') ? 'inline' : 'external',
     standalone: Boolean((navigator as Navigator & { standalone?: boolean }).standalone || matchMedia('(display-mode: standalone)').matches),
     demo, onlineAtStart: state?.onlineAtStart ?? navigator.onLine, hiddenAtStart: state?.hiddenAtStart ?? document.hidden,
     hiddenBeforeFrame, restoredFromBackForwardCache,
@@ -156,6 +160,7 @@ export function getStartupReport(): StartupReport {
       source: source.description, version: timing('dz-version')?.description ?? '', build: timing('dz-build')?.description ?? '', lookupMs: timing('dz-lookup')?.duration ?? 0,
       workerScriptStart: workerMoment('dz-worker-script'), fetchEventStart: workerMoment('dz-fetch-event'), responseReady: workerMoment('dz-response-ready'),
       cacheOpenMs: timing('dz-cache-open')?.duration ?? null, cacheMatchMs: timing('dz-cache-match')?.duration ?? null,
+      bodyReadMs: timing('dz-body-read')?.duration ?? null, bodyBytes: timing('dz-body-bytes')?.description ? Number(timing('dz-body-bytes')!.description) : null, bodyMode: timing('dz-body-mode')?.description ?? '',
     } : null,
     paint: Object.fromEntries(performance.getEntriesByType('paint').map(entry => [entry.name, rounded(entry.startTime)])),
     assets: (performance.getEntriesByType('resource') as PerformanceResourceTiming[]).filter(entry => {
